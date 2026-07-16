@@ -50,16 +50,24 @@ header{position:fixed;top:0;left:0;right:0;z-index:60;
   display:flex;align-items:center;gap:8px;padding-left:6px;padding-right:10px;
   box-shadow:0 2px 14px rgba(16,26,39,.25)}
 .logo{display:none}
-.brand{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1}
-.brand b{font-size:16px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand small{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.65;font-weight:600}
+/* The title and the save status share one column and each get a single line.
+   Previously the kicker sat above the title with 2px letter-spacing and no
+   nowrap, so on a phone "EDIT THE PLAN" wrapped to three lines and squeezed
+   the trip name down to "Vie…". */
+.brand{display:flex;flex-direction:column;justify-content:center;line-height:1.2;min-width:0;flex:1 1 auto;overflow:hidden}
+.brand b{font-size:15.5px;font-weight:800;letter-spacing:-.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.brand small{font-size:10px;opacity:.7;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
 .hspace{display:none}
 .hbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:10px;
   padding:8px 10px;color:#fff;font-weight:700;font-size:12.5px;display:inline-grid;place-items:center;
   white-space:nowrap;text-decoration:none}
 .hbtn:active{background:rgba(255,255,255,.26)}
 .hbtn.primary{background:rgba(255,255,255,.9);color:var(--navy);border-color:transparent}
-.saveflag{font-size:10px;color:rgba(255,255,255,.72);max-width:120px;line-height:1.25;text-align:right}
+.saveflag{color:rgba(255,255,255,.72)}
+/* buttons must never be squeezed by a long title */
+header .hbtn{flex:none}
 
 /* ---------- layout ---------- */
 .wrap{display:block}
@@ -225,8 +233,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:60;
 
 <header>
   <button class="hbtn" id="btnPalette" title="Item library">&#9776;</button>
-  <div class="brand"><small>Edit the plan</small><b id="brandTitle">Vietnam 2026</b></div>
-  <span class="saveflag" id="saveflag">Saved</span>
+  <div class="brand"><b id="brandTitle">Vietnam 2026</b><small class="saveflag" id="saveflag">Saved</small></div>
   <button class="hbtn" id="btnSync" title="Sync">&#9729;</button>
   <button class="hbtn" id="btnSetup" title="Trip setup">&#9881;</button>
   <a class="hbtn primary" id="btnApp" href="../" title="Back to the trip app">Done</a>
@@ -336,9 +343,8 @@ function autosave(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
   /* the plan is SHARED — push it up (no-op until signed in / sync loaded) */
   window.VNSync?.pushPlan?.(state);
-  flag(window.VNSync?.state?.user
-    ? "Saved · syncing to both phones · "+timeStr()
-    : "Saved on this device · "+timeStr());
+  /* short enough for a phone header — the ☁ button already shows sync state */
+  flag(window.VNSync?.state?.user?("Synced · "+timeStr()):("Saved · "+timeStr()));
 }
 /* sync.js hands us a newer plan from the other person */
 window.VNBuilder={
@@ -928,7 +934,7 @@ renderTabs(); renderLibrary(); renderBoard();
    offset wins, not before it. */
 if(document.readyState==="complete")setTimeout(focusDayFromHash,0);
 else window.addEventListener("load",()=>setTimeout(focusDayFromHash,0));
-flag(state.savedAt?("Loaded · saved "+new Date(state.savedAt).toLocaleDateString()):"New trip");
+flag(state.savedAt?("Saved "+new Date(state.savedAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"})):"New trip");
 </script>
 
 

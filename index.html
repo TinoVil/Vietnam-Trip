@@ -391,6 +391,7 @@ p{color:var(--body);font-size:13px}
 const CONFIG={
   country:"Vietnam",
   status:"PLANNING",
+  party:2,          /* people sharing the trip — used for the per-person split */
   /* only used to scale the budget bars — labels always show the exact captured
      amount. Kept in step with DEFAULT_VND_PER_ZAR (1/1590). */
   rates:{ZAR:1,VND:0.000629,USD:18,EUR:20,"?":1}
@@ -533,7 +534,11 @@ function usageMap(){
   });
   return u;
 }
-function daysLabel(a){if(!a||!a.length)return"—";return [...new Set(a)].sort((x,y)=>x-y).map(i=>"Day "+(i+1)).join(", ");}
+/* "Day 2, 3, 4" — the word once, not once per day */
+function daysLabel(a){
+  if(!a||!a.length)return"—";
+  return "Day "+[...new Set(a)].sort((x,y)=>x-y).map(i=>i+1).join(", ");
+}
 function parseCost(v){
   if(v==null)return null;const s=String(v).trim();if(!s)return null;
   let cur="";
@@ -553,7 +558,10 @@ function costStr(v){
   return c.n!=null?fmtMoney(c.n,c.cur):c.raw;
 }
 function fmtMoney(n,cur){
-  const s=n.toLocaleString("en-US",{maximumFractionDigits:(n%1)?2:0});
+  /* Money shows both decimals or none — never "R 8,515.5". Dong has no
+     sub-unit worth showing, so it's always whole. */
+  const frac=(cur==="VND"||!(n%1))?0:2;
+  const s=n.toLocaleString("en-US",{minimumFractionDigits:frac,maximumFractionDigits:frac});
   if(cur==="USD")return"$"+s;if(cur==="ZAR")return"R "+s;
   if(cur==="VND")return s+" ₫";if(cur==="EUR")return"€"+s;
   return s+(cur&&cur!=="?"?" "+cur:"");
@@ -610,12 +618,35 @@ function allCostRows(){
     D.items[cat].forEach(it=>{
       rows.push({cat,name:it.name,days:u[it.id]||[],raw:it.cost||"",c:parseCost(it.cost)});
       if(cat==="accommodation"){
-        if(it.breakfast&&it.breakfast.cost)rows.push({cat,name:it.name+" — breakfast",days:u[it.id]||[],raw:it.breakfast.cost,c:parseCost(it.breakfast.cost),extra:true});
-        if(it.shuttle&&it.shuttle.cost)rows.push({cat,name:it.name+" — shuttle",days:u[it.id]||[],raw:it.shuttle.cost,c:parseCost(it.shuttle.cost),extra:true});
+        /* Keep free extras visible — "included" is worth knowing — but only
+           when they actually say something. A row is earned by a real cost or
+           an explicit included/excluded status, not merely by existing. */
+        [["breakfast",it.breakfast],["shuttle",it.shuttle]].forEach(([label,x])=>{
+          if(!x)return;
+          const c=parseCost(x.cost);
+          if(!(c&&c.n)&&!x.status)return;
+          rows.push({cat,name:it.name+" — "+label,days:u[it.id]||[],raw:x.cost,c,
+            extra:true,status:x.status});
+        });
       }
     });
   });
   return rows;
+}
+/* first day an item is used — for ordering the cost tables chronologically */
+function firstDay(r){return r.days&&r.days.length?Math.min(...r.days):Infinity;}
+function byDay(a,b){return firstDay(a)-firstDay(b);}
+function splitTotals(t,n){const o={};for(const k in t)o[k]=t[k]/n;return o;}
+/* A cost of 0 is a fact ("this is free"), not missing data — say so. Only a
+   genuinely empty cost is a dash. */
+function costCell(r){
+  const s=costStr(r.raw);
+  if(s)return esc(s);
+  const c=parseCost(r.raw);
+  if(c&&c.n===0)return `<span style="color:var(--green);font-weight:700">${r.status==="included"?"Included":"Free"}</span>`;
+  if(r.status==="included")return `<span style="color:var(--green);font-weight:700">Included</span>`;
+  if(r.status==="excluded")return `<span style="color:var(--grey-2);font-weight:600">Pay direct</span>`;
+  return `<span style="color:var(--grey-2)">—</span>`;
 }
 function cancelEntries(){
   const u=usageMap(),out=[];
@@ -1163,24 +1194,39 @@ function viewCosts(){
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(c.zar/maxZar*100))}%;background:${CAT_COLOR[c.cat]}"></div></div>
     </div>`).join("");
   const tables=catTotals.map(c=>{
-    const list=rows.filter(r=>r.cat===c.cat);
+    /* chronological: the trip reads in day order, so the costs should too.
+       Sort is stable, so a hotel's extras stay under their parent. */
+    const list=rows.filter(r=>r.cat===c.cat).sort(byDay);
     const label=CAT_LABEL[c.cat]==="Activity"?"Activities":CAT_LABEL[c.cat];
     if(!list.length)return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}${emptyState("Nothing captured yet")}</section>`;
     return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}
       <div class="tablewrap"><table class="table"><thead><tr><th>Item</th><th>Used</th><th style="text-align:right">Cost</th></tr></thead><tbody>
       ${list.map(r=>`<tr><td>${r.extra?'<span class="caption">↳</span> ':""}${esc(r.name)}</td>
-        <td class="dt">${daysLabel(r.days)}</td><td class="rt">${costStr(r.raw)?esc(costStr(r.raw)):'<span style="color:var(--grey-2)">—</span>'}</td></tr>`).join("")}
+        <td class="dt">${daysLabel(r.days)}</td><td class="rt">${costCell(r)}</td></tr>`).join("")}
       <tr class="total"><td colspan="2">Subtotal</td><td class="rt">${totalsToStr(c.t)}</td></tr>
       </tbody></table></div></section>`;
   }).join("");
+  const n=CONFIG.party||1;
+  const per=splitTotals(grand,n);
   return {title:"Cost Summary",html:`
     <div class="hero"><div class="hb-kicker">The budget</div><div class="hb-title">Cost Summary</div>
-      <div class="hb-sub">Estimated total: ${totalsToStr(grand)}</div></div>
+      <div class="hb-sub">${totalsToStr(grand)} total · ${totalsToStr(per)} each</div></div>
+    <section class="grid-2">
+      <div class="stat"><div class="stat-value fit" style="color:var(--red)">${totalsToStr(grand)}</div>
+        <div class="stat-label">Total trip</div></div>
+      <div class="stat"><div class="stat-value fit" style="color:var(--navy)">${totalsToStr(per)}</div>
+        <div class="stat-label">Each · split ${n}</div></div>
+    </section>
     <section class="card">
       <div class="card-title" style="color:var(--red)">${ico("wallet",14)} Budget snapshot</div>${bars}
+      <div class="info-row" style="margin-top:8px"><span class="label">Total captured</span>
+        <span class="value" style="color:var(--red)">${totalsToStr(grand)}</span></div>
+      <div class="info-row"><span class="label">Per person (÷${n})</span>
+        <span class="value">${totalsToStr(per)}</span></div>
     </section>
     ${tables}
-    <p class="caption">Amounts are shown in Rand (R) and Vietnam Dong (₫) — no FX conversion. Bar lengths use approximate rates for scale only. Bare numbers are read as Dong when 10,000 or more, otherwise as Rand.</p>`};
+    <p class="caption">Amounts are shown in Rand (R) and Vietnam Dong (₫) — no FX conversion. Bar lengths use approximate rates for scale only. Bare numbers are read as Dong when 10,000 or more, otherwise as Rand.</p>
+    <p class="caption">Per person is a straight ÷${n} of everything captured — fine for shared rooms and taxis, but anything you each paid for separately is already a single person's cost, so treat it as a guide.</p>`};
 }
 
 /* ============================================================ VIEW · ACCOMMODATION */
