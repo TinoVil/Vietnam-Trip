@@ -14,17 +14,30 @@ rules_version = '2';
 //                                        only ever write your own.
 //
 // Project: vietnamtrip26-73b1a
-// To add someone: add their Google account email to the list in allowed().
+//
+// NOTE — this file is DOCUMENTATION ONLY. The live rules are whatever is
+// published in the Firebase console; nothing here is used at runtime.
+//
+// The real allow-list is deliberately NOT in this file: the repo is public
+// (and this file is served at /firestore.rules), so putting real addresses
+// here would publish them for scrapers. Keep the actual emails in the
+// console copy only.
+//
+// To add someone: edit the allow-list in
+//   console.firebase.google.com/project/_/firestore/rules
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Emails are lower-cased before comparing: Google normalises Gmail
+    // addresses, but relying on that would lock someone out over a capital
+    // letter, and the failure looks like a generic permission error.
     function allowed() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email in [
-             'viljoentinoc@gmail.com',
-             'SISTER_EMAIL_HERE'
+        && request.auth.token.email.lower() in [
+             'first.traveller@example.com',   // <- real addresses live in the
+             'second.traveller@example.com'   //    console copy, not in git
            ];
     }
 
