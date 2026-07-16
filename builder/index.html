@@ -915,16 +915,28 @@ palBackdrop.onclick=closePalette;
 const _openPicker=openPicker;
 openPicker=function(...a){ closePalette(); return _openPicker.apply(this,a); };
 
-/* ---------- deep link: the app links here as /builder/#day-5 ---------- */
+/* ---------- deep links from the app ----------
+     /builder/#day-5      → scroll to that day
+     /builder/#item-<id>  → open that item's editor straight away          */
 function focusDayFromHash(){
-  const m=(location.hash||"").match(/^#day-(\d+)$/);
-  if(!m)return;
-  const el=document.getElementById("day-"+m[1]);
-  if(!el)return;
-  const y=el.getBoundingClientRect().top+window.scrollY-(56+12);  /* clear the fixed bar */
-  window.scrollTo({top:Math.max(0,y)});
-  el.classList.add("day-focus");
-  setTimeout(()=>el.classList.remove("day-focus"),2400);
+  const h=location.hash||"";
+  const d=h.match(/^#day-(\d+)$/);
+  if(d){
+    const el=document.getElementById("day-"+d[1]);
+    if(!el)return;
+    const y=el.getBoundingClientRect().top+window.scrollY-(56+12);  /* clear the fixed bar */
+    window.scrollTo({top:Math.max(0,y)});
+    el.classList.add("day-focus");
+    setTimeout(()=>el.classList.remove("day-focus"),2400);
+    return;
+  }
+  const i=h.match(/^#item-([\w-]+)$/);
+  if(i){
+    const id=i[1];
+    if(!getItem(id))return;                       /* deleted since the link was made */
+    if(itemCat(id)==="location")renameItem(id);   /* locations are just a name */
+    else openEditor(id);
+  }
 }
 window.addEventListener("hashchange",focusDayFromHash);
 

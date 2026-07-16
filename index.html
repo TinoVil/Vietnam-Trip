@@ -218,9 +218,11 @@ p{color:var(--body);font-size:13px}
   padding:14px 14px calc(12px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(242,244,247,0),var(--bg) 42%)}
 .daynav-spacer{height:84px}
-.editday{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;
+.editday,.editlink{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;
   padding:13px;border-radius:14px;background:var(--green-soft);border:1px solid #C5E8DA;
   color:var(--green);font-weight:800;font-size:13px;text-decoration:none}
+.editlink.blue{background:var(--blue-soft);border-color:#C4DDF2;color:var(--blue);
+  margin-top:12px;padding:11px}
 .daynav button{flex:1;padding:13px 8px;border-radius:14px;background:#fff;border:1px solid var(--border);
   font-weight:700;font-size:13px;color:var(--blue);box-shadow:0 4px 14px rgba(16,26,39,.08)}
 .daynav button:disabled{color:var(--grey-2);box-shadow:none}
@@ -1255,6 +1257,7 @@ function viewStays(){
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${badges.join("")}</div>
       ${amen.length?`<div class="caption" style="margin-top:9px">${amen.map(esc).join(" · ")}${(a.amenities.length>6)?` · +${a.amenities.length-6} more`:""}</div>`:""}
       ${linkChips(a.address||a.name,a.url)}
+      <a class="editlink blue" href="./builder/#item-${esc(a.id)}">${ico("grid",13)} Edit details</a>
     </section>`;
   }).join(""):emptyState("No accommodation booked yet");
   return {title:"Accommodation",html:`
