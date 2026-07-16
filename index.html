@@ -93,6 +93,11 @@ a{color:var(--blue)}
   font-weight:700;color:var(--blue);background:#fff;white-space:nowrap;flex:none}
 .acct button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .syncmsg{font-size:10.5px;color:var(--red);padding:0 14px 10px;line-height:1.4}
+.installrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:12px 14px;border-bottom:1px solid var(--border-2);background:var(--gold-soft)}
+.installrow .who b{display:block;font-size:12.5px}
+.installrow .who span{font-size:10.5px;color:var(--gold-ink);opacity:.85}
+.installrow .dico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
 .dgroup{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;
   color:var(--grey-2);padding:14px 12px 6px}
 .ditem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
@@ -354,6 +359,7 @@ p{color:var(--body);font-size:13px}
     <div class="dh-sub" id="drawer-sub"></div>
   </div>
   <div class="acct" id="acct"></div>
+  <div id="installrow"></div>
   <nav id="drawer-nav"></nav>
 </aside>
 
@@ -1298,9 +1304,39 @@ function viewJournal(){
 let deferredPrompt=null;
 window.addEventListener("beforeinstallprompt",e=>{
   e.preventDefault();deferredPrompt=e;
-  if(currentRoute().split("/")[0]==="summary")render();
+  /* re-render so both the tip and the menu row can offer the one-tap install */
+  if(typeof render==="function")render();
 });
 window.addEventListener("appinstalled",()=>{deferredPrompt=null;store.set("tip_dismissed",true);render();});
+/* The summary tip can be dismissed (or auto-hidden once installed), so it must
+   NOT be the only way in — if an install silently fails you'd be stranded with
+   no way to retry. This row lives in the menu and stays until we're actually
+   running standalone. */
+function renderInstallRow(){
+  const el=document.getElementById("installrow");
+  if(!el)return;
+  if(isStandalone()){el.innerHTML="";return;}
+  const ua=navigator.userAgent;
+  const iOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  el.innerHTML=`<button class="installrow" id="installrow-btn">
+    <span class="dico" style="background:var(--gold-soft);color:var(--gold-ink)">${ico("plus",16)}</span>
+    <span class="who"><b>Install this app</b>
+      <span>${deferredPrompt?"One tap — works offline after":(iOS?"Safari → Share → Add to Home Screen":"Chrome ⋮ → Add to Home screen")}</span></span>
+  </button>`;
+  el.querySelector("#installrow-btn").onclick=async()=>{
+    if(deferredPrompt){
+      deferredPrompt.prompt();
+      const r=await deferredPrompt.userChoice;
+      deferredPrompt=null;
+      if(r.outcome!=="accepted")store.set("tip_dismissed",false);
+      render();
+      return;
+    }
+    alert(iOS
+      ? "In Safari: tap the Share button (□↑), scroll down, then tap “Add to Home Screen”."
+      : "In Chrome: tap the ⋮ menu, then “Install app” or “Add to Home screen”.\n\nAlready installed? Look in your app drawer for “Vietnam 26” — Android puts it there, not on the home screen.");
+  };
+}
 function isStandalone(){
   return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 }
@@ -1370,6 +1406,7 @@ function render(){
     (dayDateObj(D.days.length-1)?.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})||"")+
     " · "+ph.pill;
   buildDrawer(active);
+  renderInstallRow();
   /* restore synchronously so there's no visible jump */
   window.scrollTo(0,keepY);
 }
