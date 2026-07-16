@@ -1201,14 +1201,50 @@ function viewJournal(){
   }};
 }
 
-/* ============================================================ INSTALL TIP */
+/* ============================================================ INSTALL TIP
+   iOS and Android install differently: iOS has no install API (Safari's Share
+   menu only), Android/Chrome fires beforeinstallprompt so we can offer a real
+   one-tap button. Detect rather than assume. */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();deferredPrompt=e;
+  if(currentRoute().split("/")[0]==="summary")render();
+});
+window.addEventListener("appinstalled",()=>{deferredPrompt=null;store.set("tip_dismissed",true);render();});
+function isStandalone(){
+  return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+}
 function installTip(){
-  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
-  if(standalone||store.get("tip_dismissed",false))return"";
-  return `<div class="install-tip" id="install-tip">
-    <div><b>Add to Home Screen</b> for the full app: in Safari tap <b>Share</b> → <b>Add to Home Screen</b>. It then works fully offline.</div>
-    <button id="tip-x">✕</button>
-  </div>`;
+  if(isStandalone()||store.get("tip_dismissed",false))return"";
+  const ua=navigator.userAgent;
+  const iOS=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const android=/Android/.test(ua);
+  let body;
+  if(deferredPrompt){
+    body=`<div><b>Install the app</b> for offline use and a home-screen icon.
+      <button id="tip-install" style="display:block;margin:8px 0 0;padding:9px 16px;border-radius:10px;
+        background:var(--gold-ink);color:#fff;font-weight:800;font-size:12.5px">Install now</button></div>`;
+  }else if(iOS){
+    body=`<div><b>Add to Home Screen</b> for the full app: in <b>Safari</b>, tap
+      <b>Share</b> → <b>Add to Home Screen</b>. It then works fully offline.</div>`;
+  }else if(android){
+    body=`<div><b>Add to Home Screen</b> for the full app: in <b>Chrome</b>, tap the
+      <b>⋮</b> menu → <b>Add to Home screen</b> (or <b>Install app</b>). It then works fully offline.</div>`;
+  }else{
+    body=`<div><b>Tip:</b> open this page on your phone to install it as an offline app.</div>`;
+  }
+  return `<div class="install-tip" id="install-tip">${body}<button id="tip-x">✕</button></div>`;
+}
+function wireInstallTip(el){
+  const x=el.querySelector("#tip-x");
+  if(x)x.onclick=()=>{store.set("tip_dismissed",true);render();};
+  const b=el.querySelector("#tip-install");
+  if(b)b.onclick=async()=>{
+    if(!deferredPrompt)return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt=null;render();
+  };
 }
 
 /* ============================================================ RENDER */
@@ -1229,8 +1265,7 @@ function render(){
   el.innerHTML=(active==="summary"?installTip():"")+v.html+
     `<div class="footer caption">Travel Book · ${esc(D.meta.title)} · offline edition</div>`;
   if(v.wire)v.wire(el);
-  const tip=el.querySelector("#tip-x");
-  if(tip)tip.onclick=()=>{store.set("tip_dismissed",true);render();};
+  wireInstallTip(el);
   document.getElementById("bar-title").textContent=v.title==="Trip Summary"?D.meta.title:v.title;
   const ph=tripPhase();
   document.getElementById("bar-pill").textContent=ph.pill;
