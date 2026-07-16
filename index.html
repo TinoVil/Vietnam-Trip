@@ -1315,6 +1315,7 @@ function wireInstallTip(el){
 /* ============================================================ RENDER */
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
   stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,journal:viewJournal};
+let lastRoute=null;
 function render(){
   const r=currentRoute();
   const parts=r.split("/");
@@ -1326,6 +1327,11 @@ function render(){
     const fn=VIEWS[parts[0]]||viewSummary;
     v=fn();active=VIEWS[parts[0]]?parts[0]:"summary";
   }
+  /* Ticking a bingo tile / checklist item re-renders in place. Keep the reader
+     where they were — only jump to the top when the page actually changes. */
+  const sameRoute=(r===lastRoute);
+  const keepY=sameRoute?window.scrollY:0;
+  lastRoute=r;
   const el=document.getElementById("view");
   el.innerHTML=(active==="summary"?installTip():"")+v.html+
     `<div class="footer caption">Travel Book · ${esc(D.meta.title)} · offline edition</div>`;
@@ -1339,7 +1345,8 @@ function render(){
     (dayDateObj(D.days.length-1)?.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})||"")+
     " · "+ph.pill;
   buildDrawer(active);
-  window.scrollTo(0,0);
+  /* restore synchronously so there's no visible jump */
+  window.scrollTo(0,keepY);
 }
 /* ============================================================ ACCOUNT PANEL */
 function renderAcct(s){
