@@ -325,6 +325,23 @@ p{color:var(--body);font-size:13px}
   color:var(--grey);font-weight:700;font-size:13px;margin-top:12px}
 .editbtn.on{border-color:var(--red);color:var(--red)}
 
+/* ---------- currency ---------- */
+.fxfield label{display:block;font-size:10.5px;font-weight:800;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--grey);margin-bottom:6px}
+.fxin{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:14px;
+  background:var(--panel2,#F7F9FB);padding:4px 14px}
+.fxin:focus-within{outline:2px solid var(--gold);outline-offset:-1px;background:#fff}
+.fxin input{flex:1;min-width:0;border:none;background:transparent;padding:14px 0;
+  font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.5px}
+.fxin input:focus{outline:none}
+.fxcur{font-size:18px;font-weight:800;color:var(--grey-2);flex:none}
+.fxswap{text-align:center;color:var(--grey-2);font-weight:800;font-size:16px;padding:8px 0}
+.fxquick{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.fxq{flex:1;min-width:72px;padding:9px 4px;border-radius:999px;border:1px solid var(--border);
+  background:#fff;font-size:11.5px;font-weight:800;color:var(--gold-ink)}
+.fxq:active{background:var(--gold-soft)}
+.fxmanual{margin-top:14px;padding-top:12px;border-top:1px solid var(--border-2)}
+
 /* ---------- journal ---------- */
 .journal{width:100%;min-height:46vh;border:1px solid var(--border);border-radius:var(--radius);
   padding:14px 16px;background:#fff;resize:vertical;line-height:1.7;color:var(--ink)}
@@ -374,7 +391,9 @@ p{color:var(--body);font-size:13px}
 const CONFIG={
   country:"Vietnam",
   status:"PLANNING",
-  rates:{ZAR:1,VND:0.00075,USD:18,EUR:20,"?":1}
+  /* only used to scale the budget bars — labels always show the exact captured
+     amount. Kept in step with DEFAULT_VND_PER_ZAR (1/1590). */
+  rates:{ZAR:1,VND:0.000629,USD:18,EUR:20,"?":1}
 };
 /* The summary's "Travel checklist" IS the "Before we go" to-do list — one list,
    two places to tick it. These are the old hardcoded checklist rows, merged in
@@ -398,7 +417,11 @@ const SEED_BINGO={
   shop:{title:"Shopping Bingo",icon:"🛍️",items:["Tailored Outfit (Hoi An)","Silk Lantern","Conical Hat (Non La)",
     "Coffee Beans + Phin Filter","Lacquerware","Silk Scarf","Propaganda Poster","Ceramics",
     "Leather Sandals","Pearl Jewellery","Embroidered Art","Fridge Magnet","Bamboo Product",
-    "Ao Dai","Local Snacks Haul","Local Artwork"]}
+    "Ao Dai","Local Snacks Haul","Local Artwork"]},
+  act:{title:"Activities Bingo",icon:"🎯",items:["Ride a scooter","Cross a Hanoi road (properly)","Basket boat spin",
+    "Float a lantern","Haggle at a market","Cooking class","Massage / spa","Karaoke",
+    "Sunrise somewhere","Swim at My Khe","Cyclo ride","Bia Hoi corner stool",
+    "Night market wander","Dragon Bridge fire","Rooftop sunset","Talk to a local"]}
 };
 
 /* ============================================================ ICONS */
@@ -642,7 +665,12 @@ function emptyState(a,b){
    once Firebase auth lands. Keeping the namespace here means the sync layer
    just maps scope -> a per-member document. */
 /* the checklist is no longer its own thing — it's the "pre" to-dos */
-const PERSONAL_KEYS=["todos","bingo","journal","todo_tab","bingo_tab","idseq","checklist","checklist_merged"];
+const PERSONAL_KEYS=["todos","bingo","journal","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
+/* Fallback rate, used until a live one is fetched (checked live 2026-07-16).
+   It WILL drift — the point is that the converter still works in a market with
+   no signal; tap Update, or set it by hand once you've changed money. */
+const DEFAULT_VND_PER_ZAR=1590;
+let FX=null;
 const store={
   scope:"local",
   key(k){
@@ -671,6 +699,10 @@ let TODOS,BINGO,idSeq,todoTab,bingoTab;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
+  idSeq=store.get("idseq",1000);      /* first — the seeders below mint ids */
+  todoTab=store.get("todo_tab","pre");
+  bingoTab=store.get("bingo_tab","food");
+  FX=store.get("fx",{vndPerZar:DEFAULT_VND_PER_ZAR,updated:0,manual:false});
   TODOS=store.get("todos",null);
   if(!TODOS){
     let n=0;TODOS=[];
@@ -686,11 +718,19 @@ function loadPersonal(){
         items:SEED_BINGO[k].items.map(t=>({id:"bg"+(++n),text:t,done:false}))};
     }
     store.set("bingo",BINGO);
+  }else{
+    /* A phone seeded before a board existed would never see it — add any new
+       boards without touching the ones already being ticked. */
+    let added=false;
+    for(const k in SEED_BINGO){
+      if(BINGO[k])continue;
+      BINGO[k]={title:SEED_BINGO[k].title,icon:SEED_BINGO[k].icon,
+        items:SEED_BINGO[k].items.map(t=>({id:newId("bg"),text:t,done:false}))};
+      added=true;
+    }
+    if(added)store.set("bingo",BINGO);
   }
-  idSeq=store.get("idseq",1000);
-  todoTab=store.get("todo_tab","pre");
-  bingoTab=store.get("bingo_tab","food");
-  mergeLegacyChecklist();   /* after idSeq — it mints ids */
+  mergeLegacyChecklist();
 }
 /* The checklist used to be its own hardcoded list with its own tick state.
    Fold any of those rows (and their ticks) into the pre-trip to-dos once, so
@@ -728,6 +768,7 @@ const SECTIONS=[
   {route:"bookings", name:"Bookings & Deadlines",icon:"alert",color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"todos",    name:"To-Do's",       icon:"check",  color:"var(--green)", soft:"var(--green-soft)", group:"On the trip"},
   {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
+  {route:"fx",       name:"Currency",      icon:"wallet", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
   {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
    group:"Planning", href:"./builder/"}
@@ -1222,10 +1263,11 @@ function viewBingo(){
   const board=BINGO[bingoTab];
   const hit=board.items.filter(i=>i.done).length;
   const full=board.items.length&&hit===board.items.length;
+  /* icon comes from the board, not a two-way guess — there are three now */
   const tiles=board.items.map(t=>`
     <button class="btile ${t.done?"hit":""}" data-bt="${t.id}">
       ${bingoEdit?`<span class="bdel" data-bdel="${t.id}">×</span>`:""}
-      <span class="bico">${bingoTab==="food"?"🍜":"🛍️"}</span>
+      <span class="bico">${esc(board.icon||"⭐")}</span>
       <span>${esc(t.text)}</span>
     </button>`).join("");
   return {title:"Bingo",html:`
@@ -1236,7 +1278,7 @@ function viewBingo(){
     </div>
     ${full?`<div class="bingo-banner">🎉 BINGO! Board complete! 🎉</div>`:""}
     <div class="seg">
-      ${Object.keys(BINGO).map(k=>`<button data-btab="${k}" class="${bingoTab===k?"on":""}">${esc(BINGO[k].icon)} ${esc(BINGO[k].title)}</button>`).join("")}
+      ${Object.keys(BINGO).map(k=>`<button data-btab="${k}" class="${bingoTab===k?"on":""}">${esc(BINGO[k].icon)} ${esc(BINGO[k].title.replace(/\s*Bingo\s*$/i,""))}</button>`).join("")}
     </div>
     ${bingoEdit?`<div class="addbar">
       <input id="bingo-in" type="text" placeholder="Add an item…" maxlength="60">
@@ -1270,6 +1312,131 @@ function viewBingo(){
       el.querySelector("#bingo-add").onclick=add;
       inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
     }
+  }};
+}
+
+/* ============================================================ VIEW · CURRENCY
+   Offline-first by necessity: you need this at a market stall with no signal.
+   A rate is always stored; refreshing is a bonus when there's a connection. */
+function fxFmtVnd(n){
+  if(!isFinite(n)||n<=0)return"";
+  return Math.round(n).toLocaleString("en-US");
+}
+function fxFmtZar(n){
+  if(!isFinite(n)||n<=0)return"";
+  return n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fxAge(){
+  if(!FX.updated)return"never updated";
+  const d=Math.floor((Date.now()-FX.updated)/86400000);
+  if(d===0)return"updated today";
+  if(d===1)return"updated yesterday";
+  return"updated "+d+" days ago";
+}
+async function fxRefresh(){
+  /* keyless + free; if it's down or we're offline we simply keep the stored rate */
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),7000);
+  try{
+    const r=await fetch("https://open.er-api.com/v6/latest/ZAR",{signal:ctrl.signal,cache:"no-store"});
+    const j=await r.json();
+    const v=j&&j.rates&&j.rates.VND;
+    if(!v||!isFinite(v))throw new Error("no rate");
+    FX={vndPerZar:v,updated:Date.now(),manual:false};
+    store.set("fx",FX);
+    return{ok:true};
+  }catch(e){
+    return{ok:false,err:(e.name==="AbortError"?"timed out":"couldn't reach the rate service")};
+  }finally{clearTimeout(t);}
+}
+let fxSide="vnd",fxAmount=100000;
+function viewFx(){
+  const rate=FX.vndPerZar||DEFAULT_VND_PER_ZAR;
+  const zar=fxSide==="vnd"?fxAmount/rate:fxAmount;
+  const vnd=fxSide==="vnd"?fxAmount:fxAmount*rate;
+  /* what things actually cost — the numbers you meet on a menu */
+  const REF=[10000,20000,50000,100000,200000,500000,1000000];
+  const rows=REF.map(v=>`<div class="info-row"><span class="label">${fxFmtVnd(v)} ₫</span>
+    <span class="value">R ${fxFmtZar(v/rate)}</span></div>`).join("");
+  /* mental shortcut: dong ÷ 1000 × (1000/rate) */
+  const per1000=1000/rate;
+  return {title:"Currency",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--gold-ink),#D9A94A)">
+      <div class="hb-kicker">Dong ↔ Rand</div><div class="hb-title">Currency</div>
+      <div class="hb-sub">R1 ≈ ${fxFmtVnd(rate)} ₫ · ${esc(fxAge())}${FX.manual?" · set by hand":""}</div>
+    </div>
+    <section class="card">
+      <div class="fxfield">
+        <label>Vietnam Dong</label>
+        <div class="fxin"><input id="fx-vnd" type="text" inputmode="numeric" autocomplete="off"
+          value="${esc(fxFmtVnd(vnd))}"><span class="fxcur">₫</span></div>
+      </div>
+      <div class="fxswap">≈</div>
+      <div class="fxfield">
+        <label>South African Rand</label>
+        <div class="fxin"><input id="fx-zar" type="text" inputmode="decimal" autocomplete="off"
+          value="${esc(fxFmtZar(zar))}"><span class="fxcur">R</span></div>
+      </div>
+      <div class="fxquick">
+        ${[20000,50000,100000,200000,500000].map(v=>`<button class="fxq" data-fxq="${v}">${fxFmtVnd(v)}₫</button>`).join("")}
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--gold-ink)">${ico("wallet",14)} Quick reference</div>
+      ${rows}
+      <div class="caption" style="margin-top:10px">Rule of thumb — knock 3 zeros off the dong
+        and multiply by ${per1000.toFixed(2)}. So 100,000 ₫ → 100 × ${per1000.toFixed(2)} ≈ R${(100*per1000).toFixed(0)}.</div>
+    </section>
+    <section class="card">
+      <div class="card-title">${ico("globe",14)} Exchange rate</div>
+      <div class="info-row"><span class="label">R1 buys</span><span class="value">${fxFmtVnd(rate)} ₫</span></div>
+      <div class="info-row"><span class="label">1,000,000 ₫ costs</span><span class="value">R ${fxFmtZar(1000000/rate)}</span></div>
+      <div class="info-row"><span class="label">Source</span><span class="value">${FX.manual?"Entered by hand":(FX.updated?"Fetched live":"Built-in estimate")}</span></div>
+      <button id="fx-refresh" style="width:100%;margin-top:10px;padding:12px;border-radius:12px;
+        background:var(--blue);color:#fff;font-weight:800;font-size:13px">Update rate (needs signal)</button>
+      <div id="fx-msg" class="caption" style="margin-top:8px"></div>
+      <div class="fxmanual">
+        <label class="caption">Or set it yourself — R1 =</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input id="fx-manual" type="text" inputmode="numeric" placeholder="${esc(fxFmtVnd(rate))}"
+            style="flex:1;border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:#fff">
+          <button id="fx-set" style="padding:11px 16px;border-radius:12px;border:1px solid var(--border);
+            font-weight:800;font-size:12.5px;color:var(--blue);background:#fff">Set</button>
+        </div>
+        <div class="caption" style="margin-top:6px">Handy when you've just changed money and know the
+          real street rate.</div>
+      </div>
+    </section>`,
+  wire(el){
+    const vndIn=el.querySelector("#fx-vnd"),zarIn=el.querySelector("#fx-zar");
+    const clean=s=>parseFloat(String(s).replace(/[^\d.]/g,""))||0;
+    vndIn.addEventListener("input",()=>{
+      const v=clean(vndIn.value);fxSide="vnd";fxAmount=v;
+      zarIn.value=fxFmtZar(v/rate);
+    });
+    zarIn.addEventListener("input",()=>{
+      const v=clean(zarIn.value);fxSide="zar";fxAmount=v;
+      vndIn.value=fxFmtVnd(v*rate);
+    });
+    /* tidy the thousands separators once they stop typing */
+    vndIn.addEventListener("blur",()=>{vndIn.value=fxFmtVnd(clean(vndIn.value));});
+    el.querySelectorAll("[data-fxq]").forEach(b=>b.onclick=()=>{
+      fxSide="vnd";fxAmount=+b.dataset.fxq;render();
+    });
+    const msg=el.querySelector("#fx-msg");
+    el.querySelector("#fx-refresh").onclick=async e=>{
+      const btn=e.currentTarget;btn.textContent="Updating…";
+      const r=await fxRefresh();
+      if(r.ok){render();}
+      else{btn.textContent="Update rate (needs signal)";
+        msg.style.color="var(--red)";
+        msg.textContent="Still on the saved rate — "+r.err+". You can set it by hand below.";}
+    };
+    el.querySelector("#fx-set").onclick=()=>{
+      const v=clean(el.querySelector("#fx-manual").value);
+      if(v<=0){msg.style.color="var(--red)";msg.textContent="Enter how many dong R1 buys, e.g. 1350.";return;}
+      FX={vndPerZar:v,updated:Date.now(),manual:true};store.set("fx",FX);render();
+    };
   }};
 }
 
@@ -1375,7 +1542,7 @@ function wireInstallTip(el){
 
 /* ============================================================ RENDER */
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
-  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,journal:viewJournal};
+  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,fx:viewFx,journal:viewJournal};
 let lastRoute=null;
 function render(){
   const r=currentRoute();
