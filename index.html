@@ -205,10 +205,20 @@ p{color:var(--body);font-size:13px}
 .route-chip{display:inline-flex;align-items:center;gap:7px;background:var(--teal-soft);color:var(--teal);
   font-weight:700;font-size:12px;padding:7px 14px;border-radius:999px}
 .arrow{color:var(--grey-2)}
-.daynav{display:flex;gap:10px;margin-top:4px}
-.daynav button{flex:1;padding:12px;border-radius:14px;background:#fff;border:1px solid var(--border);
-  font-weight:700;font-size:13px;color:var(--blue)}
-.daynav button:disabled{color:var(--grey-2)}
+/* Pinned to the bottom of the day page so you can always jump between days.
+   Fixed rather than sticky: it's the last thing on the page, so sticky would
+   have nothing left to scroll past and would barely pin at all. */
+.daynav{display:flex;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:20;
+  max-width:640px;margin:0 auto;
+  padding:14px 14px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(242,244,247,0),var(--bg) 42%)}
+.daynav-spacer{height:84px}
+.editday{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;
+  padding:13px;border-radius:14px;background:var(--green-soft);border:1px solid #C5E8DA;
+  color:var(--green);font-weight:800;font-size:13px;text-decoration:none}
+.daynav button{flex:1;padding:13px 8px;border-radius:14px;background:#fff;border:1px solid var(--border);
+  font-weight:700;font-size:13px;color:var(--blue);box-shadow:0 4px 14px rgba(16,26,39,.08)}
+.daynav button:disabled{color:var(--grey-2);box-shadow:none}
 
 /* ---------- timeline ---------- */
 .timeline-item{display:grid;grid-template-columns:44px 20px 1fr;gap:0 8px}
@@ -358,31 +368,23 @@ p{color:var(--body);font-size:13px}
 const CONFIG={
   country:"Vietnam",
   status:"PLANNING",
-  checklist:[
-    {label:"Passport",done:true},
-    {label:"Visa / e-visa",done:false},
-    {label:"Flights",done:true},
-    {label:"Accommodation",done:true},
-    {label:"Insurance",done:false},
-    {label:"SIM / eSIM",done:false},
-    {label:"Cash",done:false},
-    {label:"Power bank",done:true}
-  ],
-  remember:[
-    "Buy SIM at the airport",
-    "Download offline maps",
-    "Withdraw cash — markets are cash only",
-    "Check in online 24h before each flight",
-    "Exchange currency at gold shops for better rates"
-  ],
   rates:{ZAR:1,VND:0.00075,USD:18,EUR:20,"?":1}
 };
+/* The summary's "Travel checklist" IS the "Before we go" to-do list — one list,
+   two places to tick it. These are the old hardcoded checklist rows, merged in
+   as seeds so nothing was lost when the two were joined. */
 const SEED_TODOS={
-  pre:["Apply for e-visa","Travel insurance","Order Dong / USD cash","Book airport transfer home side",
+  pre:["Passport","Visa / e-visa","Flights","Accommodation","Insurance","SIM / eSIM","Cash","Power bank",
+    "Order Dong / USD cash","Book airport transfer home side",
     "Install Grab + offline Google Maps","Copy passports to cloud","Universal plug adapter","Motion sickness tablets"],
   trip:["Buy local SIM at airport","Get tailor measured in Hoi An (day 1 there!)","Confirm Hue walking tour",
-    "Book Memories Show seats","Reconfirm WeCozy check-in time"]
+    "Book Memories Show seats","Reconfirm WeCozy check-in time",
+    "Download offline maps","Withdraw cash — markets are cash only",
+    "Check in online 24h before each flight","Exchange currency at gold shops for better rates"]
 };
+/* One-off: phones that already seeded the old shorter list, and ticked the old
+   separate checklist, keep both — merge the checklist rows in with their state. */
+const LEGACY_CHECKLIST=["Passport","Visa / e-visa","Flights","Accommodation","Insurance","SIM / eSIM","Cash","Power bank"];
 const SEED_BINGO={
   food:{title:"Food Bingo",icon:"🍜",items:["Pho","Banh Mi","Egg Coffee","Coconut Coffee","Cao Lau (Hoi An)",
     "White Rose Dumplings","Mi Quang (Da Nang)","Banh Xeo","Bun Cha (Hanoi)","Fresh Spring Rolls",
@@ -633,7 +635,8 @@ function emptyState(a,b){
    un-prefixed keys, so existing phones keep their data), then the account id
    once Firebase auth lands. Keeping the namespace here means the sync layer
    just maps scope -> a per-member document. */
-const PERSONAL_KEYS=["todos","bingo","checklist","journal","todo_tab","bingo_tab","idseq"];
+/* the checklist is no longer its own thing — it's the "pre" to-dos */
+const PERSONAL_KEYS=["todos","bingo","journal","todo_tab","bingo_tab","idseq","checklist","checklist_merged"];
 const store={
   scope:"local",
   key(k){
@@ -658,7 +661,7 @@ const store={
     this.scope=prev;
   }
 };
-let TODOS,BINGO,CHECKS,idSeq,todoTab,bingoTab;
+let TODOS,BINGO,idSeq,todoTab,bingoTab;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -678,11 +681,26 @@ function loadPersonal(){
     }
     store.set("bingo",BINGO);
   }
-  CHECKS=store.get("checklist",null);
-  if(!CHECKS){CHECKS={};CONFIG.checklist.forEach(c=>CHECKS[c.label]=c.done);store.set("checklist",CHECKS);}
   idSeq=store.get("idseq",1000);
   todoTab=store.get("todo_tab","pre");
   bingoTab=store.get("bingo_tab","food");
+  mergeLegacyChecklist();   /* after idSeq — it mints ids */
+}
+/* The checklist used to be its own hardcoded list with its own tick state.
+   Fold any of those rows (and their ticks) into the pre-trip to-dos once, so
+   joining the two lists doesn't quietly throw away what someone had ticked. */
+function mergeLegacyChecklist(){
+  if(store.get("checklist_merged",false))return;
+  const old=store.get("checklist",null);
+  let changed=false;
+  LEGACY_CHECKLIST.forEach(label=>{
+    const existing=TODOS.find(t=>t.group==="pre"&&t.text.toLowerCase()===label.toLowerCase());
+    const wasDone=old?!!old[label]:false;
+    if(existing){ if(wasDone&&!existing.done){existing.done=true;changed=true;} }
+    else{ TODOS.push({id:newId("td"),text:label,group:"pre",done:wasDone}); changed=true; }
+  });
+  if(changed)store.set("todos",TODOS);
+  store.set("checklist_merged",true);
 }
 /* Switch to a person's private space. Called by the sync layer on sign-in. */
 function setScope(scope){
@@ -786,13 +804,13 @@ function viewSummary(){
         <span class="bar-val">${totalsToStr(c.t)}</span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(c.zar/maxZar*100))}%;background:${CAT_COLOR[c.cat]}"></div></div>
     </div>`).join("");
-  const checks=CONFIG.checklist.map(c=>{
-    const done=!!CHECKS[c.label];
-    return `<button class="chk ${done?"done":""}" data-chk="${esc(c.label)}">
-      <span class="box">${done?ico("check",12):""}</span><span class="lbl">${esc(c.label)}</span>
-    </button>`;
-  }).join("");
-  const remember=CONFIG.remember.map(r=>`<li>${esc(r)}</li>`).join("");
+  /* the checklist IS the "Before we go" to-do list — same data, ticked here too */
+  const pre=TODOS.filter(t=>t.group==="pre");
+  const preDone=pre.filter(t=>t.done).length;
+  const checks=pre.length?pre.map(t=>`
+    <button class="chk ${t.done?"done":""}" data-chk="${esc(t.id)}">
+      <span class="box">${t.done?ico("check",12):""}</span><span class="lbl">${esc(t.text)}</span>
+    </button>`).join(""):emptyState("Nothing to pack yet","Add items in To-Do's.");
   const todayBtn=ph.today!=null?`<button class="daynav-jump" id="jump-today" style="margin-top:10px;width:100%;padding:12px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:700;font-size:13px">Open today's plan →</button>`:"";
   return {title:"Trip Summary",html:`
     <div class="hero">
@@ -815,17 +833,22 @@ function viewSummary(){
         <span class="value" style="color:var(--red)">${totalsToStr(grand)}</span></div>
     </section>
     <section class="card">
-      <div class="card-title" style="color:var(--green)">${ico("check",14)} Travel checklist</div>
+      <div class="card-title" style="color:var(--green)">${ico("check",14)} Before we go
+        <span style="margin-left:auto;color:var(--grey-2);font-weight:700">${preDone}/${pre.length}</span></div>
+      ${pre.length?`<div class="progress"><i style="width:${Math.round(preDone/pre.length*100)}%"></i></div>`:""}
       ${checks}
-    </section>
-    <section class="notes-panel">
-      <div class="card-title" style="color:var(--gold-ink)">${ico("note",14)} Things to remember</div>
-      <ul>${remember}</ul>
+      <button id="open-todos" style="width:100%;margin-top:10px;padding:11px;border-radius:12px;
+        border:1px solid var(--border);color:var(--green);font-weight:700;font-size:12.5px">
+        Open To-Do's →</button>
     </section>`,
   wire(el){
+    /* ticking here ticks the real to-do — same list, two places */
     el.querySelectorAll("[data-chk]").forEach(b=>b.onclick=()=>{
-      CHECKS[b.dataset.chk]=!CHECKS[b.dataset.chk];store.set("checklist",CHECKS);render();
+      const t=TODOS.find(x=>x.id===b.dataset.chk);
+      if(t){t.done=!t.done;store.set("todos",TODOS);render();}
     });
+    const o=el.querySelector("#open-todos");
+    if(o)o.onclick=()=>{todoTab="pre";store.set("todo_tab","pre");go("todos");};
     const j=el.querySelector("#jump-today");
     if(j)j.onclick=()=>go("day/"+(tripPhase().today+1));
   }};
@@ -942,6 +965,8 @@ function viewDay(i){
     ${d.note&&d.note.trim()?`<section>
       <div class="card-title" style="color:var(--gold-ink)">${ico("note",13)} Notes</div>
       <div class="day-note">${esc(d.note)}</div></section>`:""}
+    <a class="editday" href="./builder/#day-${i+1}">${ico("grid",14)} Edit Day ${i+1}</a>
+    <div class="daynav-spacer"></div>
     <div class="daynav">
       <button id="prev-day" ${i===0?"disabled":""}>← Day ${i}</button>
       <button id="all-days">All days</button>
@@ -1390,7 +1415,7 @@ renderAcct({status:"connecting",user:null});   /* until/unless sync reports in *
 /* the sync layer calls into these after sign-in / on remote changes */
 window.VNApp={setScope,loadPersonal,render,store,
   reloadPlan(){D=loadPlan();render();},
-  get personal(){return{todos:TODOS,bingo:BINGO,checklist:CHECKS,journal:store.get("journal","")}}};
+  get personal(){return{todos:TODOS,bingo:BINGO,journal:store.get("journal","")}}};
 
 /* ============================================================ SERVICE WORKER (offline) */
 if("serviceWorker" in navigator&&location.protocol.startsWith("http")){

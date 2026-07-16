@@ -111,6 +111,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:60;
 /* ---------- day cards ---------- */
 .grid{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
 .day{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+/* flash the day the app deep-linked to, so it's obvious where you landed */
+.day-focus{animation:dayflash 2.4s ease-out}
+@keyframes dayflash{
+  0%,55%{box-shadow:0 0 0 3px var(--blue),0 8px 26px rgba(45,116,185,.3)}
+  100%{box-shadow:0 0 0 0 rgba(45,116,185,0)}
+}
+@media (prefers-reduced-motion:reduce){.day-focus{animation:none;box-shadow:0 0 0 3px var(--blue)}}
 .day-h{display:flex;flex-direction:column;gap:7px;padding:12px 14px;
   background:linear-gradient(120deg,var(--navy),#31517A);color:#fff}
 .day-h-top{display:flex;align-items:baseline;gap:8px}
@@ -489,7 +496,7 @@ function zoneHTML(d,i,cat){
   </div>`;
 }
 function dayCard(d,i){
-  return `<div class="day">
+  return `<div class="day" id="day-${i+1}">
     <div class="day-h">
       <div class="day-h-top"><span class="dn">Day ${i+1}</span><span class="dd">${esc(dayDate(i))}</span></div>
       <input class="day-name" data-day="${i}" placeholder="＋ name this day…" value="${esc(d.name||"")}" autocomplete="off">
@@ -902,7 +909,25 @@ palBackdrop.onclick=closePalette;
 const _openPicker=openPicker;
 openPicker=function(...a){ closePalette(); return _openPicker.apply(this,a); };
 
+/* ---------- deep link: the app links here as /builder/#day-5 ---------- */
+function focusDayFromHash(){
+  const m=(location.hash||"").match(/^#day-(\d+)$/);
+  if(!m)return;
+  const el=document.getElementById("day-"+m[1]);
+  if(!el)return;
+  const y=el.getBoundingClientRect().top+window.scrollY-(56+12);  /* clear the fixed bar */
+  window.scrollTo({top:Math.max(0,y)});
+  el.classList.add("day-focus");
+  setTimeout(()=>el.classList.remove("day-focus"),2400);
+}
+window.addEventListener("hashchange",focusDayFromHash);
+
 renderTabs(); renderLibrary(); renderBoard();
+/* On a fresh load the browser does its OWN jump to #day-N once it sees the id,
+   and that lands the card underneath the fixed app bar. Run after that so our
+   offset wins, not before it. */
+if(document.readyState==="complete")setTimeout(focusDayFromHash,0);
+else window.addEventListener("load",()=>setTimeout(focusDayFromHash,0));
 flag(state.savedAt?("Loaded · saved "+new Date(state.savedAt).toLocaleDateString()):"New trip");
 </script>
 

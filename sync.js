@@ -2,7 +2,8 @@
    Vietnam 2026 · sync layer
    ----------------------------------------------------------------------------
    Shared   : trips/vietnam2026                 — the plan (meta/items/days)
-   Personal : trips/vietnam2026/members/{uid}   — todos, bingo, checklist, journal
+   Personal : trips/vietnam2026/members/{uid}   — todos, bingo, journal
+              (the travel checklist is just the "pre" to-dos — one list)
 
    Design rules this file must never break:
 
@@ -29,7 +30,7 @@ const firebaseConfig = {
 };
 
 const BUILDER_LS_KEY = "vietnam_itinerary_builder_v2";
-const PERSONAL_KEYS = ["todos", "bingo", "checklist", "journal"];
+const PERSONAL_KEYS = ["todos", "bingo", "journal"];
 
 const listeners = new Set();
 /* `available` rides on the state itself. Readers must never have to reach back
