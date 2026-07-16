@@ -1,12 +1,15 @@
 /* Vietnam 2026 · offline service worker */
-const CACHE = "vn26-v1";
+/* Bump CACHE on every deploy, otherwise installed phones keep serving the old copy. */
+const CACHE = "vn26-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./builder/",
+  "./builder/index.html"
 ];
 
 self.addEventListener("install", e => {
@@ -27,14 +30,17 @@ self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin) return;
   if (e.request.mode === "navigate") {
+    /* Cache each page under its OWN url — the app and /builder/ are different
+       documents, so a single shared key would serve one in place of the other. */
+    const fallback = url.pathname.includes("/builder") ? "./builder/index.html" : "./index.html";
     e.respondWith(
       fetch(e.request)
         .then(r => {
           const copy = r.clone();
-          caches.open(CACHE).then(c => c.put("./index.html", copy));
+          caches.open(CACHE).then(c => c.put(e.request, copy));
           return r;
         })
-        .catch(() => caches.match("./index.html"))
+        .catch(() => caches.match(e.request).then(hit => hit || caches.match(fallback)))
     );
     return;
   }

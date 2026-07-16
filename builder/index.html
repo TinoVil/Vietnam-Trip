@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vietnam 2026 · Itinerary Builder</title>
+<meta name="theme-color" content="#0f9d76">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+:root{
+  --bg:#eef1f0; --panel:#ffffff; --panel2:#f5f8f7; --line:#e3e8e5;
+  --ink:#1d2a26; --mut:#62736d; --faint:#9aa8a3;
+  --jade:#0f9d76; --jade-d:#0c7e5e; --gold:#c98a1e; --rose:#d9544a; --sky:#2f7fd1;
+  --shadow:0 6px 20px rgba(31,45,41,.07);
+  --shadow-sm:0 1px 3px rgba(31,45,41,.06);
+  --r:14px;
+  --c-location:#2f7fd1; --c-transport:#c98a1e; --c-accommodation:#7c5cdb; --c-activities:#0f9d76;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:linear-gradient(165deg,#f3f6f5,#e7edeb);color:var(--ink);
+  font:14px/1.45 "Inter","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font:inherit;color:var(--ink)}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:#d4ddd9;border-radius:8px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#bcc8c3;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Header ---------- */
+header{display:flex;align-items:center;gap:16px;padding:11px 20px;
+  background:rgba(255,255,255,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:40;box-shadow:var(--shadow-sm)}
+.logo{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(150deg,var(--jade),var(--jade-d));color:#fff;font-weight:800;
+  font-size:14px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(15,157,118,.35)}
+.brand{display:flex;flex-direction:column;line-height:1.25}
+.brand b{font-size:16.5px;letter-spacing:-.2px}
+.brand small{color:var(--mut);font-size:11.5px}
+.hspace{flex:1}
+.hbtn{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--mut);font-weight:600;box-shadow:var(--shadow-sm)}
+.hbtn:hover{color:var(--jade-d);border-color:var(--jade)}
+.hbtn.primary{background:var(--jade);color:#fff;border-color:var(--jade)}
+.hbtn.primary:hover{background:var(--jade-d);color:#fff}
+.saveflag{font-size:11.5px;color:var(--faint);min-width:96px}
+
+/* ---------- Layout ---------- */
+.wrap{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 61px)}
+.palette{border-right:1px solid var(--line);background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
+.board{overflow:auto;padding:18px}
+
+/* ---------- Mobile / touch (iPhone) ----------
+   HTML5 drag-and-drop never fires on iOS touch, so on small screens the
+   palette becomes a slide-over and every assignment goes through the
+   existing tap picker (+ Add / tap a slot). */
+.palbackdrop{display:none}
+.mobile-only{display:none}
+@media (max-width:820px){
+  header{padding:9px 12px;gap:9px;padding-top:calc(9px + env(safe-area-inset-top))}
+  .brand small{display:none}
+  .saveflag{display:none}
+  .logo{width:32px;height:32px;font-size:12.5px;border-radius:9px}
+  .hbtn{padding:8px 10px;font-size:12px}
+  .hbtn .lbl{display:none}
+  .mobile-only{display:inline-grid}
+  /* File System Access API (Save/Copy to disk) doesn't exist on iOS Safari */
+  .desktop-only{display:none}
+  .wrap{grid-template-columns:1fr;height:auto}
+  .board{padding:12px 12px calc(24px + env(safe-area-inset-bottom));overflow:visible}
+  /* palette becomes a slide-over drawer */
+  .palette{position:fixed;top:0;bottom:0;left:0;width:min(330px,86vw);z-index:70;
+    transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.25,1);
+    box-shadow:14px 0 40px rgba(20,30,27,.22);padding-top:env(safe-area-inset-top)}
+  .palette.open{transform:none}
+  .palbackdrop{display:block;position:fixed;inset:0;background:rgba(20,30,27,.45);z-index:65;
+    opacity:0;pointer-events:none;transition:opacity .25s}
+  .palbackdrop.open{opacity:1;pointer-events:auto}
+  .grid{grid-template-columns:1fr;gap:12px}
+  .loc-slots{grid-template-columns:1fr 1fr}
+  .f2,.f3{grid-template-columns:1fr}
+  .ovl{padding:12px 10px calc(12px + env(safe-area-inset-bottom))}
+  .m-b{max-height:none}
+  .amen-grid{grid-template-columns:1fr 1fr;max-height:200px}
+  /* comfortable tap targets */
+  .iconbtn{width:32px;height:32px}
+  .chip{padding:9px 10px}
+  .chip .x{font-size:19px;padding:0 6px}
+  .zone-h .zadd{padding:6px 12px;font-size:12px}
+  .slot{min-height:54px}
+  .pick{padding:12px 11px}
+  .item{cursor:default}
+  .item .nm{padding-right:74px}
+}
+/* stop iOS auto-zoom on focus (needs >=16px) */
+@media (max-width:820px){
+  input,select,textarea,.fld input,.fld select,.fld textarea,.pal-add input{font-size:16px}
+}
+
+/* ---------- Palette ---------- */
+.pal-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:12px 12px 8px}
+.pchip{flex:1 1 auto;text-align:center;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;padding:7px 6px;color:var(--mut);font-size:12px;font-weight:600;white-space:nowrap;transition:.13s}
+.pchip:hover{color:var(--ink);border-color:#cfd9d5}
+.pchip.active{color:#fff;font-weight:700;box-shadow:var(--shadow-sm)}
+.pchip[data-cat="location"].active{background:var(--c-location);border-color:var(--c-location)}
+.pchip[data-cat="transport"].active{background:var(--c-transport);border-color:var(--c-transport)}
+.pchip[data-cat="accommodation"].active{background:var(--c-accommodation);border-color:var(--c-accommodation)}
+.pchip[data-cat="activities"].active{background:var(--c-activities);border-color:var(--c-activities)}
+.pal-sub{padding:6px 14px 4px;color:var(--faint);font-size:11px}
+.pal-add{display:flex;gap:6px;padding:2px 12px 10px;border-bottom:1px solid var(--line)}
+.pal-add input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.pal-add button{background:var(--jade);border:none;border-radius:8px;padding:0 14px;color:#fff;font-weight:700}
+.pal-list{flex:1;overflow:auto;padding:10px 12px 24px;display:flex;flex-direction:column;gap:8px}
+.pal-empty{color:var(--faint);text-align:center;padding:28px 10px;font-size:12.5px;line-height:1.6}
+
+.item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+  cursor:grab;border-left:3px solid var(--mut);position:relative;transition:.12s;box-shadow:var(--shadow-sm)}
+.item:hover{border-color:var(--jade);transform:translateY(-1px);box-shadow:0 4px 12px rgba(31,45,41,.1)}
+.item:active{cursor:grabbing}
+.item .nm{font-weight:600;font-size:13px;padding-right:52px}
+.item .mt{color:var(--mut);font-size:11.5px;margin-top:3px}
+.item[data-cat="location"]{border-left-color:var(--c-location)}
+.item[data-cat="transport"]{border-left-color:var(--c-transport)}
+.item[data-cat="accommodation"]{border-left-color:var(--c-accommodation)}
+.item[data-cat="activities"]{border-left-color:var(--c-activities)}
+.item .row-btns{position:absolute;top:7px;right:8px;display:flex;gap:4px}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:7px;width:24px;height:24px;
+  display:grid;place-items:center;color:var(--mut);font-size:12px;padding:0}
+.iconbtn:hover{color:var(--jade-d);border-color:var(--jade)}
+.iconbtn.del:hover{color:var(--rose);border-color:var(--rose)}
+
+/* ---------- Board ---------- */
+.board-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.board-head h2{margin:0;font-size:16px;font-weight:700}
+.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--mut);font-size:11.5px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.day-h{display:flex;flex-direction:column;gap:6px;padding:11px 14px;
+  background:linear-gradient(180deg,#f6faf8,#eef4f1);border-bottom:1px solid var(--line)}
+.day-h-top{display:flex;align-items:baseline;gap:8px}
+.day-h .dn{font-weight:800;color:var(--jade-d)}
+.day-h .dd{color:var(--mut);font-size:12px}
+.day-name{width:100%;background:transparent;border:1px solid transparent;border-radius:7px;
+  padding:4px 7px;margin-left:-7px;font-weight:700;font-size:13.5px;color:var(--ink)}
+.day-name::placeholder{color:var(--faint);font-weight:600}
+.day-name:hover{border-color:var(--line);background:rgba(255,255,255,.6)}
+.day-name:focus{outline:none;border-color:var(--jade);background:#fff}
+.day-note{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+  padding:8px 10px;resize:vertical;min-height:46px;font:inherit;color:var(--ink)}
+.day-note::placeholder{color:var(--faint)}
+.day-note:focus{outline:none;border-color:var(--jade);background:#fff}
+.day-body{padding:10px 12px 14px;display:flex;flex-direction:column;gap:12px}
+.zone-h{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.zone-h .zt{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mut)}
+.zone-h .zadd{margin-left:auto;background:var(--panel2);border:1px dashed var(--line);border-radius:7px;
+  padding:2px 9px;font-size:11px;color:var(--mut);font-weight:600}
+.zone-h .zadd:hover{color:var(--jade-d);border-color:var(--jade)}
+.zone{min-height:6px;display:flex;flex-direction:column;gap:6px}
+.zone.drop-ok{outline:2px dashed var(--jade);outline-offset:2px;border-radius:8px}
+.loc-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot{border:1px dashed var(--line);border-radius:9px;padding:7px 9px;min-height:44px;background:var(--panel2)}
+.slot .sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--faint)}
+.slot.drop-ok{outline:2px dashed var(--c-location);outline-offset:1px}
+.slot.filled{background:#eaf2fb;border-style:solid;border-color:#cfe0f4}
+
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:9px;padding:7px 9px;font-size:12.5px;border-left:3px solid var(--mut)}
+.chip[data-cat="location"]{border-left-color:var(--c-location)}
+.chip[data-cat="transport"]{border-left-color:var(--c-transport)}
+.chip[data-cat="accommodation"]{border-left-color:var(--c-accommodation)}
+.chip[data-cat="activities"]{border-left-color:var(--c-activities)}
+.chip .cn{font-weight:600;flex:1;cursor:pointer}
+.chip .cn:hover{color:var(--jade-d)}
+.chip .cm{color:var(--faint);font-size:11px}
+.chip .x{background:none;border:none;color:var(--faint);font-size:15px;line-height:1;padding:0 2px}
+.chip .x:hover{color:var(--rose)}
+.zone .empty{color:var(--faint);font-size:11.5px;font-style:italic;padding:2px 2px}
+
+/* ---------- Modal ---------- */
+.ovl{position:fixed;inset:0;background:rgba(20,30,27,.42);backdrop-filter:blur(3px);z-index:60;
+  display:none;align-items:flex-start;justify-content:center;padding:34px 16px;overflow:auto}
+.ovl.show{display:flex}
+.modal{background:var(--panel);border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 60px rgba(20,30,27,.28);
+  border:1px solid var(--line);overflow:hidden}
+.modal.wide{max-width:820px}
+.m-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#f8fbf9,#f1f6f3)}
+.m-h b{font-size:15px}
+.m-h .tagcat{font-size:11px;font-weight:700;color:#fff;padding:2px 9px;border-radius:999px}
+.m-h .x{margin-left:auto;background:none;border:none;font-size:20px;color:var(--mut);padding:0 4px}
+.m-h .x:hover{color:var(--rose)}
+.m-b{padding:16px 18px;display:flex;flex-direction:column;gap:13px;max-height:70vh;overflow:auto}
+.m-f{padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;background:var(--panel2)}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:11.5px;font-weight:700;color:var(--mut);letter-spacing:.2px}
+.fld input,.fld select,.fld textarea{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%}
+.fld textarea{resize:vertical;min-height:64px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.sec{border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--panel2)}
+.sec h4{margin:0 0 9px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--jade-d)}
+.checks{display:flex;flex-wrap:wrap;gap:7px}
+.chk{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;user-select:none}
+.chk input{margin:0;accent-color:var(--jade)}
+.chk.on{border-color:var(--jade);background:#eaf7f2;color:var(--jade-d);font-weight:600}
+.amen-tools{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
+.amen-tools input#e_amen_search{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+.amen-tools .chk{padding:5px 10px;font-size:12px}
+.amen-tools #e_amen_count{margin-left:auto}
+.amen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:240px;overflow:auto;padding-right:4px}
+.amen-grid .chk{font-size:12px;padding:5px 9px}
+.amen-grid .chk.hide{display:none}
+.radio-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mini{font-size:11px;color:var(--faint)}
+.btn{background:var(--jade);border:none;border-radius:9px;padding:9px 18px;color:#fff;font-weight:700}
+.btn:hover{background:var(--jade-d)}
+.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
+.btn.ghost:hover{color:var(--jade-d);border-color:var(--jade)}
+.btn.danger{background:none;border:1px solid var(--line);color:var(--rose);margin-right:auto}
+.btn.danger:hover{background:#fdeceb;border-color:var(--rose)}
+
+/* to-do */
+.todo-add{display:flex;gap:7px;flex-wrap:wrap}
+.todo-add #td_text{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.todo-add #td_date,.todo-add #td_time{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
+.todo-add #td_add{background:var(--jade);border:none;border-radius:9px;padding:0 16px;color:#fff;font-weight:700}
+.todo-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.todo-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel2)}
+.todo-row .tc{width:17px;height:17px;accent-color:var(--jade);flex:none}
+.todo-row .tt{flex:1;font-weight:600;cursor:pointer}
+.todo-row .tt:hover{color:var(--jade-d)}
+.todo-row .tbadge{font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap}
+.todo-row .tb,.todo-row .tbt{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:12px}
+.todo-row .tbt{width:96px}
+.todo-row .tx{background:none;border:none;color:var(--faint);font-size:17px;line-height:1;padding:0 2px}
+.todo-row .tx:hover{color:var(--rose)}
+.todo-row.done{opacity:.6}
+.todo-row.done .tt{text-decoration:line-through;color:var(--mut);font-weight:500}
+.todo-row.overdue{border-color:#e7b4af;background:#fdf1f0}
+.todo-row.overdue .tbadge{color:var(--rose)}
+.rep-todo{border:1px solid #e3e8e5;border-radius:12px;padding:14px 18px;margin-bottom:22px;background:#f8fbf9}
+.rep-todo h2{margin:0 0 10px;font-size:16px;color:#0c7e5e}
+.rep-todo .rt{padding:4px 0;font-size:13.5px;border-bottom:1px solid #eef2f0}
+.rep-todo .rt:last-child{border-bottom:none}
+.rep-todo .rt span{color:#8a6d1e}
+.rep-todo .rt.done{color:#9aa8a3}.rep-todo .rt.done b{text-decoration:line-through;font-weight:500}
+.rep-todo .rt.overdue span{color:#c0392b}
+
+/* picker */
+.pick-list{display:flex;flex-direction:column;gap:7px}
+.pick{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2)}
+.pick:hover{border-color:var(--jade);background:#eef8f4}
+.pick .pn{font-weight:600;flex:1}
+.pick .pm{font-size:11px;color:var(--faint)}
+
+/* ---------- Report ---------- */
+#report{position:fixed;inset:0;background:#fff;z-index:80;display:none;overflow:auto}
+#report.show{display:block}
+.rep-bar{position:sticky;top:0;display:flex;gap:10px;align-items:center;padding:12px 22px;
+  background:var(--jade-d);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:2}
+.rep-bar b{font-size:15px;flex:1}
+.rep-bar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;
+  border-radius:8px;padding:7px 15px;font-weight:600}
+.rep-bar button:hover{background:rgba(255,255,255,.28)}
+.rep-body{max-width:900px;margin:0 auto;padding:30px 26px 80px}
+.rep-body h1{font-size:26px;margin:0 0 4px}
+.rep-body .rsub{color:#667;margin:0 0 24px;font-size:14px}
+.rep-day{border:1px solid #e3e8e5;border-radius:12px;margin-bottom:18px;overflow:hidden;page-break-inside:avoid}
+.rep-day-h{background:#f1f6f3;padding:12px 18px;border-bottom:1px solid #e3e8e5}
+.rep-day-h b{font-size:16px;color:#0c7e5e}
+.rep-day-h em{font-style:normal;font-weight:700;color:#1d2a26;margin-left:8px}
+.rep-day-h span{color:#667;margin-left:8px}
+.rep-day-b{padding:14px 18px}
+.rep-note{white-space:pre-wrap;color:#3c4a44;font-size:13px;line-height:1.6;background:#f7faf9;border:1px solid #e3e8e5;border-radius:8px;padding:8px 11px}
+.rep-block{margin-bottom:14px}
+.rep-block:last-child{margin-bottom:0}
+.rep-block .rblab{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a978f;margin-bottom:6px}
+.rep-el{border-left:3px solid #ccc;padding:2px 0 2px 12px;margin-bottom:10px}
+.rep-el .ren{font-weight:700;font-size:14px}
+.rep-el .redt{font-size:12.5px;color:#48544f;margin-top:3px;line-height:1.6}
+.rep-el .redt b{color:#2a332f}
+.rep-el.location{border-left-color:var(--c-location)}
+.rep-el.transport{border-left-color:var(--c-transport)}
+.rep-el.accommodation{border-left-color:var(--c-accommodation)}
+.rep-el.activities{border-left-color:var(--c-activities)}
+.rep-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.rep-tags span{font-size:11px;background:#eef4f1;border:1px solid #dbe6e1;border-radius:6px;padding:1px 8px;color:#3c4a44}
+.rep-empty{color:#9aa8a3;font-style:italic}
+@media print{
+  .rep-bar{display:none}
+  #report{position:static}
+  body{background:#fff}
+}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;height:auto}
+  .palette{height:auto;max-height:46vh;border-right:none;border-bottom:1px solid var(--line)}
+  .board{height:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="hbtn mobile-only" id="btnPalette" title="Item library" style="place-items:center">☰</button>
+  <div class="logo">VN</div>
+  <div class="brand"><b id="brandTitle">Vietnam 2026</b><small>Itinerary Builder</small></div>
+  <div class="hspace"></div>
+  <span class="saveflag" id="saveflag">Autosaved · 17:20</span>
+  <a class="hbtn" id="btnApp" href="../" title="Open the trip app">📱<span class="lbl"> App</span></a>
+  <button class="hbtn" id="btnSetup">⚙<span class="lbl"> Trip Setup</span></button>
+  <button class="hbtn" id="btnTodo">✓<span class="lbl"> To-Do</span></button>
+  <button class="hbtn" id="btnReport">📄<span class="lbl"> Export Report</span></button>
+  <button class="hbtn desktop-only" id="btnSaveCopy" title="Download a backup copy to Downloads">⬇<span class="lbl"> Copy</span></button>
+  <button class="hbtn primary desktop-only" id="btnSave" title="Overwrite Vietnam_Itinerary_Builder.html (pick it once, then it saves silently)">💾<span class="lbl"> Save</span></button>
+</header>
+
+<div class="palbackdrop" id="palBackdrop"></div>
+<div class="wrap">
+  <!-- LIBRARY -->
+  <aside class="palette" id="palette">
+    <div class="pal-tabs" id="palTabs"></div>
+    <div class="pal-sub" id="palSub">9 items · drag onto a day, or use “+ Add”</div>
+    <div class="pal-add">
+      <input id="newItemName" placeholder="New item name…" autocomplete="off">
+      <button id="btnAddItem">Add</button>
+    </div>
+    <div class="pal-list" id="palList"></div>
+  </aside>
+
+  <!-- BOARD -->
+  <main class="board">
+    <div class="board-head">
+      <h2 id="boardTitle">Vietnam 2026 — Itinerary</h2>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--c-location)"></i>Location</span>
+        <span><i class="dot" style="background:var(--c-transport)"></i>Transport</span>
+        <span><i class="dot" style="background:var(--c-accommodation)"></i>Accommodation</span>
+        <span><i class="dot" style="background:var(--c-activities)"></i>Activities</span>
+      </div>
+    </div>
+    <div class="grid" id="board"></div>
+  </main>
+</div>
+
+<!-- Editor / picker / setup overlays -->
+<div class="ovl" id="ovlEdit"><div class="modal wide" id="editModal"></div></div>
+<div class="ovl" id="ovlPick"><div class="modal" id="pickModal"></div></div>
+<div class="ovl" id="ovlSetup"><div class="modal" id="setupModal"></div></div>
+<div class="ovl" id="ovlTodo"><div class="modal" id="todoModal"></div></div>
+
+<!-- Report -->
+<div id="report">
+  <div class="rep-bar">
+    <b>Itinerary Report</b>
+    <button onclick="window.print()">🖨 Print / Save PDF</button>
+    <button onclick="closeReport()">✕ Close</button>
+  </div>
+  <div class="rep-body" id="repBody"></div>
+</div>
+
+<!-- Persisted state lives here, inside the HTML itself -->
+<script id="trip-data" type="application/json">{"meta":{"title":"Vietnam 2026","startDate":"2026-08-20","numDays":16},"items":{"location":[{"id":"imrj68w2f20p9","cat":"location","name":"Da Nang"},{"id":"imrj6a2cf14v7","cat":"location","name":"Hoi An"},{"id":"imrj6ajy017kf","cat":"location","name":"Hue"},{"id":"imrj6bdg41bwv","cat":"location","name":"Hanoi"}],"transport":[{"id":"imrj75s6lo19","cat":"transport","name":"Airport Shuttle - Sofiana","tcat":"Organised","cost":"0","duration":"","pickup":"Da Nang Airport","dropoff":"Sofiana","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0i6qaj41","cat":"transport","name":"Grab App","tcat":"Taxi","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0ivhz1ook","cat":"transport","name":"Heritage Train - Danang","tcat":"Train","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0k2uh1sek","cat":"transport","name":"Sleeper Bus","tcat":"Bus","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0kcsn21a0","cat":"transport","name":"Hue to Hanoi Flight","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0v3t61thd","cat":"transport","name":"Flight into Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0vk122ps","cat":"transport","name":"Flight out of Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""}],"accommodation":[{"id":"imrj6cjrz1f1q","cat":"accommodation","name":"Sofiana My Khe Hotel & Spa","checkinDate":"2026-08-21","checkinTime":"14:00","checkoutDate":"2026-08-24","checkoutTime":"12:00","cost":"R3095","address":"54-56 Tran Bach Dang, Danang, Vietnam","url":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":"0"},"shuttle":{"status":"included","cost":"0"},"amenities":["Air conditioning","Terrace","Hairdryer","Electric kettle","Socket near the bed","Wake-Up Service"]},{"id":"imrj71yzn23vf","cat":"accommodation","name":"Nolia Hoi An","checkinDate":"2026-08-24","checkinTime":"14:00","checkoutDate":"2026-08-27","checkoutTime":"12:00","cost":"1917","address":"Cầu Hói Muống Street Số 01 - 02, 50000 Hoi An, Vietnam","url":"https://www.noliahoian.com/","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Free Bicycles Rental"],"cancelDate":"","cancelTime":""},{"id":"imrj76qq6124z","cat":"accommodation","name":"Gahi Homestay","checkinDate":"2026-08-27","checkinTime":"14:00","checkoutDate":"2026-08-30","checkoutTime":"12:00","cost":"R1644","address":"103 Dang Van Ngu, Hue, Vietnam","url":"","cancelDate":"","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":true,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Barbecue"]},{"id":"imrj771b220ym","cat":"accommodation","name":"Radison Red","checkinDate":"2026-09-03","checkinTime":"14:00","checkoutDate":"2026-09-04","checkoutTime":"18:00","cost":"0","address":"90 Vo Nguyen Gliap, Son Tra Ward, Da Nang, Vietnam","url":"https://www.radissonhotels.com/vi-vn/hotels/radisson-red-danang?msockid=2c25fde442166cf105c6ebfc43886d30","cancelDate":"","cancelTime":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]},{"id":"imrm0cw5dkoe","cat":"accommodation","name":"WeCozy","checkinDate":"2026-08-30","checkinTime":"15:00","checkoutDate":"2026-09-03","checkoutTime":"12:00","cost":"5359","address":"20 Tong Duy Tan, Hoan Kiem, Hanoi, Vietnam","url":"","cancelDate":"2026-08-24","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":false,"other":"Two Bedroom Apartment"},"breakfast":{"status":"","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]}],"activities":[{"id":"imrksfkmvjhd","cat":"activities","name":"My Sun Sanctuary Tour","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrksto2922bw","cat":"activities","name":"Memories Show","timeStart":"","timeEnd":"","location":"Hoi An","website":"https://www.getyourguide.com/hoi-an-l831/hoi-an-memories-show-hoi-an-impression-theme-park-qrticket-t481283/?ranking_uuid=e3163bfa-9558-4a58-a30e-d9b82484a45c&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"778","cancelDate":"","cancelTime":""},{"id":"imrkt45d21jju","cat":"activities","name":"City of Ghosts Cemetary","timeStart":"","timeEnd":"","location":"Hue","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm6ld9t18c7","cat":"activities","name":"Teh Dar: Unique Bamboo Circus","timeStart":"","timeEnd":"","location":"Hoi An Lune Center 1A Nguyen Phuc Chu, Minh An Ward, Hoi An, Quang Nam, Vietnam","website":"https://www.getyourguide.com/hoi-an-l831/teh-dar-vietnamese-tribal-culture-at-saigon-opera-house-t83301/?ranking_uuid=d0b089c1-8f05-422f-bb27-9a198db2d23e&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"908","cancelDate":"","cancelTime":""},{"id":"imrm7bk3nrgb","cat":"activities","name":"Hue Imperial Ancient City Walking Tour","timeStart":"","timeEnd":"","location":"FH9H+3XJ Phu Xuan, Hue, Vietnam","website":"https://www.getyourguide.com/hue-vietnam-l833/hue-imperial-ancient-city-walking-tour-t848289/?ranking_uuid=ebcd110b-f6b4-47ed-a0d5-6e71f4301999&q=Hue%2C+Vietnam&date_from=2026-08-27&date_to=2026-08-30&adults=2","cost":"366","cancelDate":"","cancelTime":""},{"id":"imrm7rgm82513","cat":"activities","name":"Hue Tombs","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm7voc51uso","cat":"activities","name":"Water Puppet Show","timeStart":"","timeEnd":"","location":"31 Lo Su, Hoan Kiem, Hanoi","website":"https://www.getyourguide.com/hanoi-l205/hanoi-water-puppet-tickets-with-hotel-delivery-t62912/?ranking_uuid=aa6c3c27-9032-4efc-afce-2472bd035eca&q=Hanoi&date_from=2026-08-31&date_to=2026-09-03&adults=2","cost":"230","cancelDate":"","cancelTime":""},{"id":"imrm7wqip14tb","cat":"activities","name":"Spa Day","timeStart":"","timeEnd":"","location":"","website":"","cost":"2000","cancelDate":"","cancelTime":""},{"id":"imrm80a1t1w53","cat":"activities","name":"Old Quarter Street Food Tour","timeStart":"","timeEnd":"","location":"38 Bát Sứ street","website":"","cost":"734","cancelDate":"","cancelTime":""}]},"days":[{"name":"Travel Day","note":"","locStart":null,"locEnd":null,"transport":[],"accommodation":[],"activities":[]},{"name":"Landing Day","note":"","locStart":null,"locEnd":"imrj68w2f20p9","transport":["imrj75s6lo19","imrm0v3t61thd"],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Shopping Vibe","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Heritage at Danang","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":["imrksfkmvjhd"]},{"name":"Travel Day","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj6a2cf14v7","transport":["imrm0i6qaj41"],"accommodation":["imrj71yzn23vf"],"activities":[]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrksto2922bw"]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrm6ld9t18c7"]},{"name":"Travel Day","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6ajy017kf","transport":["imrm0i6qaj41","imrm0ivhz1ook"],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":["imrm7bk3nrgb","imrm7rgm82513"]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"Travel Day","note":"","locStart":"imrj6ajy017kf","locEnd":null,"transport":["imrm0kcsn21a0","imrm0k2uh1sek"],"accommodation":["imrj76qq6124z"],"activities":["imrkt45d21jju"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":[]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7voc51uso","imrm80a1t1w53"]},{"name":"Spa Day","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7wqip14tb"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj771b220ym"],"activities":[]},{"name":"","note":"","locStart":"imrj68w2f20p9","locEnd":null,"transport":["imrm0vk122ps"],"accommodation":[],"activities":[]}],"savedAt":1784128845078,"todos":[]}</script>
+
+<script>
+"use strict";
+/* ============================================================= CONFIG */
+const CATS = [
+  {key:"location",      label:"Locations",     one:"Location"},
+  {key:"transport",     label:"Transport",     one:"Transport"},
+  {key:"accommodation", label:"Accommodation", one:"Accommodation"},
+  {key:"activities",    label:"Activities",    one:"Activity"}
+];
+const CAT_COLOR = {location:"--c-location",transport:"--c-transport",accommodation:"--c-accommodation",activities:"--c-activities"};
+const TRANSPORT_CATS = ["Flight","Bus","Train","Taxi","Organised"];
+const AMENITIES = [
+  "Air conditioning","Free WiFi","Flat-screen TV","Balcony","Terrace","City view","Landmark view",
+  "Soundproofing","Private kitchen","Kitchenette","Kitchenware","Attached bathroom","Shared toilet",
+  "Free toiletries","Shower","Bidet","Toilet","Toilet paper","Towels","Linens","Slippers","Hairdryer",
+  "Washing machine","Dryer","Iron","Ironing facilities","Drying rack for clothing","Clothes rack",
+  "Wardrobe or closet","Walk-in closet","Suit press","Desk","Seating area","Dining area","Dining table",
+  "Refrigerator","Microwave","Electric kettle","Stovetop","Fireplace","Heating","Fan","Telephone",
+  "Satellite channels","Cable channels","Socket near the bed","Cleaning products","Hypoallergenic",
+  "Hardwood or parquet floors","Private entrance","Outdoor furniture","Outdoor dining area",
+  "Executive lounge access","Upper floors accessible by elevator","Entire unit wheelchair accessible",
+  "Child safety socket covers","Baby safety gates","Hand sanitizer","Sanitizer"
+];
+const LS_KEY = "vietnam_itinerary_builder_v2";
+
+/* ============================================================= STATE */
+let state = loadState();
+let activeCat = "location";
+
+function defaultState(){
+  return {
+    meta:{title:"Vietnam 2026", startDate:"", numDays:15},
+    items:{location:[],transport:[],accommodation:[],activities:[]},
+    todos:[],
+    days: Array.from({length:15}, emptyDay),
+    savedAt:0
+  };
+}
+function emptyDay(){ return {name:"", note:"", locStart:null, locEnd:null, transport:[], accommodation:[], activities:[]}; }
+function uid(){ return "i"+Date.now().toString(36)+Math.floor(Math.random()*1e5).toString(36); }
+
+function loadState(){
+  let embedded=null, ls=null;
+  try{ const t=document.getElementById("trip-data").textContent.trim(); if(t && t!=="{}") embedded=JSON.parse(t); }catch(e){}
+  try{ const t=localStorage.getItem(LS_KEY); if(t) ls=JSON.parse(t); }catch(e){}
+  let s=null;
+  if(embedded && ls) s = (ls.savedAt||0) >= (embedded.savedAt||0) ? ls : embedded;
+  else s = embedded || ls;
+  if(!s) return defaultState();
+  return migrate(s);
+}
+function migrate(s){
+  s.meta = Object.assign({title:"Vietnam 2026",startDate:"",numDays:15}, s.meta||{});
+  s.items = Object.assign({location:[],transport:[],accommodation:[],activities:[]}, s.items||{});
+  if(!Array.isArray(s.todos)) s.todos=[];
+  if(!Array.isArray(s.days)) s.days=[];
+  const n=s.meta.numDays||s.days.length||15;
+  while(s.days.length<n) s.days.push(emptyDay());
+  s.days.length=n;
+  s.days=s.days.map(d=>Object.assign(emptyDay(),d));
+  s.meta.numDays=n;
+  return s;
+}
+function autosave(){
+  state.savedAt=Date.now();
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  flag("Autosaved · "+timeStr());
+}
+function timeStr(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function flag(t){ document.getElementById("saveflag").textContent=t; }
+
+/* ============================================================= HELPERS */
+function getItem(id){ for(const c of CATS){ const f=state.items[c.key].find(x=>x.id===id); if(f) return f; } return null; }
+function itemCat(id){ for(const c of CATS){ if(state.items[c.key].some(x=>x.id===id)) return c.key; } return null; }
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function money(v){ v=(v==null?"":String(v)).trim(); if(!v) return ""; return /^[\d.,\s]+$/.test(v)? v : v; }
+
+function newItem(cat,name){
+  const base={id:uid(), cat, name:name||"Untitled"};
+  if(cat==="location") return base;
+  if(cat==="transport") return Object.assign(base,{tcat:"Flight",cost:"",duration:"",pickup:"",dropoff:"",
+    airline:"",boardingTime:"",gate:"",seat:"",lounge:"",busName:"",plate:"",cancelDate:"",cancelTime:"",notes:""});
+  if(cat==="accommodation") return Object.assign(base,{
+    checkinDate:"",checkinTime:"",checkoutDate:"",checkoutTime:"",cost:"",address:"",url:"",cancelDate:"",cancelTime:"",
+    beds:{twin:false,doubleShared:false,doubleEach:false,other:""},
+    breakfast:{status:"",cost:""}, shuttle:{status:"",cost:""}, amenities:[]
+  });
+  if(cat==="activities") return Object.assign(base,{timeStart:"",timeEnd:"",location:"",website:"",cost:"",cancelDate:"",cancelTime:""});
+  return base;
+}
+
+/* short summary line shown on library chips + day chips */
+function summary(it){
+  if(!it) return "";
+  if(it.cat==="location") return "";
+  if(it.cat==="transport"){ const p=[it.tcat]; const who=it.airline||it.busName; if(who)p.push(who); if(it.seat)p.push("Seat "+it.seat); if(it.duration)p.push(it.duration); if(it.cost)p.push(money(it.cost)); return p.filter(Boolean).join(" · "); }
+  if(it.cat==="accommodation"){ const p=[]; if(it.checkinDate)p.push("in "+it.checkinDate); if(it.cost)p.push(money(it.cost)); return p.join(" · "); }
+  if(it.cat==="activities"){ const p=[]; if(it.timeStart)p.push(it.timeStart+(it.timeEnd?"–"+it.timeEnd:"")); if(it.cost)p.push(money(it.cost)); return p.join(" · "); }
+  return "";
+}
+
+/* ============================================================= LIBRARY UI */
+function renderTabs(){
+  const el=document.getElementById("palTabs");
+  el.innerHTML = CATS.map(c=>`<button class="pchip ${c.key===activeCat?"active":""}" data-cat="${c.key}">${c.label}</button>`).join("");
+  el.querySelectorAll(".pchip").forEach(b=>b.onclick=()=>{ activeCat=b.dataset.cat; renderTabs(); renderLibrary(); });
+}
+function renderLibrary(){
+  const cat=activeCat, list=state.items[cat];
+  document.getElementById("palSub").textContent =
+    cat==="location" ? "Locations (start / end points — no details)" :
+    `${list.length} item${list.length!==1?"s":""} · drag onto a day, or use “+ Add”`;
+  const el=document.getElementById("palList");
+  if(!list.length){ el.innerHTML=`<div class="pal-empty">No ${CATS.find(c=>c.key===cat).label.toLowerCase()} yet.<br>Type a name above and click <b>Add</b> to create one.</div>`; return; }
+  el.innerHTML = list.map(it=>{
+    const s=summary(it);
+    return `<div class="item" data-cat="${it.cat}" draggable="true" data-id="${it.id}">
+      <div class="nm">${esc(it.name)}</div>
+      ${s?`<div class="mt">${esc(s)}</div>`:""}
+      <div class="row-btns">
+        ${it.cat!=="location"?`<button class="iconbtn" data-act="edit" title="Edit details">✎</button>`:`<button class="iconbtn" data-act="rename" title="Rename">✎</button>`}
+        <button class="iconbtn del" data-act="del" title="Delete item">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".item").forEach(node=>{
+    const id=node.dataset.id;
+    node.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain",id); e.dataTransfer.effectAllowed="copy"; });
+    node.querySelector('[data-act="del"]').onclick=e=>{ e.stopPropagation(); delItem(id); };
+    const editBtn=node.querySelector('[data-act="edit"]'); if(editBtn) editBtn.onclick=e=>{ e.stopPropagation(); openEditor(id); };
+    const renBtn=node.querySelector('[data-act="rename"]'); if(renBtn) renBtn.onclick=e=>{ e.stopPropagation(); renameItem(id); };
+    node.querySelector(".nm").onclick=()=>{ it_cat(id)==="location"?renameItem(id):openEditor(id); };
+  });
+}
+function it_cat(id){ return itemCat(id); }
+
+function addItem(){
+  const inp=document.getElementById("newItemName");
+  const name=inp.value.trim(); if(!name) return;
+  const it=newItem(activeCat,name);
+  state.items[activeCat].push(it);
+  inp.value=""; autosave(); renderLibrary();
+  if(activeCat!=="location") openEditor(it.id);
+}
+function renameItem(id){
+  const it=getItem(id); if(!it) return;
+  const v=prompt("Item name:", it.name); if(v==null) return;
+  it.name=v.trim()||it.name; autosave(); renderLibrary(); renderBoard();
+}
+function delItem(id){
+  const it=getItem(id); if(!it) return;
+  if(!confirm(`Delete “${it.name}”? It will be removed from all days.`)) return;
+  const cat=it.cat;
+  state.items[cat]=state.items[cat].filter(x=>x.id!==id);
+  state.days.forEach(d=>{
+    if(d.locStart===id) d.locStart=null;
+    if(d.locEnd===id) d.locEnd=null;
+    d.transport=d.transport.filter(x=>x!==id);
+    d.accommodation=d.accommodation.filter(x=>x!==id);
+    d.activities=d.activities.filter(x=>x!==id);
+  });
+  autosave(); renderLibrary(); renderBoard();
+}
+
+/* ============================================================= BOARD UI */
+function dayDate(i){
+  if(!state.meta.startDate) return "";
+  const p=state.meta.startDate.split("-").map(Number);
+  if(p.length!==3) return "";
+  const d=new Date(p[0],p[1]-1,p[2]); d.setDate(d.getDate()+i);
+  return d.toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short"});
+}
+function renderBoard(){
+  document.getElementById("boardTitle").textContent = state.meta.title+" — Itinerary";
+  document.getElementById("brandTitle").textContent = state.meta.title;
+  const el=document.getElementById("board");
+  el.innerHTML = state.days.map((d,i)=>dayCard(d,i)).join("");
+  wireBoard();
+}
+function chipHTML(id){
+  const it=getItem(id); if(!it) return "";
+  const s=summary(it);
+  return `<div class="chip" data-cat="${it.cat}" data-id="${it.id}">
+    <span class="cn" title="Edit details">${esc(it.name)}</span>
+    ${s?`<span class="cm">${esc(s)}</span>`:""}
+    <button class="x" title="Remove from day">×</button>
+  </div>`;
+}
+function slotHTML(d,i,which){
+  const id=which==="start"?d.locStart:d.locEnd;
+  const it=id?getItem(id):null;
+  return `<div class="slot ${it?"filled":""}" data-day="${i}" data-slot="${which}">
+    <div class="sl">${which==="start"?"Start":"End"}</div>
+    ${it?`<div class="chip" data-cat="location" data-id="${it.id}" style="margin-top:5px">
+        <span class="cn">${esc(it.name)}</span><button class="x" title="Clear">×</button></div>`
+      :`<div class="empty">drop / + add</div>`}
+  </div>`;
+}
+function zoneHTML(d,i,cat){
+  const ids=d[cat];
+  const label=cat==="transport"?"Transport":cat==="accommodation"?"Accommodation":"Activities";
+  return `<div>
+    <div class="zone-h">
+      <span class="dot" style="background:var(${CAT_COLOR[cat]})"></span>
+      <span class="zt">${label}</span>
+      <button class="zadd" data-day="${i}" data-zone="${cat}">+ Add</button>
+    </div>
+    <div class="zone" data-day="${i}" data-zone="${cat}">
+      ${ids.length?ids.map(chipHTML).join(""):`<div class="empty">none</div>`}
+    </div>
+  </div>`;
+}
+function dayCard(d,i){
+  return `<div class="day">
+    <div class="day-h">
+      <div class="day-h-top"><span class="dn">Day ${i+1}</span><span class="dd">${esc(dayDate(i))}</span></div>
+      <input class="day-name" data-day="${i}" placeholder="＋ name this day…" value="${esc(d.name||"")}" autocomplete="off">
+    </div>
+    <div class="day-body">
+      <div>
+        <div class="zone-h"><span class="dot" style="background:var(--c-location)"></span><span class="zt">Location</span></div>
+        <div class="loc-slots">${slotHTML(d,i,"start")}${slotHTML(d,i,"end")}</div>
+      </div>
+      ${zoneHTML(d,i,"transport")}
+      ${zoneHTML(d,i,"accommodation")}
+      ${zoneHTML(d,i,"activities")}
+      <div>
+        <div class="zone-h"><span class="dot" style="background:var(--faint)"></span><span class="zt">Notes</span></div>
+        <textarea class="day-note" data-day="${i}" placeholder="Day notes, reminders, ideas…">${esc(d.note||"")}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+function wireBoard(){
+  const board=document.getElementById("board");
+  // chip edit + remove
+  board.querySelectorAll(".chip").forEach(chip=>{
+    const id=chip.dataset.id;
+    const cn=chip.querySelector(".cn"); if(cn) cn.onclick=()=>{ itemCat(id)==="location"?renameItem(id):openEditor(id); };
+    const x=chip.querySelector(".x"); if(x) x.onclick=()=>removeFromDay(chip);
+  });
+  // + Add buttons (zones)
+  board.querySelectorAll(".zadd").forEach(b=>b.onclick=()=>openPicker(+b.dataset.day,b.dataset.zone));
+  // slot add via click empty
+  board.querySelectorAll(".slot").forEach(slot=>{
+    const empty=slot.querySelector(".empty");
+    if(empty) empty.onclick=()=>openPicker(+slot.dataset.day,"location",slot.dataset.slot);
+    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("drop-ok");});
+    slot.addEventListener("dragleave",()=>slot.classList.remove("drop-ok"));
+    slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("drop-ok");
+      const id=e.dataTransfer.getData("text/plain"); if(itemCat(id)!=="location") return;
+      const day=+slot.dataset.day; state.days[day][slot.dataset.slot==="start"?"locStart":"locEnd"]=id; autosave(); renderBoard();
+    });
+  });
+  // zone drop
+  board.querySelectorAll(".zone").forEach(zone=>{
+    zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("drop-ok");});
+    zone.addEventListener("dragleave",()=>zone.classList.remove("drop-ok"));
+    zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("drop-ok");
+      const id=e.dataTransfer.getData("text/plain"); const zc=zone.dataset.zone;
+      if(itemCat(id)!==zc) return;
+      const day=+zone.dataset.day; if(!state.days[day][zc].includes(id)) state.days[day][zc].push(id);
+      autosave(); renderBoard();
+    });
+  });
+  // day name + notes (update state on input without re-render so focus is kept; persist on blur)
+  board.querySelectorAll(".day-name").forEach(inp=>{
+    inp.addEventListener("input",()=>{ state.days[+inp.dataset.day].name=inp.value; });
+    inp.addEventListener("change",autosave);
+  });
+  board.querySelectorAll(".day-note").forEach(ta=>{
+    ta.addEventListener("input",()=>{ state.days[+ta.dataset.day].note=ta.value; });
+    ta.addEventListener("change",autosave);
+  });
+}
+function removeFromDay(chip){
+  const id=chip.dataset.id;
+  // find day context
+  const slot=chip.closest(".slot");
+  if(slot){ const day=+slot.dataset.day; state.days[day][slot.dataset.slot==="start"?"locStart":"locEnd"]=null; autosave(); renderBoard(); return; }
+  const zone=chip.closest(".zone"); if(!zone) return;
+  const day=+zone.dataset.day, zc=zone.dataset.zone;
+  state.days[day][zc]=state.days[day][zc].filter(x=>x!==id); autosave(); renderBoard();
+}
+
+/* ============================================================= PICKER */
+let pickCtx=null;
+function openPicker(day,zone,slot){
+  pickCtx={day,zone,slot};
+  const cat=zone==="location"?"location":zone;
+  const list=state.items[cat];
+  const m=document.getElementById("pickModal");
+  m.innerHTML=`
+    <div class="m-h">
+      <span class="tagcat" style="background:var(${CAT_COLOR[cat]})">${CATS.find(c=>c.key===cat).one}</span>
+      <b>Add to Day ${day+1}${slot?" · "+slot:""}</b>
+      <button class="x" onclick="closeOvl('ovlPick')">×</button>
+    </div>
+    <div class="m-b">
+      <div class="pal-add" style="padding:0;border:none">
+        <input id="pickNew" placeholder="Create new ${CATS.find(c=>c.key===cat).one.toLowerCase()}…" autocomplete="off">
+        <button id="pickAddNew">Create</button>
+      </div>
+      <div class="pick-list">
+        ${list.length?list.map(it=>`<div class="pick" data-id="${it.id}">
+            <div><div class="pn">${esc(it.name)}</div>${summary(it)?`<div class="pm">${esc(summary(it))}</div>`:""}</div>
+          </div>`).join(""):`<div class="pal-empty">No items yet — create one above.</div>`}
+      </div>
+    </div>`;
+  m.querySelectorAll(".pick").forEach(p=>p.onclick=()=>{ placeItem(p.dataset.id); });
+  m.querySelector("#pickAddNew").onclick=()=>{
+    const v=m.querySelector("#pickNew").value.trim(); if(!v) return;
+    const it=newItem(cat,v); state.items[cat].push(it); placeItem(it.id,true);
+  };
+  m.querySelector("#pickNew").addEventListener("keydown",e=>{ if(e.key==="Enter") m.querySelector("#pickAddNew").click(); });
+  showOvl("ovlPick");
+}
+function placeItem(id,editAfter){
+  const {day,zone,slot}=pickCtx;
+  if(zone==="location"){ state.days[day][slot==="start"?"locStart":"locEnd"]=id; }
+  else { if(!state.days[day][zone].includes(id)) state.days[day][zone].push(id); }
+  autosave(); closeOvl("ovlPick"); renderLibrary(); renderBoard();
+  if(editAfter && zone!=="location") openEditor(id);
+}
+
+/* ============================================================= EDITOR */
+let editId=null;
+function openEditor(id){
+  const it=getItem(id); if(!it) return;
+  editId=id;
+  const m=document.getElementById("editModal");
+  m.innerHTML=`
+    <div class="m-h">
+      <span class="tagcat" style="background:var(${CAT_COLOR[it.cat]})">${CATS.find(c=>c.key===it.cat).one}</span>
+      <b>Edit details</b>
+      <button class="x" onclick="closeOvl('ovlEdit')">×</button>
+    </div>
+    <div class="m-b">${editorFields(it)}</div>
+    <div class="m-f">
+      <button class="btn danger" onclick="delItem('${it.id}');closeOvl('ovlEdit')">Delete item</button>
+      <button class="btn ghost" onclick="closeOvl('ovlEdit')">Cancel</button>
+      <button class="btn" id="saveEdit">Save details</button>
+    </div>`;
+  wireEditor(it);
+  m.querySelector("#saveEdit").onclick=()=>{ collectEditor(it); autosave(); closeOvl("ovlEdit"); renderLibrary(); renderBoard(); };
+  showOvl("ovlEdit");
+}
+function editorFields(it){
+  const nameFld=`<div class="fld"><label>Name</label><input id="e_name" value="${esc(it.name)}"></div>`;
+  if(it.cat==="transport"){
+    return nameFld+`
+    <div class="f2">
+      <div class="fld"><label>Category</label><select id="e_tcat">${TRANSPORT_CATS.map(c=>`<option ${c===it.tcat?"selected":""}>${c}</option>`).join("")}</select></div>
+      <div class="fld"><label>Cost</label><input id="e_cost" value="${esc(it.cost)}" placeholder="e.g. $45"></div>
+    </div>
+    <div class="fld"><label>Duration</label><input id="e_duration" value="${esc(it.duration)}" placeholder="e.g. 2h 15m"></div>
+
+    <div class="tfield" data-when="Flight"><div class="f2">
+      <div class="fld"><label>Airline</label><input id="e_airline" value="${esc(it.airline)}" placeholder="e.g. Vietnam Airlines"></div>
+      <div class="fld"><label>Boarding time</label><input id="e_boardingTime" type="time" value="${esc(it.boardingTime)}"></div>
+    </div></div>
+    <div class="tfield" data-when="Flight"><div class="f2">
+      <div class="fld"><label>Gate number</label><input id="e_gate" value="${esc(it.gate)}" placeholder="e.g. B12"></div>
+      <div class="fld"><label>Airport lounge</label><input id="e_lounge" value="${esc(it.lounge)}" placeholder="Lounge name / access"></div>
+    </div></div>
+
+    <div class="tfield" data-when="Bus"><div class="fld"><label>Bus name / operator</label><input id="e_busName" value="${esc(it.busName)}" placeholder="e.g. The Sinh Tourist"></div></div>
+    <div class="tfield" data-when="Bus,Taxi"><div class="fld"><label>License plate</label><input id="e_plate" value="${esc(it.plate)}" placeholder="e.g. 51F-123.45"></div></div>
+
+    <div class="tfield" data-when="Flight,Bus,Train"><div class="fld"><label>Seat number(s)</label><input id="e_seat" value="${esc(it.seat)}" placeholder="e.g. 14A, 14B"></div></div>
+
+    <div class="tfield" data-when="Bus,Taxi,Train,Organised"><div class="f2">
+      <div class="fld"><label>Pickup location</label><input id="e_pickup" value="${esc(it.pickup)}" placeholder="Pickup point"></div>
+      <div class="fld"><label>Drop-off location</label><input id="e_dropoff" value="${esc(it.dropoff)}" placeholder="Drop-off point"></div>
+    </div></div>
+
+    <div class="f2">
+      <div class="fld"><label>Free cancellation until — date <span class="mini">(before event)</span></label><input id="e_cancelDate" type="date" value="${esc(it.cancelDate)}"></div>
+      <div class="fld"><label>Time</label><input id="e_cancelTime" type="time" value="${esc(it.cancelTime)}"></div>
+    </div>
+    <div class="fld"><label>Other notes</label><textarea id="e_notes">${esc(it.notes)}</textarea></div>`;
+  }
+  if(it.cat==="activities"){
+    return nameFld+`
+    <div class="f2">
+      <div class="fld"><label>Time start</label><input id="e_timeStart" type="time" value="${esc(it.timeStart)}"></div>
+      <div class="fld"><label>Time end</label><input id="e_timeEnd" type="time" value="${esc(it.timeEnd)}"></div>
+    </div>
+    <div class="fld"><label>Location</label><input id="e_location" value="${esc(it.location)}"></div>
+    <div class="f2">
+      <div class="fld"><label>Website</label><input id="e_website" value="${esc(it.website)}" placeholder="https://"></div>
+      <div class="fld"><label>Costs</label><input id="e_cost" value="${esc(it.cost)}"></div>
+    </div>
+    <div class="f2">
+      <div class="fld"><label>Free cancellation until — date <span class="mini">(before event)</span></label><input id="e_cancelDate" type="date" value="${esc(it.cancelDate)}"></div>
+      <div class="fld"><label>Time</label><input id="e_cancelTime" type="time" value="${esc(it.cancelTime)}"></div>
+    </div>`;
+  }
+  if(it.cat==="accommodation"){
+    const b=it.beds||{}, bf=it.breakfast||{}, sh=it.shuttle||{}, am=it.amenities||[];
+    const amenSet=Array.from(new Set([...AMENITIES,...am]));
+    return nameFld+`
+    <div class="f2">
+      <div class="fld"><label>Check-in date</label><input id="e_checkinDate" type="date" value="${esc(it.checkinDate)}"></div>
+      <div class="fld"><label>Check-in time</label><input id="e_checkinTime" type="time" value="${esc(it.checkinTime)}"></div>
+    </div>
+    <div class="f2">
+      <div class="fld"><label>Check-out date</label><input id="e_checkoutDate" type="date" value="${esc(it.checkoutDate)}"></div>
+      <div class="fld"><label>Check-out time</label><input id="e_checkoutTime" type="time" value="${esc(it.checkoutTime)}"></div>
+    </div>
+    <div class="f2">
+      <div class="fld"><label>Costs</label><input id="e_cost" value="${esc(it.cost)}"></div>
+      <div class="fld"><label>Website URL</label><input id="e_url" value="${esc(it.url)}" placeholder="https://"></div>
+    </div>
+    <div class="f2">
+      <div class="fld"><label>Free cancellation until — date <span class="mini">(before check-in)</span></label><input id="e_cancelDate" type="date" value="${esc(it.cancelDate)}"></div>
+      <div class="fld"><label>Time</label><input id="e_cancelTime" type="time" value="${esc(it.cancelTime)}"></div>
+    </div>
+    <div class="fld"><label>Address</label><input id="e_address" value="${esc(it.address)}"></div>
+
+    <div class="sec"><h4>Beds</h4>
+      <div class="checks" id="e_beds">
+        ${bedChk("twin","Twin Beds",b.twin)}
+        ${bedChk("doubleShared","Double Bed (Shared)",b.doubleShared)}
+        ${bedChk("doubleEach","Double Bed (Each)",b.doubleEach)}
+      </div>
+      <div class="fld" style="margin-top:9px"><label>Other</label><input id="e_beds_other" value="${esc(b.other||"")}" placeholder="Describe other bed setup…"></div>
+    </div>
+
+    ${incExcSec("breakfast","Breakfast",bf)}
+    ${incExcSec("shuttle","Airport Shuttle",sh)}
+
+    <div class="sec"><h4>Amenities</h4>
+      <div class="amen-tools">
+        <input id="e_amen_search" placeholder="🔍 Search amenities…" autocomplete="off">
+        <label class="chk" id="e_amen_selonly"><input type="checkbox">Selected only</label>
+        <span class="mini" id="e_amen_count"></span>
+      </div>
+      <div class="amen-grid" id="e_amen">
+        ${amenSet.map(a=>`<label class="chk ${am.includes(a)?"on":""}"><input type="checkbox" value="${esc(a)}" ${am.includes(a)?"checked":""}>${esc(a)}</label>`).join("")}
+      </div>
+      <div class="mini amen-none" id="e_amen_none" style="display:none;padding:6px 2px">No matches — type it below to add as a custom amenity.</div>
+      <div class="pal-add" style="padding:8px 0 0;border:none">
+        <input id="e_amen_new" placeholder="Add custom amenity…" autocomplete="off">
+        <button type="button" id="e_amen_add">Add</button>
+      </div>
+    </div>`;
+  }
+  return nameFld;
+}
+function bedChk(k,label,on){ return `<label class="chk ${on?"on":""}" data-bed="${k}"><input type="checkbox" ${on?"checked":""}>${label}</label>`; }
+function incExcSec(key,label,obj){
+  const st=obj.status||"";
+  return `<div class="sec"><h4>${label}</h4>
+    <div class="radio-row">
+      <label class="chk ${st==="included"?"on":""}"><input type="radio" name="${key}_st" value="included" ${st==="included"?"checked":""}>Included</label>
+      <label class="chk ${st==="excluded"?"on":""}"><input type="radio" name="${key}_st" value="excluded" ${st==="excluded"?"checked":""}>Excluded</label>
+      <label class="chk ${st===""?"on":""}"><input type="radio" name="${key}_st" value="" ${st===""?"checked":""}>—</label>
+      <div class="fld" style="flex:1;min-width:120px"><input id="e_${key}_cost" value="${esc(obj.cost||"")}" placeholder="Cost (if any)"></div>
+    </div></div>`;
+}
+function updateTransportFields(cat){
+  const m=document.getElementById("editModal");
+  m.querySelectorAll(".tfield").forEach(g=>{
+    const when=(g.dataset.when||"").split(",");
+    g.style.display = when.includes(cat) ? "" : "none";
+  });
+}
+function wireEditor(it){
+  const m=document.getElementById("editModal");
+  if(it.cat==="transport"){
+    const sel=m.querySelector("#e_tcat");
+    const upd=()=>updateTransportFields(sel.value);
+    sel.addEventListener("change",upd); upd();
+  }
+  // toggle .on class on checkbox labels
+  m.querySelectorAll(".chk input").forEach(inp=>{
+    inp.addEventListener("change",()=>{
+      if(inp.type==="radio"){ m.querySelectorAll(`input[name="${inp.name}"]`).forEach(r=>r.closest(".chk").classList.toggle("on",r.checked)); }
+      else inp.closest(".chk").classList.toggle("on",inp.checked);
+    });
+  });
+  if(it.cat==="accommodation"){
+    const addBtn=m.querySelector("#e_amen_add");
+    if(addBtn) addBtn.onclick=()=>{
+      const inp=m.querySelector("#e_amen_new"); const v=inp.value.trim(); if(!v) return;
+      const grid=m.querySelector("#e_amen");
+      if([...grid.querySelectorAll("input")].some(x=>x.value.toLowerCase()===v.toLowerCase())){ inp.value=""; return; }
+      const lab=document.createElement("label"); lab.className="chk on";
+      lab.innerHTML=`<input type="checkbox" value="${esc(v)}" checked>${esc(v)}`;
+      lab.querySelector("input").addEventListener("change",e=>lab.classList.toggle("on",e.target.checked));
+      grid.appendChild(lab); inp.value="";
+    };
+    const ai=m.querySelector("#e_amen_new"); if(ai) ai.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();addBtn.click();}});
+
+    // search / filter amenities
+    const search=m.querySelector("#e_amen_search");
+    const selOnly=m.querySelector("#e_amen_selonly input");
+    const grid=m.querySelector("#e_amen");
+    const none=m.querySelector("#e_amen_none");
+    const count=m.querySelector("#e_amen_count");
+    function applyAmenFilter(){
+      const q=(search.value||"").trim().toLowerCase();
+      const only=selOnly.checked;
+      let shown=0, selected=0;
+      grid.querySelectorAll(".chk").forEach(lab=>{
+        const cb=lab.querySelector("input");
+        const on=cb.checked; if(on) selected++;
+        const text=cb.value.toLowerCase();
+        const match=(!q||text.includes(q)) && (!only||on);
+        lab.classList.toggle("hide",!match);
+        if(match) shown++;
+      });
+      none.style.display = shown===0 ? "block" : "none";
+      count.textContent = selected+" selected";
+    }
+    if(search) search.addEventListener("input",applyAmenFilter);
+    if(selOnly) selOnly.addEventListener("change",applyAmenFilter);
+    // keep count/filter fresh when amenities are toggled or added
+    grid.addEventListener("change",applyAmenFilter);
+    const origAdd=addBtn.onclick; addBtn.onclick=()=>{ origAdd(); applyAmenFilter(); };
+    applyAmenFilter();
+  }
+}
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():""; }
+function collectEditor(it){
+  it.name=val("e_name")||it.name;
+  if(it.cat==="transport"){ it.tcat=val("e_tcat"); it.cost=val("e_cost"); it.duration=val("e_duration");
+    it.airline=val("e_airline"); it.boardingTime=val("e_boardingTime"); it.gate=val("e_gate"); it.seat=val("e_seat"); it.lounge=val("e_lounge");
+    it.busName=val("e_busName"); it.plate=val("e_plate"); it.pickup=val("e_pickup"); it.dropoff=val("e_dropoff");
+    it.cancelDate=val("e_cancelDate"); it.cancelTime=val("e_cancelTime"); it.notes=val("e_notes"); }
+  else if(it.cat==="activities"){ it.timeStart=val("e_timeStart"); it.timeEnd=val("e_timeEnd"); it.location=val("e_location"); it.website=val("e_website"); it.cost=val("e_cost"); it.cancelDate=val("e_cancelDate"); it.cancelTime=val("e_cancelTime"); }
+  else if(it.cat==="accommodation"){
+    it.checkinDate=val("e_checkinDate"); it.checkinTime=val("e_checkinTime");
+    it.checkoutDate=val("e_checkoutDate"); it.checkoutTime=val("e_checkoutTime");
+    it.cost=val("e_cost"); it.url=val("e_url"); it.address=val("e_address");
+    it.cancelDate=val("e_cancelDate"); it.cancelTime=val("e_cancelTime");
+    const m=document.getElementById("editModal");
+    it.beds={
+      twin:m.querySelector('[data-bed="twin"] input').checked,
+      doubleShared:m.querySelector('[data-bed="doubleShared"] input').checked,
+      doubleEach:m.querySelector('[data-bed="doubleEach"] input').checked,
+      other:val("e_beds_other")
+    };
+    const rad=n=>{ const x=m.querySelector(`input[name="${n}"]:checked`); return x?x.value:""; };
+    it.breakfast={status:rad("breakfast_st"),cost:val("e_breakfast_cost")};
+    it.shuttle={status:rad("shuttle_st"),cost:val("e_shuttle_cost")};
+    it.amenities=[...m.querySelectorAll("#e_amen input:checked")].map(x=>x.value);
+  }
+}
+
+/* ============================================================= SETUP */
+function openSetup(){
+  const m=document.getElementById("setupModal");
+  m.innerHTML=`
+    <div class="m-h"><b>Trip Setup</b><button class="x" onclick="closeOvl('ovlSetup')">×</button></div>
+    <div class="m-b">
+      <div class="fld"><label>Trip title</label><input id="s_title" value="${esc(state.meta.title)}"></div>
+      <div class="f2">
+        <div class="fld"><label>Start date (Day 1)</label><input id="s_start" type="date" value="${esc(state.meta.startDate)}"></div>
+        <div class="fld"><label>Number of days</label><input id="s_days" type="number" min="1" max="60" value="${state.meta.numDays}"></div>
+      </div>
+      <div class="mini">Reducing days removes the last days (and any items placed on them).</div>
+    </div>
+    <div class="m-f">
+      <button class="btn ghost" onclick="closeOvl('ovlSetup')">Cancel</button>
+      <button class="btn" id="s_save">Apply</button>
+    </div>`;
+  m.querySelector("#s_save").onclick=()=>{
+    state.meta.title=val("s_title")||state.meta.title;
+    state.meta.startDate=val("s_start");
+    let n=parseInt(val("s_days"),10); if(isNaN(n)||n<1) n=1; if(n>60) n=60;
+    while(state.days.length<n) state.days.push(emptyDay());
+    state.days.length=n; state.meta.numDays=n;
+    autosave(); closeOvl("ovlSetup"); renderBoard();
+  };
+  showOvl("ovlSetup");
+}
+
+/* ============================================================= TO-DO */
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function todoSorted(){
+  return state.todos.map((t,idx)=>({t,idx})).sort((a,b)=>{
+    if(!!a.t.done!==!!b.t.done) return a.t.done?1:-1;         // undone first
+    const da=a.t.before||"9999-12-31", db=b.t.before||"9999-12-31";
+    if(da!==db) return da<db?-1:1;                            // earliest deadline first
+    return a.idx-b.idx;
+  }).map(x=>x.t);
+}
+function openTodo(){ renderTodo(); showOvl("ovlTodo"); }
+function renderTodo(){
+  const m=document.getElementById("todoModal");
+  const today=todayStr();
+  const list=todoSorted();
+  const open=state.todos.filter(t=>!t.done).length, total=state.todos.length;
+  m.innerHTML=`
+    <div class="m-h"><b>To-Do — Complete Before</b>
+      <span class="mini" style="margin-left:8px">${open} open · ${total} total</span>
+      <button class="x" onclick="closeOvl('ovlTodo')">×</button></div>
+    <div class="m-b">
+      <div class="todo-add">
+        <input id="td_text" placeholder="What needs doing? (e.g. Book Ha Long cruise)" autocomplete="off">
+        <input id="td_date" type="date" title="Complete before (optional)">
+        <input id="td_time" type="time" title="Time (optional)">
+        <button id="td_add">Add</button>
+      </div>
+      <div class="mini">Add a “Complete before” date to make it a deadline, or leave it blank for a plain checklist item.</div>
+      <div class="todo-list">
+        ${list.length? list.map(t=>{
+          const overdue = t.before && !t.done && t.before < today;
+          return `<div class="todo-row ${t.done?"done":""} ${overdue?"overdue":""}" data-id="${t.id}">
+            <input type="checkbox" class="tc" ${t.done?"checked":""}>
+            <span class="tt" title="Click to edit">${esc(t.text)}</span>
+            <span class="tbadge">${t.before?`before ${esc(fmtDate(t.before,t.beforeTime))}${overdue?" ⚠":""}`:""}</span>
+            <input type="date" class="tb" value="${esc(t.before||"")}" title="Complete before">
+            <input type="time" class="tbt" value="${esc(t.beforeTime||"")}" title="Time">
+            <button class="tx" title="Delete">×</button>
+          </div>`;
+        }).join("") : `<div class="pal-empty">No to-dos yet — add one above.</div>`}
+      </div>
+    </div>
+    <div class="m-f"><button class="btn ghost" onclick="closeOvl('ovlTodo')">Close</button></div>`;
+  const add=()=>{
+    const text=m.querySelector("#td_text").value.trim(); if(!text) return;
+    state.todos.push({id:uid(), text, before:m.querySelector("#td_date").value, beforeTime:m.querySelector("#td_time").value, done:false});
+    autosave(); renderTodo(); m.querySelector("#td_text").focus();
+  };
+  m.querySelector("#td_add").onclick=add;
+  m.querySelector("#td_text").addEventListener("keydown",e=>{ if(e.key==="Enter") add(); });
+  m.querySelectorAll(".todo-row").forEach(row=>{
+    const t=state.todos.find(x=>x.id===row.dataset.id); if(!t) return;
+    row.querySelector(".tc").onchange=e=>{ t.done=e.target.checked; autosave(); renderTodo(); };
+    row.querySelector(".tt").onclick=()=>{ const v=prompt("Edit task:",t.text); if(v!=null){ t.text=v.trim()||t.text; autosave(); renderTodo(); } };
+    row.querySelector(".tb").onchange=e=>{ t.before=e.target.value; autosave(); renderTodo(); };
+    row.querySelector(".tbt").onchange=e=>{ t.beforeTime=e.target.value; autosave(); renderTodo(); };
+    row.querySelector(".tx").onclick=()=>{ state.todos=state.todos.filter(x=>x.id!==t.id); autosave(); renderTodo(); };
+  });
+}
+
+/* ============================================================= REPORT */
+function fmtDate(d,t){ if(!d && !t) return ""; return [d,t].filter(Boolean).join(" "); }
+function elDetails(it){
+  if(!it) return "";
+  const rows=[];
+  const push=(l,v)=>{ if(v!=null && String(v).trim()!=="") rows.push(`<b>${l}:</b> ${esc(v)}`); };
+  if(it.cat==="transport"){
+    push("Category",it.tcat); push("Duration",it.duration); push("Cost",it.cost);
+    push("Airline",it.airline); push("Bus / operator",it.busName); push("License plate",it.plate);
+    push("Pickup",it.pickup); push("Drop-off",it.dropoff);
+    push("Boarding time",it.boardingTime); push("Gate",it.gate); push("Seat(s)",it.seat); push("Airport lounge",it.lounge);
+    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
+    push("Notes",it.notes);
+  } else if(it.cat==="activities"){
+    const tm=[it.timeStart,it.timeEnd].filter(Boolean).join(" – ");
+    push("Time",tm); push("Location",it.location); push("Website",it.website); push("Costs",it.cost);
+    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
+  } else if(it.cat==="accommodation"){
+    push("Check-in",fmtDate(it.checkinDate,it.checkinTime));
+    push("Check-out",fmtDate(it.checkoutDate,it.checkoutTime));
+    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
+    push("Costs",it.cost); push("Address",it.address); push("Website",it.url);
+    const beds=[]; const b=it.beds||{};
+    if(b.twin)beds.push("Twin Beds"); if(b.doubleShared)beds.push("Double Bed (Shared)");
+    if(b.doubleEach)beds.push("Double Bed (Each)"); if(b.other)beds.push(b.other);
+    push("Beds",beds.join(", "));
+    const bfLine=(o)=>{ if(!o) return ""; const p=[]; if(o.status)p.push(o.status.charAt(0).toUpperCase()+o.status.slice(1)); if(o.cost)p.push("Cost "+o.cost); return p.join(" · "); };
+    push("Breakfast",bfLine(it.breakfast)); push("Airport Shuttle",bfLine(it.shuttle));
+    let out=rows.map(r=>`<div>${r}</div>`).join("");
+    if(it.amenities&&it.amenities.length) out+=`<div class="rep-tags">${it.amenities.map(a=>`<span>${esc(a)}</span>`).join("")}</div>`;
+    return out;
+  }
+  return rows.map(r=>`<div>${r}</div>`).join("");
+}
+function repEl(id){
+  const it=getItem(id); if(!it) return "";
+  const dt=elDetails(it);
+  return `<div class="rep-el ${it.cat}"><div class="ren">${esc(it.name)}</div>${dt?`<div class="redt">${dt}</div>`:""}</div>`;
+}
+function repBlock(label,ids){
+  if(!ids.length) return `<div class="rep-block"><div class="rblab">${label}</div><div class="rep-empty">—</div></div>`;
+  return `<div class="rep-block"><div class="rblab">${label}</div>${ids.map(repEl).join("")}</div>`;
+}
+function buildReport(){
+  const body=document.getElementById("repBody");
+  const days=state.days.map((d,i)=>{
+    const loc=[]; if(d.locStart)loc.push(d.locStart); if(d.locEnd)loc.push(d.locEnd);
+    const locBlock = (d.locStart||d.locEnd)
+      ? `<div class="rep-block"><div class="rblab">Location</div>
+          ${d.locStart?`<div class="rep-el location"><div class="ren">Start · ${esc(getItem(d.locStart)?.name||"")}</div></div>`:""}
+          ${d.locEnd?`<div class="rep-el location"><div class="ren">End · ${esc(getItem(d.locEnd)?.name||"")}</div></div>`:""}
+         </div>`
+      : `<div class="rep-block"><div class="rblab">Location</div><div class="rep-empty">—</div></div>`;
+    const noteBlock = d.note && d.note.trim()
+      ? `<div class="rep-block"><div class="rblab">Notes</div><div class="rep-note">${esc(d.note)}</div></div>` : "";
+    return `<div class="rep-day">
+      <div class="rep-day-h"><b>Day ${i+1}</b>${d.name&&d.name.trim()?`<em>${esc(d.name)}</em>`:""}<span>${esc(dayDate(i))}</span></div>
+      <div class="rep-day-b">
+        ${locBlock}
+        ${repBlock("Transport",d.transport)}
+        ${repBlock("Accommodation",d.accommodation)}
+        ${repBlock("Activities",d.activities)}
+        ${noteBlock}
+      </div></div>`;
+  }).join("");
+  const today=todayStr();
+  const todoRep = state.todos.length ? `<div class="rep-todo"><h2>To-Do — Complete Before</h2>${
+    todoSorted().map(t=>{
+      const overdue=t.before && !t.done && t.before<today;
+      return `<div class="rt ${t.done?"done":""} ${overdue?"overdue":""}">${t.done?"☑":"☐"} <b>${esc(t.text)}</b>${t.before?` <span>— before ${esc(fmtDate(t.before,t.beforeTime))}${overdue?" (overdue)":""}</span>`:""}</div>`;
+    }).join("")
+  }</div>` : "";
+  body.innerHTML=`<h1>${esc(state.meta.title)}</h1>
+    <p class="rsub">${state.meta.startDate?"Starting "+dayDate(0)+" · ":""}${state.meta.numDays} days · generated ${new Date().toLocaleDateString()}</p>
+    ${todoRep}
+    ${days}`;
+  document.getElementById("report").classList.add("show");
+}
+function closeReport(){ document.getElementById("report").classList.remove("show"); }
+
+/* ============================================================= SAVE */
+function buildFileHtml(){
+  autosave();
+  // write current state into the embedded json script tag; escape any "<slash"
+  // sequence so a stray closing tag inside notes/amenities cannot break the tag
+  // (JSON.parse restores it on load)
+  document.getElementById("trip-data").textContent = JSON.stringify(state).replace(/<\//g,"<\\/");
+  // clear dynamic containers so the saved file is clean (re-rendered on load)
+  const board=document.getElementById("board"), lib=document.getElementById("palList"), tabs=document.getElementById("palTabs");
+  const bh=board.innerHTML, lh=lib.innerHTML, th=tabs.innerHTML;
+  board.innerHTML=""; lib.innerHTML=""; tabs.innerHTML="";
+  document.getElementById("editModal").innerHTML="";
+  document.getElementById("pickModal").innerHTML="";
+  document.getElementById("setupModal").innerHTML="";
+  document.getElementById("todoModal").innerHTML="";
+  document.getElementById("repBody").innerHTML="";
+  const html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+  // restore live view
+  board.innerHTML=bh; lib.innerHTML=lh; tabs.innerHTML=th;
+  renderTabs(); renderLibrary(); renderBoard();
+  return html;
+}
+function saveCopy(){
+  const html=buildFileHtml();
+  const blob=new Blob([html],{type:"text/html"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=(state.meta.title.replace(/[^\w]+/g,"_")||"Itinerary")+"_Builder.html";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  flag("Copy downloaded · "+timeStr());
+}
+
+/* ---- Save in place (File System Access API) ----
+   First click: pick Vietnam_Itinerary_Builder.html once and allow editing.
+   After that the button overwrites the same file silently — no more
+   "(1) (2) (3)" copies in Downloads. The file handle is remembered in
+   IndexedDB; if the browser forgets it, you simply pick the file again. */
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open("vn_builder_handle",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("kv");
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbGet(k){ const db=await idbOpen(); return new Promise((res,rej)=>{
+  const t=db.transaction("kv","readonly").objectStore("kv").get(k);
+  t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); }
+async function idbSet(k,v){ const db=await idbOpen(); return new Promise((res,rej)=>{
+  const t=db.transaction("kv","readwrite"); t.objectStore("kv").put(v,k);
+  t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+async function ensureHandle(){
+  let h=null;
+  try{ h=await idbGet("file"); }catch(e){}
+  if(h){
+    let p=await h.queryPermission({mode:"readwrite"});
+    if(p!=="granted") p=await h.requestPermission({mode:"readwrite"});
+    if(p!=="granted") h=null;
+  }
+  if(!h){
+    h=await window.showSaveFilePicker({
+      suggestedName:"Vietnam_Itinerary_Builder.html",
+      types:[{description:"HTML file",accept:{"text/html":[".html",".htm"]}}]
+    });
+    try{ await idbSet("file",h); }catch(e){}
+  }
+  return h;
+}
+async function saveInPlace(){
+  if(!window.showSaveFilePicker){ saveCopy(); return; }  // browser without the API
+  try{
+    const h=await ensureHandle();
+    const html=buildFileHtml();
+    const w=await h.createWritable();
+    await w.write(html);
+    await w.close();
+    flag("Saved · "+h.name+" · "+timeStr());
+  }catch(e){
+    if(e && e.name==="AbortError"){ flag("Save cancelled"); return; }
+    alert("Couldn't save in place ("+((e&&e.message)||e)+").\nDownloading a copy instead.");
+    saveCopy();
+  }
+}
+
+/* ============================================================= OVERLAY UTIL */
+function showOvl(id){ document.getElementById(id).classList.add("show"); }
+function closeOvl(id){ document.getElementById(id).classList.remove("show"); }
+document.querySelectorAll(".ovl").forEach(o=>o.addEventListener("mousedown",e=>{ if(e.target===o) o.classList.remove("show"); }));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ document.querySelectorAll(".ovl.show").forEach(o=>o.classList.remove("show")); closeReport(); } });
+
+/* ============================================================= INIT */
+document.getElementById("btnAddItem").onclick=addItem;
+document.getElementById("newItemName").addEventListener("keydown",e=>{ if(e.key==="Enter") addItem(); });
+document.getElementById("btnSetup").onclick=openSetup;
+document.getElementById("btnTodo").onclick=openTodo;
+document.getElementById("btnReport").onclick=buildReport;
+document.getElementById("btnSave").onclick=saveInPlace;
+document.getElementById("btnSaveCopy").onclick=saveCopy;
+
+/* ---------- mobile palette drawer ---------- */
+const palette=document.getElementById("palette"), palBackdrop=document.getElementById("palBackdrop");
+function openPalette(){ palette.classList.add("open"); palBackdrop.classList.add("open"); }
+function closePalette(){ palette.classList.remove("open"); palBackdrop.classList.remove("open"); }
+document.getElementById("btnPalette").onclick=()=>
+  palette.classList.contains("open")?closePalette():openPalette();
+palBackdrop.onclick=closePalette;
+/* the picker modal is the touch path for assigning — close the drawer behind it */
+const _openPicker=openPicker;
+openPicker=function(...a){ closePalette(); return _openPicker.apply(this,a); };
+
+renderTabs(); renderLibrary(); renderBoard();
+flag(state.savedAt?("Loaded · saved "+new Date(state.savedAt).toLocaleDateString()):"New trip");
+</script>
+
+
+</body></html>

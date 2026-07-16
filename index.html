@@ -77,7 +77,8 @@ a{color:var(--blue)}
 .dgroup{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;
   color:var(--grey-2);padding:14px 12px 6px}
 .ditem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
-  padding:11px 12px;border-radius:14px;font-size:14.5px;font-weight:600;color:var(--ink)}
+  padding:11px 12px;border-radius:14px;font-size:14.5px;font-weight:600;color:var(--ink);
+  text-decoration:none}
 .ditem .dico{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
 .ditem.active{background:var(--blue-soft)}
 .ditem .dno{margin-left:auto;font-size:11px;font-weight:800;color:var(--grey-2)}
@@ -424,15 +425,32 @@ const COAST=[[23.3,105.4],[22.5,106.6],[21.9,107.4],[21.5,108.0],[20.8,106.8],[1
  [16.0,107.0],[16.8,106.4],[17.6,105.6],[18.6,105.2],[19.4,104.6],[20.4,104.4],[21.2,103.1],
  [22.0,102.2],[22.5,102.8],[22.8,103.6],[23.0,104.8]];
 
-/* ============================================================ DATA LOAD + HELPERS */
-let D=null;
-(function(){
-  const t=document.getElementById("trip-data").textContent.trim();
-  D=JSON.parse(t);
-  D.meta=Object.assign({title:"Vietnam 2026",startDate:"",numDays:D.days.length},D.meta||{});
-  D.items=Object.assign({location:[],transport:[],accommodation:[],activities:[]},D.items||{});
-  D.days=D.days.map(d=>Object.assign({name:"",note:"",locStart:null,locEnd:null,transport:[],accommodation:[],activities:[]},d));
-})();
+/* ============================================================ DATA LOAD + HELPERS
+   Plan sources, newest wins (by savedAt):
+     1. the Itinerary Builder at /builder/ — same origin, so it shares localStorage
+     2. the plan embedded in #trip-data below (the published baseline)
+   Editing the plan in the builder therefore flows straight through to this app. */
+const BUILDER_LS_KEY="vietnam_itinerary_builder_v2";
+let D=null,PLAN_SOURCE="embedded";
+function loadPlan(){
+  let embedded=null,built=null;
+  try{const t=document.getElementById("trip-data").textContent.trim();if(t&&t!=="{}")embedded=JSON.parse(t);}catch(e){}
+  try{const t=localStorage.getItem(BUILDER_LS_KEY);if(t)built=JSON.parse(t);}catch(e){}
+  let s=embedded;
+  if(built&&built.days&&built.days.length){
+    if(!embedded||(built.savedAt||0)>=(embedded.savedAt||0)){s=built;PLAN_SOURCE="builder";}
+  }
+  if(!s)s={meta:{},items:{},days:[]};
+  s.meta=Object.assign({title:"Vietnam 2026",startDate:"",numDays:(s.days||[]).length},s.meta||{});
+  s.items=Object.assign({location:[],transport:[],accommodation:[],activities:[]},s.items||{});
+  s.days=(s.days||[]).map(d=>Object.assign({name:"",note:"",locStart:null,locEnd:null,transport:[],accommodation:[],activities:[]},d));
+  return s;
+}
+D=loadPlan();
+/* another tab/window (e.g. the builder) saved a new plan — pick it up live */
+window.addEventListener("storage",e=>{
+  if(e.key===BUILDER_LS_KEY){D=loadPlan();if(typeof render==="function")render();}
+});
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function getItem(id){for(const k in D.items){const f=D.items[k].find(x=>x.id===id);if(f)return f;}return null;}
 function dayDateObj(i){
@@ -619,7 +637,9 @@ const SECTIONS=[
   {route:"bookings", name:"Bookings & Deadlines",icon:"alert",color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"todos",    name:"To-Do's",       icon:"check",  color:"var(--green)", soft:"var(--green-soft)", group:"On the trip"},
   {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
-  {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"}
+  {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
+  {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
+   group:"Planning", href:"./builder/"}
 ];
 const drawer=document.getElementById("drawer"),scrim=document.getElementById("scrim");
 function openDrawer(){drawer.classList.add("open");scrim.classList.add("open");}
@@ -631,6 +651,14 @@ function buildDrawer(active){
   let html="",no=0;
   SECTIONS.forEach(s=>{
     if(s.group)html+=`<div class="dgroup">${esc(s.group)}</div>`;
+    /* external pages (the builder) are plain links, not hash routes */
+    if(s.href){
+      html+=`<a class="ditem" href="${s.href}">
+        <span class="dico" style="background:${s.soft};color:${s.color}">${ico(s.icon,16)}</span>
+        ${esc(s.name)}<span class="dno">↗</span>
+      </a>`;
+      return;
+    }
     no++;
     html+=`<button class="ditem ${s.route===active?"active":""}" data-route="${s.route}">
       <span class="dico" style="background:${s.soft};color:${s.color}">${ico(s.icon,16)}</span>
@@ -638,7 +666,7 @@ function buildDrawer(active){
     </button>`;
   });
   nav.innerHTML=html;
-  nav.querySelectorAll(".ditem").forEach(b=>b.onclick=()=>{closeDrawer();go(b.dataset.route);});
+  nav.querySelectorAll("button.ditem").forEach(b=>b.onclick=()=>{closeDrawer();go(b.dataset.route);});
 }
 function go(route){location.hash="#/"+route;}
 function currentRoute(){
