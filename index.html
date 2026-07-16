@@ -800,10 +800,49 @@ function buildDrawer(active){
   nav.innerHTML=html;
   nav.querySelectorAll("button.ditem").forEach(b=>b.onclick=()=>{closeDrawer();go(b.dataset.route);});
 }
-function go(route){location.hash="#/"+route;}
+/* ---------- Back goes UP a level, not back through your steps ----------
+   Trip Summary is the root; a day belongs to the Itinerary; everything else
+   sits directly under the Summary. Back from the root leaves the app.
+
+   Getting this means owning the history stack instead of listening to it:
+   navigation REPLACES the current entry, and one "sentinel" entry sits on top
+   purely to be consumed by the next Back press. When it's consumed we decide
+   where up is, rewrite the URL, and arm a fresh sentinel. Otherwise the browser
+   would just walk your visit history, which is the thing being replaced. */
+function parentOf(route){
+  if(!route||route==="summary")return null;          /* root — leave the app */
+  if(route.split("/")[0]==="day")return "itinerary"; /* a day lives under the itinerary */
+  return "summary";
+}
 function currentRoute(){
   const h=location.hash.replace(/^#\/?/,"");
   return h||"summary";
+}
+function armBack(){
+  /* same URL, so consuming it fires popstate but no hashchange */
+  history.pushState({vn:"sentinel"},"",location.hash||"#/summary");
+}
+function go(route){
+  if(route===currentRoute()){closeDrawer();return;}
+  history.replaceState({vn:"page"},"","#/"+route);   /* no new entry */
+  render();
+}
+let popping=false;
+function onPop(){
+  /* Back rewinds the URL to the entry underneath, which holds a stale route.
+     Flag it so the hashchange that follows doesn't render that stale page —
+     this pop decides where we go, not the address bar. */
+  popping=true;setTimeout(()=>{popping=false;},0);
+  /* an open drawer is a level of its own — close it first */
+  if(drawer.classList.contains("open")){closeDrawer();armBack();return;}
+  /* Use what's ON SCREEN (lastRoute), not the URL: Back has already rewound the
+     address to the entry underneath, so reading it here computes "up" from the
+     wrong page. */
+  const up=parentOf(lastRoute);
+  if(up===null){history.back();return;}             /* at the root: let them out */
+  history.replaceState({vn:"page"},"","#/"+up);
+  render();
+  armBack();
 }
 
 /* ============================================================ COUNTDOWN */
@@ -1610,8 +1649,17 @@ function renderAcct(s){
   }
 }
 
-window.addEventListener("hashchange",render);
+/* go() uses replaceState (no hashchange), so this only catches hashes arriving
+   from outside — a typed URL, or a home-screen shortcut like ./#/bingo.
+   Never during a Back: onPop owns that, and the popped URL is stale. */
+window.addEventListener("hashchange",()=>{
+  if(popping)return;
+  if(currentRoute()!==lastRoute)render();
+});
+window.addEventListener("popstate",onPop);
 loadPersonal();
+history.replaceState({vn:"page"},"",location.hash||"#/summary");
+armBack();
 render();
 /* sync.js is a deferred module, so it loads after this script and broadcasts */
 window.addEventListener("vnsync",e=>renderAcct(e.detail));
