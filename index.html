@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Vietnam 2026</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vietnam 26">
+<meta name="theme-color" content="#243447">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* ==========================================================
+   VIETNAM 2026 · POCKET TRAVEL APP  (offline PWA)
+   Built on: Travel Book Design System v1.0 — mobile-first
+========================================================== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#2D74B9; --blue-soft:#E7F2FC;
+  --green:#1E8B65; --green-soft:#E7F7F2;
+  --gold:#C89B3C; --gold-soft:#FFF7E2; --gold-ink:#A97700;
+  --coral:#D98445;
+  --red:#C23B3B; --red-soft:#FCECEC;
+  --purple:#7C5CDB; --purple-soft:#F0EBFB;
+  --teal:#2494A2; --teal-soft:#E6F4F6;
+  --sand:#F8F5EF;
+  --navy:#243447; --navy-2:#1A2736;
+  --grey:#667085; --grey-2:#98A2B3; --grey-3:#7A8793;
+  --ink:#243447; --body:#52606D;
+  --border:#E3E7EC; --border-2:#EDF2F7;
+  --bg:#F2F4F7;
+  --radius:18px;
+  --c-transport:var(--gold); --c-accommodation:var(--blue); --c-activities:var(--green);
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  color:var(--ink);background:var(--bg);line-height:1.5;
+  padding-top:calc(56px + env(safe-area-inset-top));
+  padding-bottom:calc(20px + env(safe-area-inset-bottom));
+  overscroll-behavior-y:none}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+input,textarea{font-family:inherit;font-size:16px}
+a{color:var(--blue)}
+
+/* ---------- app bar ---------- */
+.appbar{position:fixed;top:0;left:0;right:0;z-index:60;
+  background:linear-gradient(120deg,var(--navy),#31517A);color:#fff;
+  padding-top:env(safe-area-inset-top);height:calc(56px + env(safe-area-inset-top));
+  display:flex;align-items:center;gap:10px;box-shadow:0 2px 14px rgba(16,26,39,.25)}
+.appbar .burger{width:48px;height:56px;display:grid;place-items:center;color:#fff}
+.appbar .ttl{font-weight:800;font-size:17px;letter-spacing:-.2px;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .ttl small{display:block;font-weight:600;font-size:10.5px;letter-spacing:2px;
+  text-transform:uppercase;opacity:.65}
+.appbar .pill{margin-right:14px;padding:6px 13px;border-radius:999px;font-size:11.5px;font-weight:700;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);white-space:nowrap}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(16,26,39,.5);z-index:70;opacity:0;
+  pointer-events:none;transition:opacity .25s}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(310px,84vw);z-index:80;background:#fff;
+  transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.25,1);
+  display:flex;flex-direction:column;box-shadow:14px 0 40px rgba(16,26,39,.22);
+  padding-top:env(safe-area-inset-top);overflow-y:auto}
+.drawer.open{transform:none}
+.drawer-head{background:linear-gradient(120deg,var(--navy),#31517A);color:#fff;
+  padding:22px 20px 18px;margin-top:calc(-1 * env(safe-area-inset-top));
+  padding-top:calc(22px + env(safe-area-inset-top))}
+.drawer-head .dh-kicker{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;opacity:.7}
+.drawer-head .dh-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-top:2px}
+.drawer-head .dh-sub{font-size:11.5px;opacity:.8;margin-top:4px}
+.drawer nav{padding:10px 10px calc(20px + env(safe-area-inset-bottom))}
+.dgroup{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;
+  color:var(--grey-2);padding:14px 12px 6px}
+.ditem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:11px 12px;border-radius:14px;font-size:14.5px;font-weight:600;color:var(--ink)}
+.ditem .dico{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.ditem.active{background:var(--blue-soft)}
+.ditem .dno{margin-left:auto;font-size:11px;font-weight:800;color:var(--grey-2)}
+
+/* ---------- layout ---------- */
+.wrap{padding:14px 14px 8px;max-width:640px;margin:0 auto}
+section{margin-bottom:14px}
+.card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px}
+.card-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--grey);
+  margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.small{font-size:12px;color:var(--grey-3)}
+.caption{font-size:11px;color:var(--grey-2)}
+h3{font-size:15px;font-weight:700;color:var(--navy)}
+p{color:var(--body);font-size:13px}
+
+/* ---------- hero ---------- */
+.hero{border-radius:var(--radius);padding:18px 20px;color:#fff;margin-bottom:14px;
+  position:relative;overflow:hidden;background:linear-gradient(120deg,var(--navy),#31517A)}
+.hero .hb-kicker{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:700;opacity:.75}
+.hero .hb-title{font-size:23px;font-weight:800;letter-spacing:-.5px;line-height:1.15;margin-top:3px}
+.hero .hb-sub{font-size:12px;opacity:.85;margin-top:5px}
+
+/* ---------- stats / badges / info ---------- */
+.stat{text-align:center;padding:13px 8px;border:1px solid var(--border);border-radius:var(--radius);background:#fff}
+.stat-value{font-size:23px;font-weight:800;color:var(--blue);line-height:1.1}
+.stat-value.fit{font-size:13px;padding-top:7px}
+.stat-label{margin-top:5px;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--grey)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;
+  font-size:11px;font-weight:700;white-space:nowrap}
+.badge.blue{background:#DDEEFF;color:var(--blue)}
+.badge.green{background:#DDF5EA;color:var(--green)}
+.badge.gold{background:#FFF2CC;color:var(--gold-ink)}
+.badge.red{background:#FFE1E1;color:var(--red)}
+.badge.grey{background:#EEF1F5;color:var(--grey)}
+.info-row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:7px 0;border-bottom:1px solid var(--border-2)}
+.info-row:last-child{border-bottom:none}
+.info-row .label{color:var(--grey-2);font-size:12px;flex:none}
+.info-row .value{font-weight:600;font-size:12.5px;text-align:right;word-break:break-word}
+
+/* ---------- journey / bars ---------- */
+.j-node{display:flex;align-items:center;gap:12px}
+.j-node .jdot{width:13px;height:13px;border-radius:50%;border:3px solid var(--teal);background:#fff;flex:none}
+.j-node .jname{font-weight:700;font-size:13.5px}
+.j-node .jnights{margin-left:auto;font-size:11px;color:var(--grey-2);font-weight:600}
+.j-link{width:2px;height:10px;background:var(--border);margin-left:5.5px}
+.bar-row{margin-bottom:9px}.bar-row:last-child{margin-bottom:0}
+.bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;gap:8px}
+.bar-name{font-weight:600;font-size:12.5px}
+.bar-val{font-weight:700;font-size:12px;color:var(--navy);text-align:right}
+.bar-track{height:8px;border-radius:999px;background:var(--border-2);overflow:hidden}
+.bar-fill{height:100%;border-radius:999px}
+
+/* ---------- transport / hotel minis ---------- */
+.t-row{display:flex;align-items:center;gap:11px;padding:7px 0;border-bottom:1px solid var(--border-2)}
+.t-row:last-child{border-bottom:none}
+.t-ico{width:28px;height:28px;border-radius:9px;background:var(--gold-soft);color:var(--gold-ink);
+  display:grid;place-items:center;flex:none}
+.t-main{flex:1;min-width:0}
+.t-name{font-weight:700;font-size:12.5px}
+.t-sub{font-size:11px;color:var(--grey-3)}
+.t-day{font-size:10.5px;font-weight:700;color:var(--grey);white-space:nowrap}
+.hmini{border:1px solid var(--border);border-radius:14px;padding:10px 13px;margin-bottom:8px}
+.hmini:last-child{margin-bottom:0}
+.hmini .hname{font-weight:700;font-size:13px;margin-bottom:5px}
+.hmini .hmeta{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ---------- checklist ---------- */
+.chk{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-2);
+  font-size:13.5px;width:100%;text-align:left}
+.chk:last-child{border-bottom:none}
+.chk .box{width:22px;height:22px;border-radius:7px;flex:none;display:grid;place-items:center;
+  border:2px solid var(--grey-2);background:#fff;color:#fff;transition:all .15s}
+.chk.done .box{background:var(--green);border-color:var(--green)}
+.chk.done .lbl{color:var(--grey-2);text-decoration:line-through}
+.chk .lbl{flex:1;min-width:0}
+
+/* ---------- notes panel ---------- */
+.notes-panel{background:var(--sand);border:1px solid #EFE7D4;border-radius:var(--radius);padding:13px 16px}
+.notes-panel ul{list-style:none}
+.notes-panel li{position:relative;padding:4px 0 4px 17px;font-size:12.5px;color:#5C5442}
+.notes-panel li::before{content:"";position:absolute;left:0;top:12px;width:6px;height:6px;
+  border-radius:50%;background:var(--gold)}
+.day-note{background:var(--sand);border:1px solid #EFE7D4;border-radius:14px;padding:12px 15px;
+  font-size:12.5px;color:#5C5442;white-space:pre-wrap}
+
+/* ---------- day list / day page ---------- */
+.dayrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;
+  border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:9px}
+.dayrow .dnum{width:44px;height:44px;border-radius:13px;background:var(--blue-soft);color:var(--blue);
+  display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;text-align:center;line-height:1.05}
+.dayrow .dnum span{display:block;font-size:9px;letter-spacing:1px;opacity:.75}
+.dayrow.travel .dnum{background:var(--gold-soft);color:var(--gold-ink)}
+.dayrow .dmain{flex:1;min-width:0}
+.dayrow .dname{font-weight:700;font-size:13.5px}
+.dayrow .dsub{font-size:11px;color:var(--grey-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dayrow .chev{color:var(--grey-2);flex:none}
+.day-head{border-radius:var(--radius);background:linear-gradient(120deg,var(--navy),#31517A);
+  color:#fff;padding:16px 18px;margin-bottom:12px}
+.day-head .d-num{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:.7}
+.day-head .d-name{font-size:21px;font-weight:800;letter-spacing:-.3px;margin-top:2px}
+.day-head .d-date{font-size:12px;opacity:.85;margin-top:4px}
+.route-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.route-chip{display:inline-flex;align-items:center;gap:7px;background:var(--teal-soft);color:var(--teal);
+  font-weight:700;font-size:12px;padding:7px 14px;border-radius:999px}
+.arrow{color:var(--grey-2)}
+.daynav{display:flex;gap:10px;margin-top:4px}
+.daynav button{flex:1;padding:12px;border-radius:14px;background:#fff;border:1px solid var(--border);
+  font-weight:700;font-size:13px;color:var(--blue)}
+.daynav button:disabled{color:var(--grey-2)}
+
+/* ---------- timeline ---------- */
+.timeline-item{display:grid;grid-template-columns:44px 20px 1fr;gap:0 8px}
+.timeline-time{font-weight:700;color:var(--grey);font-size:11px;text-align:right;padding-top:3px}
+.timeline-rail{position:relative}
+.timeline-rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;
+  transform:translateX(-50%);background:var(--border-2)}
+.timeline-dot{position:absolute;left:50%;top:5px;transform:translateX(-50%);width:11px;height:11px;
+  border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border)}
+.timeline-content{padding:0 0 14px 2px}
+.tl-card{border:1px solid var(--border);border-radius:14px;padding:11px 13px;background:#fff}
+.tl-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+.tl-name .tico{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:none}
+.tl-meta{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+.tl-detail{margin-top:7px;font-size:12px;color:var(--body);line-height:1.55}
+.tl-detail b{color:var(--navy);font-weight:600}
+
+/* ---------- link chips ---------- */
+.lnk{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;
+  font-size:11px;font-weight:700;text-decoration:none;border:1px solid;white-space:nowrap}
+.lnk.map{color:var(--teal);border-color:#B8DEE3;background:var(--teal-soft)}
+.lnk.web{color:var(--blue);border-color:#C4DDF2;background:var(--blue-soft)}
+.lnk .ext{font-size:9px;opacity:.75}
+.lnk-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;border-radius:12px}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{text-align:left;background:var(--navy);color:#fff;padding:9px 11px;font-size:10px;
+  letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.table th:first-child{border-radius:10px 0 0 0}
+.table th:last-child{border-radius:0 10px 0 0}
+.table td{padding:9px 11px;border-bottom:1px solid var(--border-2);vertical-align:top;background:#fff}
+.table tr:nth-child(even) td{background:#FAFBFD}
+.table td.rt{text-align:right;font-weight:700;white-space:nowrap}
+.table .dt{color:var(--grey-2);white-space:nowrap;font-size:11px}
+.table tr.total td{background:var(--navy);color:#fff;font-weight:700;border-bottom:none}
+.table tr.total td:first-child{border-radius:0 0 0 10px}
+.table tr.total td:last-child{border-radius:0 0 10px 0}
+.section-title{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.section-title h2{font-size:15px;font-weight:800;white-space:nowrap;letter-spacing:.2px}
+.section-title .line{flex:1;height:3px;border-radius:999px;background:var(--border)}
+
+/* ---------- bookings ---------- */
+.bk-card{border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.bk-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bk-name{font-weight:700;font-size:13px;flex:1;min-width:60%}
+.bk-sub{font-size:11px;color:var(--grey-3);margin-top:6px}
+.bk-when{font-weight:700;font-size:12px;color:var(--navy);margin-top:4px}
+
+/* ---------- movement map ---------- */
+.mapwrap{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:#E9F3F5}
+.mapwrap svg{display:block;width:100%;height:auto}
+.leg-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border-2)}
+.leg-row:last-child{border-bottom:none}
+.leg-ico{width:32px;height:32px;border-radius:10px;background:var(--teal-soft);color:var(--teal);
+  display:grid;place-items:center;flex:none}
+.leg-route{font-weight:700;font-size:13px}
+.leg-via{font-size:11px;color:var(--grey-3)}
+.leg-day{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--grey);
+  background:var(--border-2);border-radius:999px;padding:4px 10px;white-space:nowrap}
+
+/* ---------- todos ---------- */
+.addbar{display:flex;gap:8px;margin-bottom:12px}
+.addbar input{flex:1;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff}
+.addbar input:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.addbar .go{width:48px;border-radius:14px;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
+.seg{display:flex;background:var(--border-2);border-radius:12px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;padding:9px;border-radius:10px;font-weight:700;font-size:12.5px;color:var(--grey)}
+.seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 4px rgba(16,26,39,.12)}
+.todo{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-2)}
+.todo:last-child{border-bottom:none}
+.todo .tbox{width:24px;height:24px;border-radius:8px;flex:none;display:grid;place-items:center;
+  border:2px solid var(--grey-2);background:#fff;color:#fff}
+.todo.done .tbox{background:var(--green);border-color:var(--green)}
+.todo .ttxt{flex:1;min-width:0;font-size:14px;font-weight:500;word-break:break-word}
+.todo.done .ttxt{color:var(--grey-2);text-decoration:line-through}
+.todo .tdel{color:var(--grey-2);width:34px;height:34px;display:grid;place-items:center;flex:none}
+.progress{height:8px;border-radius:999px;background:var(--border-2);overflow:hidden;margin:6px 0 2px}
+.progress i{display:block;height:100%;border-radius:999px;background:var(--green);transition:width .3s}
+
+/* ---------- bingo ---------- */
+.bingo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.btile{position:relative;border-radius:16px;border:1.5px solid var(--border);background:#fff;
+  padding:12px 8px;min-height:86px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:6px;text-align:center;font-size:12px;font-weight:600;color:var(--navy);
+  transition:transform .1s;line-height:1.25;word-break:break-word}
+.btile:active{transform:scale(.95)}
+.btile .bico{font-size:20px;line-height:1}
+.btile.hit{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.btile.hit::after{content:"✓";position:absolute;top:6px;right:8px;width:20px;height:20px;
+  border-radius:50%;background:var(--green);color:#fff;font-size:12px;font-weight:800;
+  display:grid;place-items:center}
+.btile .bdel{position:absolute;top:4px;left:6px;width:24px;height:24px;border-radius:50%;
+  background:var(--red-soft);color:var(--red);font-weight:800;display:grid;place-items:center;font-size:14px}
+.bingo-banner{border-radius:var(--radius);background:linear-gradient(120deg,var(--gold),#E0B65C);
+  color:#fff;text-align:center;padding:16px;font-weight:800;font-size:18px;letter-spacing:1px;margin-bottom:12px}
+.editbtn{width:100%;padding:12px;border-radius:14px;border:1.5px dashed var(--grey-2);
+  color:var(--grey);font-weight:700;font-size:13px;margin-top:12px}
+.editbtn.on{border-color:var(--red);color:var(--red)}
+
+/* ---------- journal ---------- */
+.journal{width:100%;min-height:46vh;border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;background:#fff;resize:vertical;line-height:1.7;color:var(--ink)}
+.journal:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.savenote{text-align:right;margin-top:6px}
+
+/* ---------- misc ---------- */
+.empty{border:1.5px dashed var(--border);border-radius:14px;padding:18px;text-align:center;background:#fff}
+.empty .e1{font-weight:700;font-size:12.5px;color:var(--grey)}
+.empty .e2{font-size:11px;color:var(--grey-2);margin-top:3px}
+.install-tip{border-radius:var(--radius);background:var(--gold-soft);border:1px solid #EEDFB3;
+  color:#7A5B10;padding:12px 14px;font-size:12.5px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.install-tip button{margin-left:auto;color:var(--gold-ink);font-weight:800;flex:none}
+.footer{padding:18px 0 6px;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="appbar">
+  <button class="burger" id="burger" aria-label="Menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <div class="ttl"><small>Travel Book</small><span id="bar-title">Vietnam 2026</span></div>
+  <div class="pill" id="bar-pill"></div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="dh-kicker">Vietnam</div>
+    <div class="dh-title">Vietnam <span style="color:#8FC1EA">2026</span></div>
+    <div class="dh-sub" id="drawer-sub"></div>
+  </div>
+  <nav id="drawer-nav"></nav>
+</aside>
+
+<main id="view" class="wrap"></main>
+
+<!-- Trip data — same schema as the Itinerary Builder / Travel Book report -->
+<script id="trip-data" type="application/json">{"meta":{"title":"Vietnam 2026","startDate":"2026-08-20","numDays":16},"items":{"location":[{"id":"imrj68w2f20p9","cat":"location","name":"Da Nang"},{"id":"imrj6a2cf14v7","cat":"location","name":"Hoi An"},{"id":"imrj6ajy017kf","cat":"location","name":"Hue"},{"id":"imrj6bdg41bwv","cat":"location","name":"Hanoi"}],"transport":[{"id":"imrj75s6lo19","cat":"transport","name":"Airport Shuttle - Sofiana","tcat":"Organised","cost":"0","duration":"","pickup":"Da Nang Airport","dropoff":"Sofiana","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0i6qaj41","cat":"transport","name":"Grab App","tcat":"Taxi","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0ivhz1ook","cat":"transport","name":"Heritage Train - Danang","tcat":"Train","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0k2uh1sek","cat":"transport","name":"Sleeper Bus","tcat":"Bus","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0kcsn21a0","cat":"transport","name":"Hue to Hanoi Flight","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0v3t61thd","cat":"transport","name":"Flight into Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0vk122ps","cat":"transport","name":"Flight out of Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""}],"accommodation":[{"id":"imrj6cjrz1f1q","cat":"accommodation","name":"Sofiana My Khe Hotel & Spa","checkinDate":"2026-08-21","checkinTime":"14:00","checkoutDate":"2026-08-24","checkoutTime":"12:00","cost":"R3095","address":"54-56 Tran Bach Dang, Danang, Vietnam","url":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":"0"},"shuttle":{"status":"included","cost":"0"},"amenities":["Air conditioning","Terrace","Hairdryer","Electric kettle","Socket near the bed","Wake-Up Service"]},{"id":"imrj71yzn23vf","cat":"accommodation","name":"Nolia Hoi An","checkinDate":"2026-08-24","checkinTime":"14:00","checkoutDate":"2026-08-27","checkoutTime":"12:00","cost":"1917","address":"Cầu Hói Muống Street Số 01 - 02, 50000 Hoi An, Vietnam","url":"https://www.noliahoian.com/","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Free Bicycles Rental"],"cancelDate":"","cancelTime":""},{"id":"imrj76qq6124z","cat":"accommodation","name":"Gahi Homestay","checkinDate":"2026-08-27","checkinTime":"14:00","checkoutDate":"2026-08-30","checkoutTime":"12:00","cost":"R1644","address":"103 Dang Van Ngu, Hue, Vietnam","url":"","cancelDate":"","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":true,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Barbecue"]},{"id":"imrj771b220ym","cat":"accommodation","name":"Radison Red","checkinDate":"2026-09-03","checkinTime":"14:00","checkoutDate":"2026-09-04","checkoutTime":"18:00","cost":"0","address":"90 Vo Nguyen Gliap, Son Tra Ward, Da Nang, Vietnam","url":"https://www.radissonhotels.com/vi-vn/hotels/radisson-red-danang?msockid=2c25fde442166cf105c6ebfc43886d30","cancelDate":"","cancelTime":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]},{"id":"imrm0cw5dkoe","cat":"accommodation","name":"WeCozy","checkinDate":"2026-08-30","checkinTime":"15:00","checkoutDate":"2026-09-03","checkoutTime":"12:00","cost":"5359","address":"20 Tong Duy Tan, Hoan Kiem, Hanoi, Vietnam","url":"","cancelDate":"2026-08-24","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":false,"other":"Two Bedroom Apartment"},"breakfast":{"status":"","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]}],"activities":[{"id":"imrksfkmvjhd","cat":"activities","name":"My Sun Sanctuary Tour","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrksto2922bw","cat":"activities","name":"Memories Show","timeStart":"","timeEnd":"","location":"Hoi An","website":"https://www.getyourguide.com/hoi-an-l831/hoi-an-memories-show-hoi-an-impression-theme-park-qrticket-t481283/?ranking_uuid=e3163bfa-9558-4a58-a30e-d9b82484a45c&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"778","cancelDate":"","cancelTime":""},{"id":"imrkt45d21jju","cat":"activities","name":"City of Ghosts Cemetary","timeStart":"","timeEnd":"","location":"Hue","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm6ld9t18c7","cat":"activities","name":"Teh Dar: Unique Bamboo Circus","timeStart":"","timeEnd":"","location":"Hoi An Lune Center 1A Nguyen Phuc Chu, Minh An Ward, Hoi An, Quang Nam, Vietnam","website":"https://www.getyourguide.com/hoi-an-l831/teh-dar-vietnamese-tribal-culture-at-saigon-opera-house-t83301/?ranking_uuid=d0b089c1-8f05-422f-bb27-9a198db2d23e&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"908","cancelDate":"","cancelTime":""},{"id":"imrm7bk3nrgb","cat":"activities","name":"Hue Imperial Ancient City Walking Tour","timeStart":"","timeEnd":"","location":"FH9H+3XJ Phu Xuan, Hue, Vietnam","website":"https://www.getyourguide.com/hue-vietnam-l833/hue-imperial-ancient-city-walking-tour-t848289/?ranking_uuid=ebcd110b-f6b4-47ed-a0d5-6e71f4301999&q=Hue%2C+Vietnam&date_from=2026-08-27&date_to=2026-08-30&adults=2","cost":"366","cancelDate":"","cancelTime":""},{"id":"imrm7rgm82513","cat":"activities","name":"Hue Tombs","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm7voc51uso","cat":"activities","name":"Water Puppet Show","timeStart":"","timeEnd":"","location":"31 Lo Su, Hoan Kiem, Hanoi","website":"https://www.getyourguide.com/hanoi-l205/hanoi-water-puppet-tickets-with-hotel-delivery-t62912/?ranking_uuid=aa6c3c27-9032-4efc-afce-2472bd035eca&q=Hanoi&date_from=2026-08-31&date_to=2026-09-03&adults=2","cost":"230","cancelDate":"","cancelTime":""},{"id":"imrm7wqip14tb","cat":"activities","name":"Spa Day","timeStart":"","timeEnd":"","location":"","website":"","cost":"2000","cancelDate":"","cancelTime":""},{"id":"imrm80a1t1w53","cat":"activities","name":"Old Quarter Street Food Tour","timeStart":"","timeEnd":"","location":"38 Bát Sứ street","website":"","cost":"734","cancelDate":"","cancelTime":""}]},"days":[{"name":"Travel Day","note":"","locStart":null,"locEnd":null,"transport":[],"accommodation":[],"activities":[]},{"name":"Landing Day","note":"","locStart":null,"locEnd":"imrj68w2f20p9","transport":["imrj75s6lo19","imrm0v3t61thd"],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Shopping Vibe","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Heritage at Danang","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":["imrksfkmvjhd"]},{"name":"Travel Day","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj6a2cf14v7","transport":["imrm0i6qaj41"],"accommodation":["imrj71yzn23vf"],"activities":[]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrksto2922bw"]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrm6ld9t18c7"]},{"name":"Travel Day","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6ajy017kf","transport":["imrm0i6qaj41","imrm0ivhz1ook"],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":["imrm7bk3nrgb","imrm7rgm82513"]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"Travel Day","note":"","locStart":"imrj6ajy017kf","locEnd":null,"transport":["imrm0kcsn21a0","imrm0k2uh1sek"],"accommodation":["imrj76qq6124z"],"activities":["imrkt45d21jju"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":[]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7voc51uso","imrm80a1t1w53"]},{"name":"Spa Day","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7wqip14tb"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj771b220ym"],"activities":[]},{"name":"","note":"","locStart":"imrj68w2f20p9","locEnd":null,"transport":["imrm0vk122ps"],"accommodation":[],"activities":[]}],"savedAt":1784128845078,"todos":[]}</script>
+
+<script>
+"use strict";
+/* ============================================================ CONFIG */
+const CONFIG={
+  country:"Vietnam",
+  status:"PLANNING",
+  checklist:[
+    {label:"Passport",done:true},
+    {label:"Visa / e-visa",done:false},
+    {label:"Flights",done:true},
+    {label:"Accommodation",done:true},
+    {label:"Insurance",done:false},
+    {label:"SIM / eSIM",done:false},
+    {label:"Cash",done:false},
+    {label:"Power bank",done:true}
+  ],
+  remember:[
+    "Buy SIM at the airport",
+    "Download offline maps",
+    "Withdraw cash — markets are cash only",
+    "Check in online 24h before each flight",
+    "Exchange currency at gold shops for better rates"
+  ],
+  rates:{ZAR:1,VND:0.00075,USD:18,EUR:20,"?":1}
+};
+const SEED_TODOS={
+  pre:["Apply for e-visa","Travel insurance","Order Dong / USD cash","Book airport transfer home side",
+    "Install Grab + offline Google Maps","Copy passports to cloud","Universal plug adapter","Motion sickness tablets"],
+  trip:["Buy local SIM at airport","Get tailor measured in Hoi An (day 1 there!)","Confirm Hue walking tour",
+    "Book Memories Show seats","Reconfirm WeCozy check-in time"]
+};
+const SEED_BINGO={
+  food:{title:"Food Bingo",icon:"🍜",items:["Pho","Banh Mi","Egg Coffee","Coconut Coffee","Cao Lau (Hoi An)",
+    "White Rose Dumplings","Mi Quang (Da Nang)","Banh Xeo","Bun Cha (Hanoi)","Fresh Spring Rolls",
+    "Bun Bo Hue","Salt Coffee (Hue)","Che Dessert","Bia Hoi","Sticky Rice (Xoi)","Grilled Seafood My Khe"]},
+  shop:{title:"Shopping Bingo",icon:"🛍️",items:["Tailored Outfit (Hoi An)","Silk Lantern","Conical Hat (Non La)",
+    "Coffee Beans + Phin Filter","Lacquerware","Silk Scarf","Propaganda Poster","Ceramics",
+    "Leather Sandals","Pearl Jewellery","Embroidered Art","Fridge Magnet","Bamboo Product",
+    "Ao Dai","Local Snacks Haul","Local Artwork"]}
+};
+
+/* ============================================================ ICONS */
+const PATHS={
+  plane:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  train:'<rect x="4" y="3" width="16" height="13" rx="2"/><path d="M4 11h16"/><circle cx="8.5" cy="13.5" r=".8"/><circle cx="15.5" cy="13.5" r=".8"/><path d="m8 19-2 3M18 22l-2-3M8 19h8"/>',
+  bus:'<path d="M8 6v6M15 6v6M2 12h19.6M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/>',
+  car:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+  ticket:'<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/>',
+  bed:'<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+  map:'<path d="m8 3-6 3v15l6-3 8 3 6-3V3l-6 3-8-3Z"/><path d="M8 3v15M16 6v15"/>',
+  note:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4M8 13h8M8 17h5"/>',
+  cal:'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+  alert:'<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  compass:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/>',
+  home:'<path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  trash:'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>'
+};
+function ico(name,size,extra){
+  return `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" ${extra||""}>${PATHS[name]||PATHS.pin}</svg>`;
+}
+const TCAT_ICON={Flight:"plane",Bus:"bus",Train:"train",Taxi:"car",Organised:"ticket"};
+
+/* ============================================================ GEODATA */
+const GEO={
+  "ho chi minh":[10.78,106.70],"saigon":[10.78,106.70],"hcmc":[10.78,106.70],
+  "hanoi":[21.03,105.85],"ha noi":[21.03,105.85],
+  "da nang":[16.05,108.21],"danang":[16.05,108.21],
+  "hoi an":[15.88,108.33],"hue":[16.46,107.59],
+  "ha long":[20.91,107.18],"halong":[20.91,107.18],"cat ba":[20.73,107.05],
+  "ninh binh":[20.25,105.97],"sapa":[22.34,103.84],"sa pa":[22.34,103.84],
+  "ha giang":[22.83,104.98],"phong nha":[17.59,106.28],
+  "nha trang":[12.24,109.19],"quy nhon":[13.78,109.22],
+  "da lat":[11.94,108.44],"dalat":[11.94,108.44],"mui ne":[10.93,108.29],
+  "vung tau":[10.35,107.07],"can tho":[10.03,105.78],"mekong":[10.03,105.78],
+  "phu quoc":[10.29,103.98],"my son":[15.79,108.12],"cu chi":[11.06,106.51]
+};
+const COAST=[[23.3,105.4],[22.5,106.6],[21.9,107.4],[21.5,108.0],[20.8,106.8],[19.8,105.9],
+ [18.6,105.7],[17.7,106.5],[16.9,107.1],[16.2,108.1],[15.1,108.9],[13.8,109.3],[12.6,109.4],
+ [11.3,108.9],[10.7,107.9],[10.3,107.0],[9.5,106.5],[8.6,105.0],[8.8,104.7],[9.9,104.8],
+ [10.38,104.48],[10.9,105.1],[10.9,105.8],[11.8,106.9],[13.0,107.5],[14.4,107.5],[15.2,107.6],
+ [16.0,107.0],[16.8,106.4],[17.6,105.6],[18.6,105.2],[19.4,104.6],[20.4,104.4],[21.2,103.1],
+ [22.0,102.2],[22.5,102.8],[22.8,103.6],[23.0,104.8]];
+
+/* ============================================================ DATA LOAD + HELPERS */
+let D=null;
+(function(){
+  const t=document.getElementById("trip-data").textContent.trim();
+  D=JSON.parse(t);
+  D.meta=Object.assign({title:"Vietnam 2026",startDate:"",numDays:D.days.length},D.meta||{});
+  D.items=Object.assign({location:[],transport:[],accommodation:[],activities:[]},D.items||{});
+  D.days=D.days.map(d=>Object.assign({name:"",note:"",locStart:null,locEnd:null,transport:[],accommodation:[],activities:[]},d));
+})();
+function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function getItem(id){for(const k in D.items){const f=D.items[k].find(x=>x.id===id);if(f)return f;}return null;}
+function dayDateObj(i){
+  if(!D.meta.startDate)return null;
+  const p=D.meta.startDate.split("-").map(Number);
+  if(p.length!==3||p.some(isNaN))return null;
+  const d=new Date(p[0],p[1]-1,p[2]);d.setDate(d.getDate()+i);return d;
+}
+function dayDateStr(i,o){const d=dayDateObj(i);return d?d.toLocaleDateString("en-GB",o||{weekday:"short",day:"numeric",month:"short"}):"";}
+function parseDate(ds,ts){
+  if(!ds)return null;
+  const p=ds.split("-").map(Number);if(p.length!==3||p.some(isNaN))return null;
+  let h=23,m=59;
+  if(ts){const q=ts.split(":").map(Number);if(q.length>=2&&!q.some(isNaN)){h=q[0];m=q[1];}}
+  return new Date(p[0],p[1]-1,p[2],h,m);
+}
+function fmtD(d,withTime){
+  if(!d)return"";
+  const s=d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  return withTime?s+" · "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"):s;
+}
+function shortDate(ds){const d=parseDate(ds);return d?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";}
+function usageMap(){
+  const u={};
+  D.days.forEach((d,i)=>{
+    const add=id=>{if(!id)return;(u[id]=u[id]||[]).push(i);};
+    add(d.locStart);if(d.locEnd&&d.locEnd!==d.locStart)add(d.locEnd);
+    (d.transport||[]).forEach(add);(d.accommodation||[]).forEach(add);(d.activities||[]).forEach(add);
+  });
+  return u;
+}
+function daysLabel(a){if(!a||!a.length)return"—";return [...new Set(a)].sort((x,y)=>x-y).map(i=>"Day "+(i+1)).join(", ");}
+function parseCost(v){
+  if(v==null)return null;const s=String(v).trim();if(!s)return null;
+  let cur="";
+  if(/₫|đ\b|VND|dong/i.test(s))cur="VND";
+  else if(/ZAR/i.test(s)||/^R\s?\d/.test(s))cur="ZAR";
+  else if(/\$|USD/i.test(s))cur="USD";
+  else if(/€|EUR/i.test(s))cur="EUR";
+  const m=s.replace(/[,\s]/g,"").match(/(\d+(?:\.\d+)?)/);
+  if(!m)return{cur:cur||"?",n:null,raw:s};
+  let n=parseFloat(m[1]);
+  if(!cur)cur=n>=10000?"VND":"ZAR";
+  return{cur,n,raw:s};
+}
+function costStr(v){
+  const c=parseCost(v);
+  if(!c||c.n===0)return"";
+  return c.n!=null?fmtMoney(c.n,c.cur):c.raw;
+}
+function fmtMoney(n,cur){
+  const s=n.toLocaleString("en-US",{maximumFractionDigits:(n%1)?2:0});
+  if(cur==="USD")return"$"+s;if(cur==="ZAR")return"R "+s;
+  if(cur==="VND")return s+" ₫";if(cur==="EUR")return"€"+s;
+  return s+(cur&&cur!=="?"?" "+cur:"");
+}
+function totalsToStr(t){
+  const ORDER=["ZAR","VND","USD","EUR"];
+  const ks=Object.keys(t).filter(k=>k!=="?"&&t[k]>0)
+    .sort((a,b)=>(ORDER.indexOf(a)+1||99)-(ORDER.indexOf(b)+1||99));
+  const p=ks.map(k=>fmtMoney(t[k],k));
+  if(t["?"])p.push(fmtMoney(t["?"],"?"));
+  return p.length?p.join(" + "):"—";
+}
+function addTot(t,c){if(c&&c.n!=null)t[c.cur]=(t[c.cur]||0)+c.n;}
+function approxZAR(t){let s=0;for(const k in t)s+=t[k]*(CONFIG.rates[k]||1);return s;}
+function locSequence(){
+  const seq=[];
+  D.days.forEach((d,i)=>{[d.locStart,d.locEnd].forEach(id=>{
+    if(id&&(!seq.length||seq[seq.length-1].id!==id))seq.push({id,day:i});});});
+  return seq;
+}
+function legs(){
+  const out=[];let prev=null;
+  D.days.forEach((d,i)=>{
+    if(d.locStart&&prev&&d.locStart!==prev)out.push({day:i,from:prev,to:d.locStart,via:[],implied:true});
+    if(d.locStart&&d.locEnd&&d.locStart!==d.locEnd)
+      out.push({day:i,from:d.locStart,to:d.locEnd,via:(d.transport||[]).map(getItem).filter(Boolean),implied:false});
+    prev=d.locEnd||d.locStart||prev;
+  });
+  return out;
+}
+function geoFor(n){n=(n||"").toLowerCase();for(const k in GEO){if(n.includes(k))return GEO[k];}return null;}
+function mapsUrl(q){
+  if(!q)return"";
+  return "https://www.google.com/maps/search/?api=1&query="+
+    encodeURIComponent(/vietnam/i.test(q)?q:q+", Vietnam");
+}
+function linkChips(mapQuery,webUrl){
+  const chips=[];
+  if(mapQuery)chips.push(`<a class="lnk map" href="${mapsUrl(mapQuery)}" target="_blank" rel="noopener">${ico("pin",10)} Google Maps <span class="ext">↗</span></a>`);
+  if(webUrl&&/^https?:\/\//i.test(webUrl))chips.push(`<a class="lnk web" href="${esc(webUrl)}" target="_blank" rel="noopener">${ico("globe",10)} Website <span class="ext">↗</span></a>`);
+  return chips.length?`<div class="lnk-row">${chips.join("")}</div>`:"";
+}
+function nightsPerLoc(){
+  const n={};
+  for(let i=0;i<D.days.length-1;i++){
+    const id=D.days[i].locEnd||D.days[i].locStart;
+    if(id)n[id]=(n[id]||0)+1;
+  }
+  return n;
+}
+function allCostRows(){
+  const u=usageMap(),rows=[];
+  ["transport","accommodation","activities"].forEach(cat=>{
+    D.items[cat].forEach(it=>{
+      rows.push({cat,name:it.name,days:u[it.id]||[],raw:it.cost||"",c:parseCost(it.cost)});
+      if(cat==="accommodation"){
+        if(it.breakfast&&it.breakfast.cost)rows.push({cat,name:it.name+" — breakfast",days:u[it.id]||[],raw:it.breakfast.cost,c:parseCost(it.breakfast.cost),extra:true});
+        if(it.shuttle&&it.shuttle.cost)rows.push({cat,name:it.name+" — shuttle",days:u[it.id]||[],raw:it.shuttle.cost,c:parseCost(it.shuttle.cost),extra:true});
+      }
+    });
+  });
+  return rows;
+}
+function cancelEntries(){
+  const u=usageMap(),out=[];
+  ["transport","accommodation","activities"].forEach(cat=>{
+    D.items[cat].forEach(it=>{
+      out.push({it,cat,dl:parseDate(it.cancelDate,it.cancelTime),days:u[it.id]||[]});
+    });
+  });
+  return out;
+}
+function urgency(dl){
+  const now=new Date(),days=Math.ceil((dl-now)/86400000);
+  if(dl<now)return{cls:"grey",dot:"var(--grey-2)",t:"Passed"};
+  if(days<=7)return{cls:"red",dot:"var(--red)",t:days<=1?(days<=0?"Due today":"Due tomorrow"):days+" days left"};
+  if(days<=21)return{cls:"gold",dot:"var(--gold)",t:days+" days left"};
+  return{cls:"green",dot:"var(--green)",t:days+" days left"};
+}
+function hotelNights(a){
+  const ci=parseDate(a.checkinDate),co=parseDate(a.checkoutDate);
+  if(ci&&co){const n=Math.round((co-ci)/86400000);if(n>0)return n;}
+  return null;
+}
+const CAT_COLOR={transport:"var(--c-transport)",accommodation:"var(--c-accommodation)",
+  activities:"var(--c-activities)",location:"var(--teal)"};
+const CAT_SOFT={transport:"var(--gold-soft)",accommodation:"var(--blue-soft)",activities:"var(--green-soft)"};
+const CAT_INK={transport:"var(--gold-ink)",accommodation:"var(--blue)",activities:"var(--green)"};
+const CAT_LABEL={transport:"Transport",accommodation:"Accommodation",activities:"Activity"};
+function sectionTitle(t,color){
+  return `<div class="section-title"><h2 style="color:${color||"var(--navy)"}">${esc(t)}</h2>
+    <span class="line" style="background:${color||"var(--border)"};opacity:.25"></span></div>`;
+}
+function emptyState(a,b){
+  return `<div class="empty"><div class="e1">${esc(a)}</div><div class="e2">${esc(b||"")}</div></div>`;
+}
+
+/* ============================================================ LOCAL STATE (persists on the phone) */
+const store={
+  get(k,def){try{const v=localStorage.getItem("vn26_"+k);return v==null?def:JSON.parse(v);}catch(e){return def;}},
+  set(k,v){try{localStorage.setItem("vn26_"+k,JSON.stringify(v));}catch(e){}}
+};
+let TODOS=store.get("todos",null);
+if(!TODOS){
+  let n=0;
+  TODOS=[];
+  SEED_TODOS.pre.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"pre",done:false}));
+  SEED_TODOS.trip.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"trip",done:false}));
+  store.set("todos",TODOS);
+}
+let BINGO=store.get("bingo",null);
+if(!BINGO){
+  BINGO={};let n=0;
+  for(const k in SEED_BINGO){
+    BINGO[k]={title:SEED_BINGO[k].title,icon:SEED_BINGO[k].icon,
+      items:SEED_BINGO[k].items.map(t=>({id:"bg"+(++n),text:t,done:false}))};
+  }
+  store.set("bingo",BINGO);
+}
+let CHECKS=store.get("checklist",null);
+if(!CHECKS){CHECKS={};CONFIG.checklist.forEach(c=>CHECKS[c.label]=c.done);store.set("checklist",CHECKS);}
+let idSeq=store.get("idseq",1000);
+function newId(p){idSeq++;store.set("idseq",idSeq);return p+idSeq;}
+
+/* ============================================================ NAV / ROUTER */
+const SECTIONS=[
+  {route:"summary",  name:"Trip Summary",  icon:"home",   color:"var(--navy)",  soft:"#E8ECF2", group:"The report"},
+  {route:"itinerary",name:"Itinerary",     icon:"cal",    color:"var(--blue)",  soft:"var(--blue-soft)"},
+  {route:"movement", name:"Movement",      icon:"map",    color:"var(--teal)",  soft:"var(--teal-soft)"},
+  {route:"costs",    name:"Cost Summary",  icon:"wallet", color:"var(--red)",   soft:"var(--red-soft)"},
+  {route:"stays",    name:"Accommodation", icon:"bed",    color:"var(--blue)",  soft:"var(--blue-soft)"},
+  {route:"bookings", name:"Bookings & Deadlines",icon:"alert",color:"var(--gold-ink)",soft:"var(--gold-soft)"},
+  {route:"todos",    name:"To-Do's",       icon:"check",  color:"var(--green)", soft:"var(--green-soft)", group:"On the trip"},
+  {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
+  {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"}
+];
+const drawer=document.getElementById("drawer"),scrim=document.getElementById("scrim");
+function openDrawer(){drawer.classList.add("open");scrim.classList.add("open");}
+function closeDrawer(){drawer.classList.remove("open");scrim.classList.remove("open");}
+document.getElementById("burger").onclick=openDrawer;
+scrim.onclick=closeDrawer;
+function buildDrawer(active){
+  const nav=document.getElementById("drawer-nav");
+  let html="",no=0;
+  SECTIONS.forEach(s=>{
+    if(s.group)html+=`<div class="dgroup">${esc(s.group)}</div>`;
+    no++;
+    html+=`<button class="ditem ${s.route===active?"active":""}" data-route="${s.route}">
+      <span class="dico" style="background:${s.soft};color:${s.color}">${ico(s.icon,16)}</span>
+      ${esc(s.name)}<span class="dno">${String(no).padStart(2,"0")}</span>
+    </button>`;
+  });
+  nav.innerHTML=html;
+  nav.querySelectorAll(".ditem").forEach(b=>b.onclick=()=>{closeDrawer();go(b.dataset.route);});
+}
+function go(route){location.hash="#/"+route;}
+function currentRoute(){
+  const h=location.hash.replace(/^#\/?/,"");
+  return h||"summary";
+}
+
+/* ============================================================ COUNTDOWN */
+function tripPhase(){
+  const start=dayDateObj(0),end=dayDateObj(D.days.length-1);
+  if(!start)return{pill:"",sub:""};
+  const now=new Date();now.setHours(0,0,0,0);
+  const s=new Date(start);s.setHours(0,0,0,0);
+  const days=Math.round((s-now)/86400000);
+  if(days>0)return{pill:days+" days to go",sub:days+" sleeps until Da Nang"};
+  const idx=Math.round((now-s)/86400000);
+  if(idx<D.days.length)return{pill:"Day "+(idx+1)+" of "+D.days.length,sub:"You're in Vietnam! 🎉",today:idx};
+  return{pill:"Trip complete",sub:"Hẹn gặp lại — see you again, Vietnam"};
+}
+
+/* ============================================================ VIEW · SUMMARY */
+function viewSummary(){
+  const uniq=locSequence().map(x=>x.id).filter((v,i,a)=>a.indexOf(v)===i);
+  const nights=nightsPerLoc();
+  const end=dayDateObj(D.days.length-1);
+  const grand={};allCostRows().forEach(r=>addTot(grand,r.c));
+  const ph=tripPhase();
+  const stats=[
+    {v:D.days.length,l:"Days"},
+    {v:uniq.length,l:"Cities"},
+    {v:D.items.activities.length,l:"Activities"},
+    {v:totalsToStr(grand),l:"Budget",fit:true}
+  ];
+  const chain=uniq.map((id,i)=>{
+    const nm=getItem(id)?.name||"";
+    const nt=nights[id];
+    return `${i?'<div class="j-link"></div>':""}<div class="j-node">
+      <span class="jdot"></span><span class="jname">${esc(nm)}</span>
+      ${nt?`<span class="jnights">${nt} night${nt>1?"s":""}</span>`:""}
+    </div>`;
+  }).join("");
+  const catTotals=["transport","accommodation","activities"].map(cat=>{
+    const t={};allCostRows().filter(r=>r.cat===cat).forEach(r=>addTot(t,r.c));
+    return{cat,t,zar:approxZAR(t)};
+  });
+  const maxZar=Math.max(...catTotals.map(c=>c.zar),1);
+  const bars=catTotals.map(c=>`
+    <div class="bar-row">
+      <div class="bar-top"><span class="bar-name">${CAT_LABEL[c.cat]==="Activity"?"Activities":CAT_LABEL[c.cat]}</span>
+        <span class="bar-val">${totalsToStr(c.t)}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(c.zar/maxZar*100))}%;background:${CAT_COLOR[c.cat]}"></div></div>
+    </div>`).join("");
+  const checks=CONFIG.checklist.map(c=>{
+    const done=!!CHECKS[c.label];
+    return `<button class="chk ${done?"done":""}" data-chk="${esc(c.label)}">
+      <span class="box">${done?ico("check",12):""}</span><span class="lbl">${esc(c.label)}</span>
+    </button>`;
+  }).join("");
+  const remember=CONFIG.remember.map(r=>`<li>${esc(r)}</li>`).join("");
+  const todayBtn=ph.today!=null?`<button class="daynav-jump" id="jump-today" style="margin-top:10px;width:100%;padding:12px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-weight:700;font-size:13px">Open today's plan →</button>`:"";
+  return {title:"Trip Summary",html:`
+    <div class="hero">
+      <div class="hb-kicker">${esc(CONFIG.country)} · ${esc(CONFIG.status)}</div>
+      <div class="hb-title">Vietnam <span style="color:#8FC1EA">2026</span></div>
+      <div class="hb-sub">${esc(dayDateStr(0,{day:"numeric",month:"short"}))} – ${end?esc(end.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})):""} · ${esc(ph.sub)}</div>
+      ${todayBtn}
+    </div>
+    <section class="grid-2">
+      ${stats.map(s=>`<div class="stat"><div class="stat-value ${s.fit?"fit":""}">${esc(String(s.v))}</div><div class="stat-label">${s.l}</div></div>`).join("")}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--teal)">${ico("compass",14)} Journey</div>
+      ${chain||emptyState("No stops yet")}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--red)">${ico("wallet",14)} Budget snapshot</div>
+      ${bars}
+      <div class="info-row" style="margin-top:8px"><span class="label">Estimated total</span>
+        <span class="value" style="color:var(--red)">${totalsToStr(grand)}</span></div>
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--green)">${ico("check",14)} Travel checklist</div>
+      ${checks}
+    </section>
+    <section class="notes-panel">
+      <div class="card-title" style="color:var(--gold-ink)">${ico("note",14)} Things to remember</div>
+      <ul>${remember}</ul>
+    </section>`,
+  wire(el){
+    el.querySelectorAll("[data-chk]").forEach(b=>b.onclick=()=>{
+      CHECKS[b.dataset.chk]=!CHECKS[b.dataset.chk];store.set("checklist",CHECKS);render();
+    });
+    const j=el.querySelector("#jump-today");
+    if(j)j.onclick=()=>go("day/"+(tripPhase().today+1));
+  }};
+}
+
+/* ============================================================ VIEW · ITINERARY */
+function viewItinerary(){
+  const rows=D.days.map((d,i)=>{
+    const s=getItem(d.locStart),e=getItem(d.locEnd);
+    const route=s?(e&&e.id!==s.id?s.name+" → "+e.name:s.name):"";
+    const acts=(d.activities||[]).length;
+    const isTravel=/travel/i.test(d.name||"")||(s&&e&&e.id!==s.id);
+    const sub=[route,acts?acts+" activit"+(acts>1?"ies":"y"):""].filter(Boolean).join(" · ");
+    return `<button class="dayrow ${isTravel?"travel":""}" data-day="${i}">
+      <span class="dnum"><span>DAY</span>${i+1}</span>
+      <span class="dmain">
+        <span class="dname" style="display:block">${esc(d.name||"Open day")}</span>
+        <span class="dsub">${esc(dayDateStr(i))}${sub?" · "+esc(sub):""}</span>
+      </span>
+      <span class="chev">${ico("chev",16)}</span>
+    </button>`;
+  }).join("");
+  return {title:"Itinerary",html:`
+    <div class="hero"><div class="hb-kicker">The plan</div><div class="hb-title">Itinerary</div>
+      <div class="hb-sub">${D.days.length} days · tap a day for the full plan</div></div>
+    ${rows}`,
+  wire(el){
+    el.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>go("day/"+(Number(b.dataset.day)+1)));
+  }};
+}
+
+/* ============================================================ VIEW · DAY */
+function dayTimeline(d){
+  const items=[];
+  (d.transport||[]).forEach(id=>{const it=getItem(id);if(it)items.push({it,cat:"transport",time:""});});
+  (d.activities||[]).forEach(id=>{const it=getItem(id);if(it)items.push({it,cat:"activities",time:it.timeStart||""});});
+  items.sort((a,b)=>(a.time||"99")<(b.time||"99")?-1:1);
+  if(!items.length)return emptyState("Nothing planned yet","A free day — wander, eat, repeat.");
+  return `<div class="timeline">${items.map(x=>{
+    const it=x.it;
+    const badges=[];
+    if(costStr(it.cost))badges.push(`<span class="badge" style="background:var(--red-soft);color:var(--red)">${esc(costStr(it.cost))}</span>`);
+    if(x.cat==="transport"&&it.duration)badges.push(`<span class="badge grey">${esc(it.duration)}</span>`);
+    if(x.cat==="activities"&&it.timeEnd)badges.push(`<span class="badge grey">until ${esc(it.timeEnd)}</span>`);
+    if(it.cancelDate)badges.push(`<span class="badge gold">Free cancel · ${esc(shortDate(it.cancelDate))}</span>`);
+    const det=[];
+    let links="";
+    if(x.cat==="transport"){
+      if(it.pickup||it.dropoff)det.push(`<b>${esc(it.pickup||"?")}</b> → <b>${esc(it.dropoff||"?")}</b>`);
+      if(it.notes)det.push(esc(it.notes));
+    }else{
+      if(it.location)det.push(esc(it.location));
+      links=linkChips(it.location||it.name,it.website);
+    }
+    const iconName=x.cat==="transport"?(TCAT_ICON[it.tcat]||"car"):"pin";
+    return `<div class="timeline-item">
+      <div class="timeline-time">${esc(x.time||"—")}</div>
+      <div class="timeline-rail"><span class="timeline-dot" style="background:${CAT_COLOR[x.cat]}"></span></div>
+      <div class="timeline-content"><div class="tl-card">
+        <div class="tl-name"><span class="tico" style="background:${CAT_SOFT[x.cat]};color:${CAT_INK[x.cat]}">${ico(iconName,13)}</span>${esc(it.name)}</div>
+        ${badges.length?`<div class="tl-meta">${badges.join("")}</div>`:""}
+        ${det.length?`<div class="tl-detail">${det.join("<br>")}</div>`:""}
+        ${links}
+      </div></div>
+    </div>`;
+  }).join("")}</div>`;
+}
+function viewDay(i){
+  const d=D.days[i];
+  if(!d)return viewItinerary();
+  const s=getItem(d.locStart),e=getItem(d.locEnd);
+  const stay=(d.accommodation||[]).map(id=>getItem(id)).filter(Boolean);
+  const stayNow=stay.length?stay:D.items.accommodation.filter(a=>{
+    const ci=parseDate(a.checkinDate),co=parseDate(a.checkoutDate),dt=dayDateObj(i);
+    return ci&&co&&dt&&dt>=ci&&dt<co;
+  });
+  const spend={};
+  [...(d.transport||[]),...(d.activities||[]),...(d.accommodation||[])].forEach(id=>{
+    const it=getItem(id);if(it)addTot(spend,parseCost(it.cost));
+  });
+  const dt=dayDateObj(i);
+  const dueToday=cancelEntries().filter(x=>x.dl&&dt&&x.dl.toDateString()===dt.toDateString());
+  const facts=`
+    ${stayNow.length?stayNow.map(a=>`<div class="info-row"><span class="label">Sleeping at</span><span class="value">${esc(a.name)}</span></div>`).join(""):`<div class="info-row"><span class="label">Sleeping at</span><span class="value" style="color:var(--grey-2)">—</span></div>`}
+    <div class="info-row"><span class="label">Booked spend</span><span class="value">${totalsToStr(spend)}</span></div>
+    <div class="info-row"><span class="label">Start</span><span class="value">${esc(s?.name||"—")}</span></div>
+    <div class="info-row"><span class="label">End</span><span class="value">${esc(e?.name||"—")}</span></div>
+    ${dueToday.map(x=>`<div class="info-row"><span class="label" style="color:var(--red)">Deadline today</span><span class="value" style="color:var(--red)">${esc(x.it.name)}</span></div>`).join("")}`;
+  const checkin=stay.map(a=>`
+    <div class="hmini" style="margin-top:10px">
+      <div class="hname">${esc(a.name)}</div>
+      <div class="caption">Check-in ${esc(shortDate(a.checkinDate)||"")}${a.checkinTime?" · "+esc(a.checkinTime):""} — Check-out ${esc(shortDate(a.checkoutDate)||"")}${a.checkoutTime?" · "+esc(a.checkoutTime):""}</div>
+      ${a.address?`<div class="caption" style="margin-top:2px">${esc(a.address)}</div>`:""}
+      ${linkChips(a.address||a.name,a.url)}
+    </div>`).join("");
+  return {title:"Day "+(i+1),html:`
+    <div class="day-head">
+      <div class="d-num">Day ${i+1} of ${D.days.length}</div>
+      <div class="d-name">${esc(d.name||"Open day")}</div>
+      <div class="d-date">${esc(dayDateStr(i,{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</div>
+    </div>
+    ${ (s||e) ? `<div class="route-chips">
+        ${s?`<span class="route-chip">${ico("pin",12)} ${esc(s.name)}</span>`:""}
+        ${s&&e&&e.id!==s.id?`<span class="arrow">→</span><span class="route-chip">${ico("pin",12)} ${esc(e.name)}</span>`:""}
+      </div>`:""}
+    <section>
+      <div class="card-title" style="color:var(--green)">${ico("clock",13)} The day</div>
+      ${dayTimeline(d)}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--blue)">${ico("compass",13)} Quick facts</div>
+      ${facts}${checkin}
+    </section>
+    ${d.note&&d.note.trim()?`<section>
+      <div class="card-title" style="color:var(--gold-ink)">${ico("note",13)} Notes</div>
+      <div class="day-note">${esc(d.note)}</div></section>`:""}
+    <div class="daynav">
+      <button id="prev-day" ${i===0?"disabled":""}>← Day ${i}</button>
+      <button id="all-days">All days</button>
+      <button id="next-day" ${i===D.days.length-1?"disabled":""}>Day ${i+2} →</button>
+    </div>`,
+  wire(el){
+    const p=el.querySelector("#prev-day"),n=el.querySelector("#next-day");
+    if(p&&!p.disabled)p.onclick=()=>go("day/"+i);
+    if(n&&!n.disabled)n.onclick=()=>go("day/"+(i+2));
+    el.querySelector("#all-days").onclick=()=>go("itinerary");
+  }};
+}
+
+/* ============================================================ VIEW · MOVEMENT */
+function proj(lat,lon){return[(lon-101.6)*36+16,(23.6-lat)*36+14];}
+function viewMovement(){
+  const seq=locSequence(),lg=legs();
+  const coastPath="M"+COAST.map(p=>proj(p[0],p[1]).map(v=>v.toFixed(1)).join(",")).join(" L ")+" Z";
+  const nodes=[],seen={};
+  seq.forEach(s=>{
+    const it=getItem(s.id);if(!it||seen[s.id]!=null)return;
+    seen[s.id]=true;nodes.push({id:s.id,name:it.name,g:geoFor(it.name),order:nodes.length+1});
+  });
+  const plotted=nodes.filter(n=>n.g),unplotted=nodes.filter(n=>!n.g);
+  const pts=seq.map(s=>{const it=getItem(s.id);const g=it?geoFor(it.name):null;return g?proj(g[0],g[1]):null;}).filter(Boolean);
+  let route="";
+  for(let i=1;i<pts.length;i++){
+    const a=pts[i-1],b=pts[i];
+    if(a[0]===b[0]&&a[1]===b[1])continue;
+    const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+    const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1;
+    route+=`<path d="M${a[0]},${a[1]} Q${mx-dy/len*14},${my+dx/len*14} ${b[0]},${b[1]}" fill="none"
+      stroke="#D98445" stroke-width="2.4" stroke-dasharray="6 5" stroke-linecap="round" marker-end="url(#arr)"/>`;
+  }
+  const NODE_R=9,labelRects=[];
+  const rectsOverlap=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
+  const nodeSvg=plotted.map(n=>{
+    const[x,y]=proj(n.g[0],n.g[1]);
+    const w=n.name.length*6+8;
+    let cands=[
+      {a:"start", tx:x+13,ty:y+3.6,r:{x:x+13,   y:y-7, w,h:13}},
+      {a:"end",   tx:x-13,ty:y+3.6,r:{x:x-13-w, y:y-7, w,h:13}},
+      {a:"middle",tx:x,   ty:y-15, r:{x:x-w/2,  y:y-25,w,h:13}},
+      {a:"middle",tx:x,   ty:y+23, r:{x:x-w/2,  y:y+13,w,h:13}}
+    ];
+    if(x>240)cands=[cands[1],cands[0],cands[2],cands[3]];
+    const hitsLabel=r=>labelRects.some(o=>rectsOverlap(r,o));
+    const hitsNode=r=>plotted.some(o=>{
+      const[ox,oy]=proj(o.g[0],o.g[1]);
+      return rectsOverlap(r,{x:ox-NODE_R,y:oy-NODE_R,w:NODE_R*2,h:NODE_R*2});
+    });
+    const pick=cands.find(c=>!hitsLabel(c.r)&&!hitsNode(c.r))||cands.find(c=>!hitsLabel(c.r))||cands[0];
+    labelRects.push(pick.r);
+    return `<circle cx="${x}" cy="${y}" r="8" fill="#fff" stroke="#243447" stroke-width="2.2"/>
+      <text x="${x}" y="${y+3.4}" text-anchor="middle" font-size="9" font-weight="700" fill="#243447">${n.order}</text>
+      <text x="${pick.tx}" y="${pick.ty}" text-anchor="${pick.a}" font-size="11" font-weight="600"
+        fill="#243447" stroke="#E9F3F5" stroke-width="3" paint-order="stroke">${esc(n.name)}</text>`;
+  }).join("");
+  const pq=proj(10.29,103.98);
+  const legRows=lg.length?lg.map(l=>{
+    const f=getItem(l.from),t=getItem(l.to);
+    const icoName=l.via.length?(TCAT_ICON[l.via[0].tcat]||"car"):"compass";
+    return `<div class="leg-row">
+      <span class="leg-ico">${ico(icoName,16)}</span>
+      <div><div class="leg-route">${esc(f?.name||"?")} → ${esc(t?.name||"?")}</div>
+        <div class="leg-via">${l.via.length?l.via.map(v=>esc(v.name)+(v.duration?" · "+esc(v.duration):"")).join("  |  ")
+          :(l.implied?"Overnight position change":"Transport not linked yet")}</div></div>
+      <span class="leg-day">DAY ${l.day+1}</span>
+    </div>`;
+  }).join(""):emptyState("No movements yet");
+  return {title:"Movement",html:`
+    <div class="hero"><div class="hb-kicker">On the road</div><div class="hb-title">Movement</div>
+      <div class="hb-sub">${plotted.length} stops plotted</div></div>
+    <section class="mapwrap">
+      <svg viewBox="0 0 340 580">
+        <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="#D98445"/></marker></defs>
+        <path d="${coastPath}" fill="#E2EFE6" stroke="#A8C8B2" stroke-width="1.8" stroke-linejoin="round"/>
+        <ellipse cx="${pq[0]}" cy="${pq[1]}" rx="8" ry="11" fill="#E2EFE6" stroke="#A8C8B2" stroke-width="1.5"/>
+        <text x="22" y="562" font-size="9.5" fill="#7593A3" font-style="italic">Schematic — not to scale</text>
+        ${route}${nodeSvg}
+      </svg>
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--teal)">${ico("compass",14)} Route order</div>
+      <div style="font-size:12.5px;line-height:2">${nodes.map(n=>`<b style="color:var(--teal)">${n.order}</b> ${esc(n.name)}`).join(`<span class="arrow"> → </span>`)||"—"}</div>
+      ${unplotted.length?`<div class="caption" style="margin-top:6px">Not on map: ${unplotted.map(n=>esc(n.name)).join(", ")}</div>`:""}
+      ${nodes.length?`<div class="lnk-row">${nodes.map(n=>`<a class="lnk map" href="${mapsUrl(n.name)}" target="_blank" rel="noopener">${ico("pin",10)} ${esc(n.name)} <span class="ext">↗</span></a>`).join("")}</div>`:""}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--teal)">${ico("map",14)} Movement log</div>
+      ${legRows}
+    </section>`};
+}
+
+/* ============================================================ VIEW · COSTS */
+function viewCosts(){
+  const rows=allCostRows(),grand={};
+  const catTotals=["transport","accommodation","activities"].map(cat=>{
+    const t={};rows.filter(r=>r.cat===cat).forEach(r=>{addTot(t,r.c);addTot(grand,r.c);});
+    return{cat,t,zar:approxZAR(t)};
+  });
+  const maxZar=Math.max(...catTotals.map(c=>c.zar),1);
+  const bars=catTotals.map(c=>`
+    <div class="bar-row">
+      <div class="bar-top"><span class="bar-name">${CAT_LABEL[c.cat]==="Activity"?"Activities":CAT_LABEL[c.cat]}</span>
+        <span class="bar-val">${totalsToStr(c.t)}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(c.zar/maxZar*100))}%;background:${CAT_COLOR[c.cat]}"></div></div>
+    </div>`).join("");
+  const tables=catTotals.map(c=>{
+    const list=rows.filter(r=>r.cat===c.cat);
+    const label=CAT_LABEL[c.cat]==="Activity"?"Activities":CAT_LABEL[c.cat];
+    if(!list.length)return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}${emptyState("Nothing captured yet")}</section>`;
+    return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}
+      <div class="tablewrap"><table class="table"><thead><tr><th>Item</th><th>Used</th><th style="text-align:right">Cost</th></tr></thead><tbody>
+      ${list.map(r=>`<tr><td>${r.extra?'<span class="caption">↳</span> ':""}${esc(r.name)}</td>
+        <td class="dt">${daysLabel(r.days)}</td><td class="rt">${costStr(r.raw)?esc(costStr(r.raw)):'<span style="color:var(--grey-2)">—</span>'}</td></tr>`).join("")}
+      <tr class="total"><td colspan="2">Subtotal</td><td class="rt">${totalsToStr(c.t)}</td></tr>
+      </tbody></table></div></section>`;
+  }).join("");
+  return {title:"Cost Summary",html:`
+    <div class="hero"><div class="hb-kicker">The budget</div><div class="hb-title">Cost Summary</div>
+      <div class="hb-sub">Estimated total: ${totalsToStr(grand)}</div></div>
+    <section class="card">
+      <div class="card-title" style="color:var(--red)">${ico("wallet",14)} Budget snapshot</div>${bars}
+    </section>
+    ${tables}
+    <p class="caption">Amounts are shown in Rand (R) and Vietnam Dong (₫) — no FX conversion. Bar lengths use approximate rates for scale only. Bare numbers are read as Dong when 10,000 or more, otherwise as Rand.</p>`};
+}
+
+/* ============================================================ VIEW · ACCOMMODATION */
+function viewStays(){
+  const cards=D.items.accommodation.length?D.items.accommodation.map(a=>{
+    const nt=hotelNights(a);
+    const b=a.beds||{},beds=[];
+    if(b.twin)beds.push("Twin beds");if(b.doubleShared)beds.push("Double (shared)");
+    if(b.doubleEach)beds.push("Double (each)");if(b.other)beds.push(b.other);
+    const badges=[];
+    if(a.breakfast&&a.breakfast.status)badges.push(`<span class="badge ${a.breakfast.status==="included"?"green":"grey"}">Breakfast ${a.breakfast.status}${costStr(a.breakfast.cost)?" · "+esc(costStr(a.breakfast.cost)):""}</span>`);
+    if(a.shuttle&&a.shuttle.status)badges.push(`<span class="badge ${a.shuttle.status==="included"?"green":"grey"}">Shuttle ${a.shuttle.status}${costStr(a.shuttle.cost)?" · "+esc(costStr(a.shuttle.cost)):""}</span>`);
+    if(a.cancelDate)badges.push(`<span class="badge gold">Free cancel until ${esc(shortDate(a.cancelDate))}</span>`);
+    const amen=(a.amenities||[]).slice(0,6);
+    return `<section class="card" style="border-top:4px solid var(--blue)">
+      <h3 style="margin:2px 0 2px">${esc(a.name)}</h3>
+      ${a.address?`<div class="caption">${esc(a.address)}</div>`:""}
+      <div style="display:flex;gap:18px;margin:12px 0 6px;flex-wrap:wrap">
+        <div><div class="caption" style="text-transform:uppercase;letter-spacing:1px">Check in</div><div style="font-weight:700;font-size:14px">${esc(shortDate(a.checkinDate)||"TBC")}${a.checkinTime?` <span class="caption">${esc(a.checkinTime)}</span>`:""}</div></div>
+        <div><div class="caption" style="text-transform:uppercase;letter-spacing:1px">Check out</div><div style="font-weight:700;font-size:14px">${esc(shortDate(a.checkoutDate)||"TBC")}${a.checkoutTime?` <span class="caption">${esc(a.checkoutTime)}</span>`:""}</div></div>
+        ${nt?`<div><div class="caption" style="text-transform:uppercase;letter-spacing:1px">Nights</div><div style="font-weight:700;font-size:14px">${nt}</div></div>`:""}
+        <div style="margin-left:auto;text-align:right"><div class="caption" style="text-transform:uppercase;letter-spacing:1px">Cost</div>
+          <div style="font-weight:800;font-size:15px;color:var(--blue)">${esc(costStr(a.cost)||"—")}</div></div>
+      </div>
+      ${beds.length?`<div class="info-row"><span class="label">Beds</span><span class="value">${esc(beds.join(", "))}</span></div>`:""}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${badges.join("")}</div>
+      ${amen.length?`<div class="caption" style="margin-top:9px">${amen.map(esc).join(" · ")}${(a.amenities.length>6)?` · +${a.amenities.length-6} more`:""}</div>`:""}
+      ${linkChips(a.address||a.name,a.url)}
+    </section>`;
+  }).join(""):emptyState("No accommodation booked yet");
+  return {title:"Accommodation",html:`
+    <div class="hero"><div class="hb-kicker">Where we sleep</div><div class="hb-title">Accommodation</div>
+      <div class="hb-sub">${D.items.accommodation.length} properties</div></div>
+    ${cards}`};
+}
+
+/* ============================================================ VIEW · BOOKINGS */
+function viewBookings(){
+  const all=cancelEntries();
+  const withDl=all.filter(e=>e.dl).sort((a,b)=>a.dl-b.dl);
+  const without=all.filter(e=>!e.dl);
+  const items=withDl.map(e=>{
+    const ug=urgency(e.dl);
+    return `<div class="bk-card" style="border-left:4px solid ${ug.dot}">
+      <div class="bk-top">
+        <span class="bk-name">${esc(e.it.name)}</span>
+        <span class="badge ${ug.cls}">${esc(ug.t)}</span>
+        <span class="badge" style="background:${CAT_SOFT[e.cat]};color:${CAT_INK[e.cat]}">${CAT_LABEL[e.cat]}</span>
+        ${costStr(e.it.cost)?`<span class="badge grey">${esc(costStr(e.it.cost))}</span>`:""}
+      </div>
+      <div class="bk-when">${esc(fmtD(e.dl))}${e.it.cancelTime?" · "+esc(e.it.cancelTime):""}</div>
+      <div class="bk-sub">Free cancellation deadline · used ${daysLabel(e.days)}</div>
+    </div>`;
+  }).join("");
+  const tail=without.length?`<section class="card">
+      <div class="card-title">${ico("alert",13)} No cancellation terms captured</div>
+      <p class="caption">${without.map(e=>esc(e.it.name)).join(" · ")}</p></section>`:"";
+  return {title:"Bookings & Deadlines",html:`
+    <div class="hero"><div class="hb-kicker">Stay flexible</div><div class="hb-title">Bookings & Deadlines</div>
+      <div class="hb-sub">${withDl.length} deadline${withDl.length===1?"":"s"} captured</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <span class="badge red">Under 7 days</span><span class="badge gold">Under 21 days</span>
+      <span class="badge green">Open</span><span class="badge grey">Passed</span>
+    </div>
+    ${items||emptyState("No cancellation deadlines captured")}
+    ${tail}`};
+}
+
+/* ============================================================ VIEW · TO-DO'S */
+let todoTab=store.get("todo_tab","pre");
+function viewTodos(){
+  const groups={pre:"Before we go",trip:"On the trip"};
+  const list=TODOS.filter(t=>t.group===todoTab);
+  const done=list.filter(t=>t.done).length;
+  const rows=list.map(t=>`
+    <div class="todo ${t.done?"done":""}">
+      <button class="tbox" data-tgl="${t.id}">${t.done?ico("check",13):""}</button>
+      <span class="ttxt">${esc(t.text)}</span>
+      <button class="tdel" data-del="${t.id}" aria-label="Delete">${ico("trash",15)}</button>
+    </div>`).join("");
+  return {title:"To-Do's",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--green),#2AA87E)">
+      <div class="hb-kicker">Get it done</div><div class="hb-title">To-Do's</div>
+      <div class="hb-sub">${done} of ${list.length} ticked in “${groups[todoTab]}”</div>
+      <div class="progress" style="background:rgba(255,255,255,.25);margin-top:10px"><i style="width:${list.length?Math.round(done/list.length*100):0}%;background:#fff"></i></div>
+    </div>
+    <div class="seg">
+      <button data-tab="pre" class="${todoTab==="pre"?"on":""}">Before we go</button>
+      <button data-tab="trip" class="${todoTab==="trip"?"on":""}">On the trip</button>
+    </div>
+    <div class="addbar">
+      <input id="todo-in" type="text" placeholder="Add a to-do…" maxlength="120">
+      <button class="go" id="todo-add" aria-label="Add">${ico("plus",20)}</button>
+    </div>
+    <section class="card">${rows||emptyState("Nothing here yet","Add your first to-do above.")}</section>`,
+  wire(el){
+    el.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{
+      todoTab=b.dataset.tab;store.set("todo_tab",todoTab);render();
+    });
+    const inp=el.querySelector("#todo-in");
+    const add=()=>{
+      const v=inp.value.trim();if(!v)return;
+      TODOS.push({id:newId("td"),text:v,group:todoTab,done:false});
+      store.set("todos",TODOS);render();
+    };
+    el.querySelector("#todo-add").onclick=add;
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+    el.querySelectorAll("[data-tgl]").forEach(b=>b.onclick=()=>{
+      const t=TODOS.find(x=>x.id===b.dataset.tgl);if(t){t.done=!t.done;store.set("todos",TODOS);render();}
+    });
+    el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+      TODOS=TODOS.filter(x=>x.id!==b.dataset.del);store.set("todos",TODOS);render();
+    });
+  }};
+}
+
+/* ============================================================ VIEW · BINGO */
+let bingoTab=store.get("bingo_tab","food");
+let bingoEdit=false;
+function viewBingo(){
+  const board=BINGO[bingoTab];
+  const hit=board.items.filter(i=>i.done).length;
+  const full=board.items.length&&hit===board.items.length;
+  const tiles=board.items.map(t=>`
+    <button class="btile ${t.done?"hit":""}" data-bt="${t.id}">
+      ${bingoEdit?`<span class="bdel" data-bdel="${t.id}">×</span>`:""}
+      <span class="bico">${bingoTab==="food"?"🍜":"🛍️"}</span>
+      <span>${esc(t.text)}</span>
+    </button>`).join("");
+  return {title:"Bingo",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--purple),#9B7FE8)">
+      <div class="hb-kicker">Hunt & tick</div><div class="hb-title">${esc(board.title)}</div>
+      <div class="hb-sub">${hit} of ${board.items.length} found</div>
+      <div class="progress" style="background:rgba(255,255,255,.25);margin-top:10px"><i style="width:${board.items.length?Math.round(hit/board.items.length*100):0}%;background:#fff"></i></div>
+    </div>
+    ${full?`<div class="bingo-banner">🎉 BINGO! Board complete! 🎉</div>`:""}
+    <div class="seg">
+      ${Object.keys(BINGO).map(k=>`<button data-btab="${k}" class="${bingoTab===k?"on":""}">${esc(BINGO[k].icon)} ${esc(BINGO[k].title)}</button>`).join("")}
+    </div>
+    ${bingoEdit?`<div class="addbar">
+      <input id="bingo-in" type="text" placeholder="Add an item…" maxlength="60">
+      <button class="go" id="bingo-add" aria-label="Add">${ico("plus",20)}</button>
+    </div>`:""}
+    <div class="bingo-grid">${tiles}</div>
+    <button class="editbtn ${bingoEdit?"on":""}" id="bingo-edit">${bingoEdit?"Done editing":"Edit list — add or remove items"}</button>`,
+  wire(el){
+    el.querySelectorAll("[data-btab]").forEach(b=>b.onclick=()=>{
+      bingoTab=b.dataset.btab;store.set("bingo_tab",bingoTab);render();
+    });
+    el.querySelector("#bingo-edit").onclick=()=>{bingoEdit=!bingoEdit;render();};
+    el.querySelectorAll("[data-bt]").forEach(b=>b.onclick=e=>{
+      if(e.target.closest("[data-bdel]"))return;
+      if(bingoEdit)return;
+      const t=board.items.find(x=>x.id===b.dataset.bt);
+      if(t){t.done=!t.done;store.set("bingo",BINGO);render();}
+    });
+    el.querySelectorAll("[data-bdel]").forEach(b=>b.onclick=e=>{
+      e.stopPropagation();
+      board.items=board.items.filter(x=>x.id!==b.dataset.bdel);
+      store.set("bingo",BINGO);render();
+    });
+    const inp=el.querySelector("#bingo-in");
+    if(inp){
+      const add=()=>{
+        const v=inp.value.trim();if(!v)return;
+        board.items.push({id:newId("bg"),text:v,done:false});
+        store.set("bingo",BINGO);render();
+      };
+      el.querySelector("#bingo-add").onclick=add;
+      inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+    }
+  }};
+}
+
+/* ============================================================ VIEW · JOURNAL */
+let saveTimer=null;
+function viewJournal(){
+  const txt=store.get("journal","");
+  return {title:"Notes",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--grey),#8B98A8)">
+      <div class="hb-kicker">Journal</div><div class="hb-title">Notes</div>
+      <div class="hb-sub">Receipts, booking refs, memories — saved on this phone</div>
+    </div>
+    <textarea class="journal" id="journal" placeholder="Scribble space for the road…">${esc(txt)}</textarea>
+    <div class="caption savenote" id="savenote"></div>`,
+  wire(el){
+    const ta=el.querySelector("#journal"),sn=el.querySelector("#savenote");
+    ta.addEventListener("input",()=>{
+      clearTimeout(saveTimer);
+      saveTimer=setTimeout(()=>{
+        store.set("journal",ta.value);
+        sn.textContent="Saved ✓";
+        setTimeout(()=>sn.textContent="",1600);
+      },400);
+    });
+  }};
+}
+
+/* ============================================================ INSTALL TIP */
+function installTip(){
+  const standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(standalone||store.get("tip_dismissed",false))return"";
+  return `<div class="install-tip" id="install-tip">
+    <div><b>Add to Home Screen</b> for the full app: in Safari tap <b>Share</b> → <b>Add to Home Screen</b>. It then works fully offline.</div>
+    <button id="tip-x">✕</button>
+  </div>`;
+}
+
+/* ============================================================ RENDER */
+const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
+  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,journal:viewJournal};
+function render(){
+  const r=currentRoute();
+  const parts=r.split("/");
+  let v,active;
+  if(parts[0]==="day"){
+    const i=Math.max(0,Math.min(D.days.length-1,(parseInt(parts[1],10)||1)-1));
+    v=viewDay(i);active="itinerary";
+  }else{
+    const fn=VIEWS[parts[0]]||viewSummary;
+    v=fn();active=VIEWS[parts[0]]?parts[0]:"summary";
+  }
+  const el=document.getElementById("view");
+  el.innerHTML=(active==="summary"?installTip():"")+v.html+
+    `<div class="footer caption">Travel Book · ${esc(D.meta.title)} · offline edition</div>`;
+  if(v.wire)v.wire(el);
+  const tip=el.querySelector("#tip-x");
+  if(tip)tip.onclick=()=>{store.set("tip_dismissed",true);render();};
+  document.getElementById("bar-title").textContent=v.title==="Trip Summary"?D.meta.title:v.title;
+  const ph=tripPhase();
+  document.getElementById("bar-pill").textContent=ph.pill;
+  document.getElementById("drawer-sub").textContent=
+    (dayDateStr(0,{day:"numeric",month:"short"})||"")+" – "+
+    (dayDateObj(D.days.length-1)?.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})||"")+
+    " · "+ph.pill;
+  buildDrawer(active);
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",render);
+render();
+
+/* ============================================================ SERVICE WORKER (offline) */
+if("serviceWorker" in navigator&&location.protocol.startsWith("http")){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
