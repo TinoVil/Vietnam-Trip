@@ -600,31 +600,74 @@ function emptyState(a,b){
   return `<div class="empty"><div class="e1">${esc(a)}</div><div class="e2">${esc(b||"")}</div></div>`;
 }
 
-/* ============================================================ LOCAL STATE (persists on the phone) */
+/* ============================================================ LOCAL STATE (persists on the phone)
+
+   Two kinds of data, deliberately kept apart:
+
+     SHARED  — the plan (itinerary, stays, transport, costs). One copy for the
+               whole trip; edited in /builder/, synced for everyone.
+     PERSONAL— todos, bingo, checklist, journal. One copy PER PERSON. Tino's
+               bingo must never overwrite his sister's.
+
+   Personal data is namespaced by scope: "local" until signed in (legacy
+   un-prefixed keys, so existing phones keep their data), then the account id
+   once Firebase auth lands. Keeping the namespace here means the sync layer
+   just maps scope -> a per-member document. */
+const PERSONAL_KEYS=["todos","bingo","checklist","journal","todo_tab","bingo_tab","idseq"];
 const store={
-  get(k,def){try{const v=localStorage.getItem("vn26_"+k);return v==null?def:JSON.parse(v);}catch(e){return def;}},
-  set(k,v){try{localStorage.setItem("vn26_"+k,JSON.stringify(v));}catch(e){}}
-};
-let TODOS=store.get("todos",null);
-if(!TODOS){
-  let n=0;
-  TODOS=[];
-  SEED_TODOS.pre.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"pre",done:false}));
-  SEED_TODOS.trip.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"trip",done:false}));
-  store.set("todos",TODOS);
-}
-let BINGO=store.get("bingo",null);
-if(!BINGO){
-  BINGO={};let n=0;
-  for(const k in SEED_BINGO){
-    BINGO[k]={title:SEED_BINGO[k].title,icon:SEED_BINGO[k].icon,
-      items:SEED_BINGO[k].items.map(t=>({id:"bg"+(++n),text:t,done:false}))};
+  scope:"local",
+  key(k){
+    /* legacy/local scope keeps the original key so nothing is orphaned */
+    if(this.scope==="local"||!PERSONAL_KEYS.includes(k))return "vn26_"+k;
+    return "vn26_u_"+this.scope+"_"+k;
+  },
+  get(k,def){try{const v=localStorage.getItem(this.key(k));return v==null?def:JSON.parse(v);}catch(e){return def;}},
+  set(k,v){try{localStorage.setItem(this.key(k),JSON.stringify(v));}catch(e){}},
+  /* first sign-in on a device: adopt whatever was ticked while signed out */
+  adopt(fromScope,toScope){
+    const prev=this.scope;
+    PERSONAL_KEYS.forEach(k=>{
+      this.scope=fromScope;const v=localStorage.getItem(this.key(k));
+      this.scope=toScope;
+      if(v!=null&&localStorage.getItem(this.key(k))==null)localStorage.setItem(this.key(k),v);
+    });
+    this.scope=prev;
   }
-  store.set("bingo",BINGO);
+};
+let TODOS,BINGO,CHECKS,idSeq,todoTab,bingoTab;
+/* (Re)load this person's data for the current scope, seeding a fresh set if
+   they have none. Called at boot and again whenever the account changes. */
+function loadPersonal(){
+  TODOS=store.get("todos",null);
+  if(!TODOS){
+    let n=0;TODOS=[];
+    SEED_TODOS.pre.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"pre",done:false}));
+    SEED_TODOS.trip.forEach(t=>TODOS.push({id:"td"+(++n),text:t,group:"trip",done:false}));
+    store.set("todos",TODOS);
+  }
+  BINGO=store.get("bingo",null);
+  if(!BINGO){
+    BINGO={};let n=0;
+    for(const k in SEED_BINGO){
+      BINGO[k]={title:SEED_BINGO[k].title,icon:SEED_BINGO[k].icon,
+        items:SEED_BINGO[k].items.map(t=>({id:"bg"+(++n),text:t,done:false}))};
+    }
+    store.set("bingo",BINGO);
+  }
+  CHECKS=store.get("checklist",null);
+  if(!CHECKS){CHECKS={};CONFIG.checklist.forEach(c=>CHECKS[c.label]=c.done);store.set("checklist",CHECKS);}
+  idSeq=store.get("idseq",1000);
+  todoTab=store.get("todo_tab","pre");
+  bingoTab=store.get("bingo_tab","food");
 }
-let CHECKS=store.get("checklist",null);
-if(!CHECKS){CHECKS={};CONFIG.checklist.forEach(c=>CHECKS[c.label]=c.done);store.set("checklist",CHECKS);}
-let idSeq=store.get("idseq",1000);
+/* Switch to a person's private space. Called by the sync layer on sign-in. */
+function setScope(scope){
+  if(store.scope===scope)return;
+  if(store.scope==="local")store.adopt("local",scope);
+  store.scope=scope;
+  loadPersonal();
+  if(typeof render==="function")render();
+}
 function newId(p){idSeq++;store.set("idseq",idSeq);return p+idSeq;}
 
 /* ============================================================ NAV / ROUTER */
@@ -1072,7 +1115,6 @@ function viewBookings(){
 }
 
 /* ============================================================ VIEW · TO-DO'S */
-let todoTab=store.get("todo_tab","pre");
 function viewTodos(){
   const groups={pre:"Before we go",trip:"On the trip"};
   const list=TODOS.filter(t=>t.group===todoTab);
@@ -1120,7 +1162,6 @@ function viewTodos(){
 }
 
 /* ============================================================ VIEW · BINGO */
-let bingoTab=store.get("bingo_tab","food");
 let bingoEdit=false;
 function viewBingo(){
   const board=BINGO[bingoTab];
@@ -1277,7 +1318,11 @@ function render(){
   window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",render);
+loadPersonal();
 render();
+/* the sync layer (once Firebase is wired) calls setScope(uid) after sign-in */
+window.VNApp={setScope,loadPersonal,render,store,
+  get personal(){return{todos:TODOS,bingo:BINGO,checklist:CHECKS,journal:store.get("journal","")}}};
 
 /* ============================================================ SERVICE WORKER (offline) */
 if("serviceWorker" in navigator&&location.protocol.startsWith("http")){

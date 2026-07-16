@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// Vietnam 2026 — Firestore security rules
+//
+// The app is hosted from a PUBLIC GitHub repo, so the Firebase config is
+// world-readable. That is fine and by design: the config identifies the
+// project, it does not grant access. THESE RULES are the actual lock.
+//
+// Data model
+//   trips/vietnam2026                 <- SHARED. The plan: meta, items, days.
+//                                        Edited in /builder/, read by everyone.
+//   trips/vietnam2026/members/{uid}   <- PERSONAL. todos, bingo, checklist,
+//                                        journal. One doc per person; you can
+//                                        only ever write your own.
+//
+// To add someone: put their Google account email in ALLOWED below.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+             'viljoentinoc@gmail.com',
+             'SISTER_EMAIL_HERE'
+           ];
+    }
+
+    match /trips/{tripId} {
+      // the shared plan — both of them read and write it
+      allow read, write: if allowed();
+
+      match /members/{uid} {
+        // everyone on the trip can SEE each other's progress...
+        allow read: if allowed();
+        // ...but only ever write their own document
+        allow write: if allowed() && request.auth.uid == uid;
+      }
+    }
+
+    // nothing else in the project is reachable
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
