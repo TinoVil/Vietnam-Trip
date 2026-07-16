@@ -5,7 +5,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "_orientation": "deliberately unset — 'portrait' locks installed tablets out of landscape",
   "background_color": "#243447",
   "theme_color": "#243447",
   "categories": ["travel", "lifestyle"],
