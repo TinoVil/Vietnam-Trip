@@ -12,6 +12,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
+<!-- sync is an enhancement: it loads alongside, and the app works without it -->
+<script type="module" src="sync.js"></script>
 <style>
 /* ==========================================================
    VIETNAM 2026 · POCKET TRAVEL APP  (offline PWA)
@@ -74,6 +76,23 @@ a{color:var(--blue)}
 .drawer-head .dh-title{font-size:22px;font-weight:800;letter-spacing:-.4px;margin-top:2px}
 .drawer-head .dh-sub{font-size:11.5px;opacity:.8;margin-top:4px}
 .drawer nav{padding:10px 10px calc(20px + env(safe-area-inset-bottom))}
+
+/* ---------- account / sync ---------- */
+.acct{padding:12px 14px;border-bottom:1px solid var(--border-2);display:flex;align-items:center;gap:10px}
+.acct .av{width:34px;height:34px;border-radius:50%;flex:none;background:var(--blue-soft);color:var(--blue);
+  display:grid;place-items:center;font-weight:800;font-size:13px;overflow:hidden}
+.acct .av img{width:100%;height:100%;object-fit:cover}
+.acct .who{flex:1;min-width:0}
+.acct .who b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acct .who span{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--grey-2)}
+.acct .dot{width:7px;height:7px;border-radius:50%;flex:none;background:var(--grey-2)}
+.acct .dot.ok{background:var(--green)}
+.acct .dot.warn{background:var(--gold)}
+.acct .dot.err{background:var(--red)}
+.acct button{border:1px solid var(--border);border-radius:10px;padding:7px 11px;font-size:11.5px;
+  font-weight:700;color:var(--blue);background:#fff;white-space:nowrap;flex:none}
+.acct button.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.syncmsg{font-size:10.5px;color:var(--red);padding:0 14px 10px;line-height:1.4}
 .dgroup{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:800;
   color:var(--grey-2);padding:14px 12px 6px}
 .ditem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
@@ -324,6 +343,7 @@ p{color:var(--body);font-size:13px}
     <div class="dh-title">Vietnam <span style="color:#8FC1EA">2026</span></div>
     <div class="dh-sub" id="drawer-sub"></div>
   </div>
+  <div class="acct" id="acct"></div>
   <nav id="drawer-nav"></nav>
 </aside>
 
@@ -622,7 +642,11 @@ const store={
     return "vn26_u_"+this.scope+"_"+k;
   },
   get(k,def){try{const v=localStorage.getItem(this.key(k));return v==null?def:JSON.parse(v);}catch(e){return def;}},
-  set(k,v){try{localStorage.setItem(this.key(k),JSON.stringify(v));}catch(e){}},
+  set(k,v){
+    try{localStorage.setItem(this.key(k),JSON.stringify(v));}catch(e){}
+    /* mirror personal changes to this person's cloud doc (no-op until signed in) */
+    if(PERSONAL_KEYS.includes(k))window.VNSync?.pushPersonal?.();
+  },
   /* first sign-in on a device: adopt whatever was ticked while signed out */
   adopt(fromScope,toScope){
     const prev=this.scope;
@@ -1317,11 +1341,48 @@ function render(){
   buildDrawer(active);
   window.scrollTo(0,0);
 }
+/* ============================================================ ACCOUNT PANEL */
+function renderAcct(s){
+  const el=document.getElementById("acct");
+  if(!el)return;
+  const u=s.user;
+  if(u){
+    const initials=(u.displayName||u.email||"?").trim()[0].toUpperCase();
+    el.innerHTML=`
+      <span class="av">${u.photoURL?`<img src="${esc(u.photoURL)}" alt="">`:esc(initials)}</span>
+      <span class="who"><b>${esc(u.displayName||u.email)}</b>
+        <span><i class="dot ${s.status==="error"?"err":"ok"}"></i>${s.status==="error"?esc(s.error||"Sync problem"):"Syncing"}</span></span>
+      <button id="acct-out">Sign out</button>`;
+    el.querySelector("#acct-out").onclick=()=>window.VNSync?.signOut?.();
+  }else{
+    const off=s.status==="offline"||s.status==="error";
+    el.innerHTML=`
+      <span class="av">${ico("globe",16)}</span>
+      <span class="who"><b>Not syncing</b>
+        <span><i class="dot ${off?"warn":""}"></i>${esc(off?(s.error||"Saved on this device"):"Sign in to sync")}</span></span>
+      ${s.available?`<button class="primary" id="acct-in">Sign in</button>`:""}`;
+    const b=el.querySelector("#acct-in");
+    if(b)b.onclick=async()=>{
+      b.textContent="…";
+      try{await window.VNSync.signIn();}catch(e){b.textContent="Sign in";}
+    };
+  }
+  const msg=document.getElementById("syncmsg");
+  if(msg)msg.remove();
+  if(s.status==="error"&&s.error){
+    el.insertAdjacentHTML("afterend",`<div class="syncmsg" id="syncmsg">${esc(s.error)}</div>`);
+  }
+}
+
 window.addEventListener("hashchange",render);
 loadPersonal();
 render();
-/* the sync layer (once Firebase is wired) calls setScope(uid) after sign-in */
+/* sync.js is a deferred module, so it loads after this script and broadcasts */
+window.addEventListener("vnsync",e=>renderAcct(e.detail));
+renderAcct({status:"connecting",user:null});   /* until/unless sync reports in */
+/* the sync layer calls into these after sign-in / on remote changes */
 window.VNApp={setScope,loadPersonal,render,store,
+  reloadPlan(){D=loadPlan();render();},
   get personal(){return{todos:TODOS,bingo:BINGO,checklist:CHECKS,journal:store.get("journal","")}}};
 
 /* ============================================================ SERVICE WORKER (offline) */

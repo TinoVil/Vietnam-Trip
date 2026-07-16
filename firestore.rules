@@ -13,7 +13,8 @@ rules_version = '2';
 //                                        journal. One doc per person; you can
 //                                        only ever write your own.
 //
-// To add someone: put their Google account email in ALLOWED below.
+// Project: vietnamtrip26-73b1a
+// To add someone: add their Google account email to the list in allowed().
 
 service cloud.firestore {
   match /databases/{database}/documents {

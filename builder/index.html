@@ -5,6 +5,7 @@
 <title>Vietnam 2026 · Itinerary Builder</title>
 <meta name="theme-color" content="#0f9d76">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<script type="module" src="../sync.js"></script>
 <style>
 :root{
   --bg:#eef1f0; --panel:#ffffff; --panel2:#f5f8f7; --line:#e3e8e5;
@@ -309,6 +310,7 @@ header{display:flex;align-items:center;gap:16px;padding:11px 20px;
   <div class="brand"><b id="brandTitle">Vietnam 2026</b><small>Itinerary Builder</small></div>
   <div class="hspace"></div>
   <span class="saveflag" id="saveflag">Autosaved · 17:20</span>
+  <button class="hbtn" id="btnSync" title="Sync">☁<span class="lbl"> Sync</span></button>
   <a class="hbtn" id="btnApp" href="../" title="Open the trip app">📱<span class="lbl"> App</span></a>
   <button class="hbtn" id="btnSetup">⚙<span class="lbl"> Trip Setup</span></button>
   <button class="hbtn" id="btnTodo">✓<span class="lbl"> To-Do</span></button>
@@ -430,8 +432,22 @@ function migrate(s){
 function autosave(){
   state.savedAt=Date.now();
   try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
-  flag("Autosaved · "+timeStr());
+  /* the plan is SHARED — push it up (no-op until signed in / sync loaded) */
+  window.VNSync?.pushPlan?.(state);
+  flag(window.VNSync?.state?.user?("Saved · synced "+timeStr()):("Autosaved · "+timeStr()));
 }
+/* sync.js hands us a newer plan from the other person */
+window.VNBuilder={
+  applyRemotePlan(remote){
+    if(!remote||!remote.days||(remote.savedAt||0)<=(state.savedAt||0))return;
+    /* don't yank the board out from under someone mid-edit */
+    const el=document.activeElement;
+    if(el&&(el.tagName==="INPUT"||el.tagName==="TEXTAREA")&&el.closest(".board"))return;
+    state=migrate(remote);
+    renderTabs(); renderLibrary(); renderBoard();
+    flag("Updated from "+(window.VNSync?.state?.user?.displayName||"the other phone"));
+  }
+};
 function timeStr(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
 function flag(t){ document.getElementById("saveflag").textContent=t; }
 
@@ -1177,6 +1193,29 @@ document.getElementById("btnTodo").onclick=openTodo;
 document.getElementById("btnReport").onclick=buildReport;
 document.getElementById("btnSave").onclick=saveInPlace;
 document.getElementById("btnSaveCopy").onclick=saveCopy;
+
+/* ---------- sync button ---------- */
+(function(){
+  const b=document.getElementById("btnSync");
+  const paint=s=>{
+    const on=!!s.user;
+    b.textContent=on?"☁":"☁";
+    b.title=on?("Synced as "+(s.user.displayName||s.user.email)+" — tap to sign out")
+              :(s.status==="error"?(s.error||"Sync error"):"Sign in to sync with the other phone");
+    b.style.color=on?"var(--jade-d)":(s.status==="error"?"var(--rose)":"");
+    b.style.borderColor=on?"var(--jade)":"";
+    const lbl=b.querySelector(".lbl");
+    if(lbl)lbl.textContent=on?" Synced":" Sync";
+  };
+  window.addEventListener("vnsync",e=>paint(e.detail));
+  paint({status:"connecting",user:null});
+  b.onclick=async()=>{
+    const s=window.VNSync?.state;
+    if(!window.VNSync?.available){alert("Sync isn't available right now — your changes are still saved on this device.");return;}
+    if(s?.user){ if(confirm("Sign out of sync?"))window.VNSync.signOut(); return; }
+    try{ await window.VNSync.signIn(); }catch(e){ alert("Sign-in failed: "+(e.code||e.message)); }
+  };
+})();
 
 /* ---------- mobile palette drawer ---------- */
 const palette=document.getElementById("palette"), palBackdrop=document.getElementById("palBackdrop");
