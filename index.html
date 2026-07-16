@@ -358,6 +358,20 @@ p{color:var(--body);font-size:13px}
   color:#7A5B10;padding:12px 14px;font-size:12.5px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
 .install-tip button{margin-left:auto;color:var(--gold-ink);font-weight:800;flex:none}
 .footer{padding:18px 0 6px;text-align:center}
+
+/* ---------- update banner ----------
+   An installed app has no reload button, so this is the only way in. */
+.updatebar{position:fixed;left:12px;right:12px;z-index:95;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  max-width:616px;margin:0 auto;display:flex;align-items:center;gap:12px;
+  padding:12px 12px 12px 16px;border-radius:16px;
+  background:var(--navy);color:#fff;box-shadow:0 10px 34px rgba(16,26,39,.34);
+  font-size:13px;font-weight:600;animation:upslide .3s ease-out}
+.updatebar span{flex:1}
+.updatebar button{background:#fff;color:var(--navy);font-weight:800;font-size:12.5px;
+  padding:9px 16px;border-radius:10px;flex:none}
+@keyframes upslide{from{transform:translateY(120%);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.updatebar{animation:none}}
 </style>
 </head>
 <body>
@@ -1718,9 +1732,38 @@ window.VNApp={setScope,loadPersonal,render,store,
   reloadPlan(){D=loadPlan();render();},
   get personal(){return{todos:TODOS,bingo:BINGO,journal:store.get("journal","")}}};
 
-/* ============================================================ SERVICE WORKER (offline) */
+/* ============================================================ SERVICE WORKER (offline)
+   An installed app has no address bar and no reload button, so it must offer
+   its own way to update. On every launch we ask the browser to re-check sw.js;
+   a deploy changes it (the cache version is bumped), the new worker takes over,
+   and we surface a Reload rather than reloading underneath the person — they
+   might be halfway through a journal entry. */
 if("serviceWorker" in navigator&&location.protocol.startsWith("http")){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  let hadController=!!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{
+    if(!hadController){hadController=true;return;}   /* first ever install, not an update */
+    showUpdateBar();
+  });
+  window.addEventListener("load",async()=>{
+    try{
+      const reg=await navigator.serviceWorker.register("./sw.js");
+      reg.update().catch(()=>{});
+      /* still open hours later — check again rather than sit on a stale copy */
+      setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
+      document.addEventListener("visibilitychange",()=>{
+        if(!document.hidden)reg.update().catch(()=>{});
+      });
+    }catch(e){}
+  });
+}
+function showUpdateBar(){
+  if(document.getElementById("updatebar"))return;
+  const el=document.createElement("div");
+  el.id="updatebar";
+  el.className="updatebar";
+  el.innerHTML=`<span>New version ready</span><button id="update-now">Reload</button>`;
+  document.body.appendChild(el);
+  el.querySelector("#update-now").onclick=()=>location.reload();
 }
 </script>
 </body>

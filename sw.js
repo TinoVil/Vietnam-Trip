@@ -1,6 +1,6 @@
 /* Vietnam 2026 · offline service worker */
 /* Bump CACHE on every deploy, otherwise installed phones keep serving the old copy. */
-const CACHE = "vn26-v11";
+const CACHE = "vn26-v12";
 const ASSETS = [
   "./",
   "./index.html",
