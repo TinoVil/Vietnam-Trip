@@ -7,315 +7,222 @@
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script type="module" src="../sync.js"></script>
 <style>
+/* ==========================================================
+   VIETNAM 2026 · EDIT THE PLAN
+   Travel Book design system — mobile first, same tokens as the app.
+   Class names are load-bearing (the JS hooks them) — restyled, not renamed.
+========================================================== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#eef1f0; --panel:#ffffff; --panel2:#f5f8f7; --line:#e3e8e5;
-  --ink:#1d2a26; --mut:#62736d; --faint:#9aa8a3;
-  --jade:#0f9d76; --jade-d:#0c7e5e; --gold:#c98a1e; --rose:#d9544a; --sky:#2f7fd1;
-  --shadow:0 6px 20px rgba(31,45,41,.07);
-  --shadow-sm:0 1px 3px rgba(31,45,41,.06);
-  --r:14px;
-  --c-location:#2f7fd1; --c-transport:#c98a1e; --c-accommodation:#7c5cdb; --c-activities:#0f9d76;
+  --blue:#2D74B9; --blue-soft:#E7F2FC;
+  --green:#1E8B65; --green-soft:#E7F7F2;
+  --gold:#C89B3C; --gold-soft:#FFF7E2; --gold-ink:#A97700;
+  --red:#C23B3B; --red-soft:#FCECEC;
+  --purple:#7C5CDB; --purple-soft:#F0EBFB;
+  --teal:#2494A2; --teal-soft:#E6F4F6;
+  --sand:#F8F5EF;
+  --navy:#243447; --navy-2:#1A2736;
+  --grey:#667085; --grey-2:#98A2B3; --grey-3:#7A8793;
+  --ink:#243447; --body:#52606D;
+  --line:#E3E7EC; --line-2:#EDF2F7;
+  --panel:#fff; --panel2:#F7F9FB;
+  --bg:#F2F4F7; --faint:#98A2B3; --mut:#667085;
+  --r:18px;
+  /* domain colours — identical to the app */
+  --c-location:#2494A2; --c-transport:#C89B3C;
+  --c-accommodation:#2D74B9; --c-activities:#1E8B65;
 }
-*{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{background:linear-gradient(165deg,#f3f6f5,#e7edeb);color:var(--ink);
-  font:14px/1.45 "Inter","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-button{font:inherit;cursor:pointer;color:inherit}
-input,select,textarea{font:inherit;color:var(--ink)}
-::-webkit-scrollbar{width:11px;height:11px}
-::-webkit-scrollbar-thumb{background:#d4ddd9;border-radius:8px;border:3px solid transparent;background-clip:content-box}
-::-webkit-scrollbar-thumb:hover{background:#bcc8c3;background-clip:content-box}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-top:calc(56px + env(safe-area-inset-top));overscroll-behavior-y:none}
+button{font:inherit;cursor:pointer;color:inherit;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#d8dee5;border-radius:8px;border:3px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-track{background:transparent}
 
-/* ---------- Header ---------- */
-header{display:flex;align-items:center;gap:16px;padding:11px 20px;
-  background:rgba(255,255,255,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
-  position:sticky;top:0;z-index:40;box-shadow:var(--shadow-sm)}
-.logo{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;
-  background:linear-gradient(150deg,var(--jade),var(--jade-d));color:#fff;font-weight:800;
-  font-size:14px;letter-spacing:.5px;box-shadow:0 4px 12px rgba(15,157,118,.35)}
-.brand{display:flex;flex-direction:column;line-height:1.25}
-.brand b{font-size:16.5px;letter-spacing:-.2px}
-.brand small{color:var(--mut);font-size:11.5px}
-.hspace{flex:1}
-.hbtn{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 14px;color:var(--mut);font-weight:600;box-shadow:var(--shadow-sm)}
-.hbtn:hover{color:var(--jade-d);border-color:var(--jade)}
-.hbtn.primary{background:var(--jade);color:#fff;border-color:var(--jade)}
-.hbtn.primary:hover{background:var(--jade-d);color:#fff}
-.saveflag{font-size:11.5px;color:var(--faint);min-width:96px;max-width:190px;line-height:1.3}
+/* ---------- app bar (mirrors the app) ---------- */
+header{position:fixed;top:0;left:0;right:0;z-index:60;
+  background:linear-gradient(120deg,var(--navy),#31517A);color:#fff;
+  padding-top:env(safe-area-inset-top);height:calc(56px + env(safe-area-inset-top));
+  display:flex;align-items:center;gap:8px;padding-left:6px;padding-right:10px;
+  box-shadow:0 2px 14px rgba(16,26,39,.25)}
+.logo{display:none}
+.brand{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1}
+.brand b{font-size:16px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand small{font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.65;font-weight:600}
+.hspace{display:none}
+.hbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:10px;
+  padding:8px 10px;color:#fff;font-weight:700;font-size:12.5px;display:inline-grid;place-items:center;
+  white-space:nowrap;text-decoration:none}
+.hbtn:active{background:rgba(255,255,255,.26)}
+.hbtn.primary{background:rgba(255,255,255,.9);color:var(--navy);border-color:transparent}
+.saveflag{font-size:10px;color:rgba(255,255,255,.72);max-width:120px;line-height:1.25;text-align:right}
 
-/* ---------- Layout ---------- */
-.wrap{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 61px)}
-.palette{border-right:1px solid var(--line);background:var(--panel);overflow:hidden;display:flex;flex-direction:column}
-.board{overflow:auto;padding:18px}
+/* ---------- layout ---------- */
+.wrap{display:block}
+.board{padding:12px 12px calc(28px + env(safe-area-inset-bottom));max-width:760px;margin:0 auto}
+.board-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.board-head h2{font-size:15px;font-weight:800;letter-spacing:-.2px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;color:var(--grey);font-size:11px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:3px;display:inline-block}
 
-/* ---------- Mobile / touch (iPhone) ----------
-   HTML5 drag-and-drop never fires on iOS touch, so on small screens the
-   palette becomes a slide-over and every assignment goes through the
-   existing tap picker (+ Add / tap a slot). */
-.palbackdrop{display:none}
-.mobile-only{display:none}
-@media (max-width:820px){
-  header{padding:9px 12px;gap:9px;padding-top:calc(9px + env(safe-area-inset-top))}
-  .brand small{display:none}
-  .saveflag{display:none}
-  .logo{width:32px;height:32px;font-size:12.5px;border-radius:9px}
-  .hbtn{padding:8px 10px;font-size:12px}
-  .hbtn .lbl{display:none}
-  .mobile-only{display:inline-grid}
-  /* File System Access API (Save/Copy to disk) doesn't exist on iOS Safari */
-  .desktop-only{display:none}
-  .wrap{grid-template-columns:1fr;height:auto}
-  .board{padding:12px 12px calc(24px + env(safe-area-inset-bottom));overflow:visible}
-  /* palette becomes a slide-over drawer */
-  .palette{position:fixed;top:0;bottom:0;left:0;width:min(330px,86vw);z-index:70;
-    transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.25,1);
-    box-shadow:14px 0 40px rgba(20,30,27,.22);padding-top:env(safe-area-inset-top)}
-  .palette.open{transform:none}
-  .palbackdrop{display:block;position:fixed;inset:0;background:rgba(20,30,27,.45);z-index:65;
-    opacity:0;pointer-events:none;transition:opacity .25s}
-  .palbackdrop.open{opacity:1;pointer-events:auto}
-  .grid{grid-template-columns:1fr;gap:12px}
-  .loc-slots{grid-template-columns:1fr 1fr}
-  .f2,.f3{grid-template-columns:1fr}
-  .ovl{padding:12px 10px calc(12px + env(safe-area-inset-bottom))}
-  .m-b{max-height:none}
-  .amen-grid{grid-template-columns:1fr 1fr;max-height:200px}
-  /* comfortable tap targets */
-  .iconbtn{width:32px;height:32px}
-  .chip{padding:9px 10px}
-  .chip .x{font-size:19px;padding:0 6px}
-  .zone-h .zadd{padding:6px 12px;font-size:12px}
-  .slot{min-height:54px}
-  .pick{padding:12px 11px}
-  .item{cursor:default}
-  .item .nm{padding-right:74px}
-}
-/* stop iOS auto-zoom on focus (needs >=16px) */
-@media (max-width:820px){
-  input,select,textarea,.fld input,.fld select,.fld textarea,.pal-add input{font-size:16px}
-}
-
-/* ---------- Palette ---------- */
+/* ---------- item library (slide-over) ---------- */
+.palbackdrop{position:fixed;inset:0;background:rgba(16,26,39,.5);z-index:70;opacity:0;
+  pointer-events:none;transition:opacity .25s}
+.palbackdrop.open{opacity:1;pointer-events:auto}
+.palette{position:fixed;top:0;bottom:0;left:0;width:min(330px,86vw);z-index:80;background:#fff;
+  transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.25,1);
+  display:flex;flex-direction:column;box-shadow:14px 0 40px rgba(16,26,39,.22);
+  padding-top:env(safe-area-inset-top)}
+.palette.open{transform:none}
 .pal-tabs{display:flex;flex-wrap:wrap;gap:5px;padding:12px 12px 8px}
 .pchip{flex:1 1 auto;text-align:center;background:var(--panel2);border:1px solid var(--line);
-  border-radius:9px;padding:7px 6px;color:var(--mut);font-size:12px;font-weight:600;white-space:nowrap;transition:.13s}
-.pchip:hover{color:var(--ink);border-color:#cfd9d5}
-.pchip.active{color:#fff;font-weight:700;box-shadow:var(--shadow-sm)}
+  border-radius:10px;padding:9px 6px;color:var(--grey);font-size:12px;font-weight:700;white-space:nowrap}
+.pchip.active{color:#fff}
 .pchip[data-cat="location"].active{background:var(--c-location);border-color:var(--c-location)}
 .pchip[data-cat="transport"].active{background:var(--c-transport);border-color:var(--c-transport)}
 .pchip[data-cat="accommodation"].active{background:var(--c-accommodation);border-color:var(--c-accommodation)}
 .pchip[data-cat="activities"].active{background:var(--c-activities);border-color:var(--c-activities)}
-.pal-sub{padding:6px 14px 4px;color:var(--faint);font-size:11px}
-.pal-add{display:flex;gap:6px;padding:2px 12px 10px;border-bottom:1px solid var(--line)}
-.pal-add input{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.pal-add button{background:var(--jade);border:none;border-radius:8px;padding:0 14px;color:#fff;font-weight:700}
-.pal-list{flex:1;overflow:auto;padding:10px 12px 24px;display:flex;flex-direction:column;gap:8px}
-.pal-empty{color:var(--faint);text-align:center;padding:28px 10px;font-size:12.5px;line-height:1.6}
-
-.item{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 11px;
-  cursor:grab;border-left:3px solid var(--mut);position:relative;transition:.12s;box-shadow:var(--shadow-sm)}
-.item:hover{border-color:var(--jade);transform:translateY(-1px);box-shadow:0 4px 12px rgba(31,45,41,.1)}
-.item:active{cursor:grabbing}
-.item .nm{font-weight:600;font-size:13px;padding-right:52px}
-.item .mt{color:var(--mut);font-size:11.5px;margin-top:3px}
+.pal-sub{padding:6px 14px 6px;color:var(--grey-2);font-size:11px}
+.pal-add{display:flex;gap:7px;padding:2px 12px 12px;border-bottom:1px solid var(--line-2)}
+.pal-add input{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.pal-add input:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.pal-add button{background:var(--blue);border-radius:12px;padding:0 16px;color:#fff;font-weight:800}
+.pal-list{flex:1;overflow:auto;padding:12px 12px calc(24px + env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:8px}
+.pal-empty{color:var(--grey-2);text-align:center;padding:26px 10px;font-size:12.5px;line-height:1.6}
+.item{background:#fff;border:1px solid var(--line);border-radius:14px;padding:11px 12px;
+  border-left:3px solid var(--grey-2);position:relative}
 .item[data-cat="location"]{border-left-color:var(--c-location)}
 .item[data-cat="transport"]{border-left-color:var(--c-transport)}
 .item[data-cat="accommodation"]{border-left-color:var(--c-accommodation)}
 .item[data-cat="activities"]{border-left-color:var(--c-activities)}
-.item .row-btns{position:absolute;top:7px;right:8px;display:flex;gap:4px}
-.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:7px;width:24px;height:24px;
-  display:grid;place-items:center;color:var(--mut);font-size:12px;padding:0}
-.iconbtn:hover{color:var(--jade-d);border-color:var(--jade)}
-.iconbtn.del:hover{color:var(--rose);border-color:var(--rose)}
+.item .nm{font-weight:700;font-size:13px;padding-right:76px}
+.item .mt{color:var(--grey-3);font-size:11.5px;margin-top:3px;padding-right:76px}
+.item .row-btns{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:9px;width:32px;height:32px;
+  display:grid;place-items:center;color:var(--grey);font-size:13px;padding:0}
+.iconbtn.del{color:var(--red)}
 
-/* ---------- Board ---------- */
-.board-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
-.board-head h2{margin:0;font-size:16px;font-weight:700}
-.legend{display:flex;gap:12px;flex-wrap:wrap;color:var(--mut);font-size:11.5px}
-.legend span{display:inline-flex;align-items:center;gap:5px}
-.dot{width:9px;height:9px;border-radius:3px;display:inline-block}
-
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
-.day{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.day-h{display:flex;flex-direction:column;gap:6px;padding:11px 14px;
-  background:linear-gradient(180deg,#f6faf8,#eef4f1);border-bottom:1px solid var(--line)}
+/* ---------- day cards ---------- */
+.grid{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+.day{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.day-h{display:flex;flex-direction:column;gap:7px;padding:12px 14px;
+  background:linear-gradient(120deg,var(--navy),#31517A);color:#fff}
 .day-h-top{display:flex;align-items:baseline;gap:8px}
-.day-h .dn{font-weight:800;color:var(--jade-d)}
-.day-h .dd{color:var(--mut);font-size:12px}
-.day-name{width:100%;background:transparent;border:1px solid transparent;border-radius:7px;
-  padding:4px 7px;margin-left:-7px;font-weight:700;font-size:13.5px;color:var(--ink)}
-.day-name::placeholder{color:var(--faint);font-weight:600}
-.day-name:hover{border-color:var(--line);background:rgba(255,255,255,.6)}
-.day-name:focus{outline:none;border-color:var(--jade);background:#fff}
-.day-note{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
-  padding:8px 10px;resize:vertical;min-height:46px;font:inherit;color:var(--ink)}
-.day-note::placeholder{color:var(--faint)}
-.day-note:focus{outline:none;border-color:var(--jade);background:#fff}
-.day-body{padding:10px 12px 14px;display:flex;flex-direction:column;gap:12px}
-.zone-h{display:flex;align-items:center;gap:7px;margin-bottom:5px}
-.zone-h .zt{font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mut)}
-.zone-h .zadd{margin-left:auto;background:var(--panel2);border:1px dashed var(--line);border-radius:7px;
-  padding:2px 9px;font-size:11px;color:var(--mut);font-weight:600}
-.zone-h .zadd:hover{color:var(--jade-d);border-color:var(--jade)}
-.zone{min-height:6px;display:flex;flex-direction:column;gap:6px}
-.zone.drop-ok{outline:2px dashed var(--jade);outline-offset:2px;border-radius:8px}
-.loc-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.slot{border:1px dashed var(--line);border-radius:9px;padding:7px 9px;min-height:44px;background:var(--panel2)}
-.slot .sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--faint)}
-.slot.drop-ok{outline:2px dashed var(--c-location);outline-offset:1px}
-.slot.filled{background:#eaf2fb;border-style:solid;border-color:#cfe0f4}
-
+.day-h .dn{font-weight:800;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:.8}
+.day-h .dd{color:rgba(255,255,255,.75);font-size:11.5px;margin-left:auto}
+/* 16px minimum on every input: below that, iOS Safari zooms the page on focus */
+.day-name{width:100%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);
+  border-radius:10px;padding:9px 11px;font-weight:700;font-size:16px;color:#fff}
+.day-name::placeholder{color:rgba(255,255,255,.6);font-weight:600}
+.day-name:focus{outline:none;background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5)}
+.day-body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:14px}
+.day-note{width:100%;background:var(--sand);border:1px solid #EFE7D4;border-radius:12px;
+  padding:10px 12px;resize:vertical;min-height:52px;font-family:inherit;font-size:16px;color:#5C5442}
+.day-note::placeholder{color:#B3A98F}
+.day-note:focus{outline:2px solid var(--gold);outline-offset:-1px}
+.zone-h{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.zone-h .zt{font-size:10.5px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey)}
+.zone-h .zadd{margin-left:auto;background:var(--panel2);border:1px solid var(--line);border-radius:999px;
+  padding:6px 13px;font-size:12px;color:var(--blue);font-weight:800}
+.zone-h .zadd:active{background:var(--blue-soft)}
+.zone{min-height:4px;display:flex;flex-direction:column;gap:7px}
+.loc-slots{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.slot{border:1.5px dashed var(--line);border-radius:12px;padding:9px 10px;min-height:60px;background:var(--panel2)}
+.slot .sl{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--grey-2)}
+.slot.filled{background:var(--teal-soft);border-style:solid;border-color:#B8DEE3}
 .chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);
-  border-radius:9px;padding:7px 9px;font-size:12.5px;border-left:3px solid var(--mut)}
+  border-radius:11px;padding:10px 11px;font-size:13px;border-left:3px solid var(--grey-2)}
 .chip[data-cat="location"]{border-left-color:var(--c-location)}
 .chip[data-cat="transport"]{border-left-color:var(--c-transport)}
 .chip[data-cat="accommodation"]{border-left-color:var(--c-accommodation)}
 .chip[data-cat="activities"]{border-left-color:var(--c-activities)}
-.chip .cn{font-weight:600;flex:1;cursor:pointer}
-.chip .cn:hover{color:var(--jade-d)}
-.chip .cm{color:var(--faint);font-size:11px}
-.chip .x{background:none;border:none;color:var(--faint);font-size:15px;line-height:1;padding:0 2px}
-.chip .x:hover{color:var(--rose)}
-.zone .empty{color:var(--faint);font-size:11.5px;font-style:italic;padding:2px 2px}
+.chip .cn{font-weight:700;flex:1;min-width:0;word-break:break-word}
+.chip .cm{color:var(--grey-2);font-size:11px;white-space:nowrap}
+.chip .x{color:var(--grey-2);font-size:20px;line-height:1;padding:0 4px;flex:none}
+.zone .empty,.slot .empty{color:var(--grey-2);font-size:11.5px;padding:4px 0}
+.slot .empty{padding-top:8px}
 
-/* ---------- Modal ---------- */
-.ovl{position:fixed;inset:0;background:rgba(20,30,27,.42);backdrop-filter:blur(3px);z-index:60;
-  display:none;align-items:flex-start;justify-content:center;padding:34px 16px;overflow:auto}
+/* ---------- modals ---------- */
+.ovl{position:fixed;inset:0;background:rgba(16,26,39,.5);z-index:90;
+  display:none;align-items:flex-end;justify-content:center;overflow:auto}
 .ovl.show{display:flex}
-.modal{background:var(--panel);border-radius:16px;width:100%;max-width:640px;box-shadow:0 24px 60px rgba(20,30,27,.28);
-  border:1px solid var(--line);overflow:hidden}
-.modal.wide{max-width:820px}
-.m-h{display:flex;align-items:center;gap:10px;padding:15px 18px;border-bottom:1px solid var(--line);
-  background:linear-gradient(180deg,#f8fbf9,#f1f6f3)}
-.m-h b{font-size:15px}
-.m-h .tagcat{font-size:11px;font-weight:700;color:#fff;padding:2px 9px;border-radius:999px}
-.m-h .x{margin-left:auto;background:none;border:none;font-size:20px;color:var(--mut);padding:0 4px}
-.m-h .x:hover{color:var(--rose)}
-.m-b{padding:16px 18px;display:flex;flex-direction:column;gap:13px;max-height:70vh;overflow:auto}
-.m-f{padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;background:var(--panel2)}
-.fld{display:flex;flex-direction:column;gap:4px}
-.fld label{font-size:11.5px;font-weight:700;color:var(--mut);letter-spacing:.2px}
-.fld input,.fld select,.fld textarea{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px;width:100%}
-.fld textarea{resize:vertical;min-height:64px}
-.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
-.sec{border:1px solid var(--line);border-radius:11px;padding:12px 13px;background:var(--panel2)}
-.sec h4{margin:0 0 9px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--jade-d)}
+.modal{background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:640px;
+  box-shadow:0 -12px 50px rgba(16,26,39,.3);overflow:hidden;
+  max-height:94vh;display:flex;flex-direction:column}
+.m-h{display:flex;align-items:center;gap:9px;padding:14px 16px;border-bottom:1px solid var(--line-2);flex:none}
+.m-h b{font-size:15px;font-weight:800}
+.m-h .tagcat{font-size:10.5px;font-weight:800;color:#fff;padding:3px 10px;border-radius:999px}
+.m-h .x{margin-left:auto;font-size:24px;color:var(--grey-2);padding:0 6px;line-height:1}
+.m-b{padding:14px 16px;display:flex;flex-direction:column;gap:13px;overflow:auto;flex:1;
+  -webkit-overflow-scrolling:touch}
+.m-f{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line-2);
+  display:flex;gap:9px;justify-content:flex-end;background:#fff;flex:none}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:11px;font-weight:800;color:var(--grey);letter-spacing:.4px;text-transform:uppercase}
+.fld input,.fld select,.fld textarea{background:#fff;border:1px solid var(--line);border-radius:12px;
+  padding:12px;width:100%}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.fld textarea{resize:vertical;min-height:70px}
+.f2,.f3{display:grid;grid-template-columns:1fr;gap:11px}
+.sec{border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--panel2)}
+.sec h4{margin:0 0 10px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--blue);font-weight:800}
 .checks{display:flex;flex-wrap:wrap;gap:7px}
-.chk{display:inline-flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);
-  border-radius:8px;padding:6px 10px;font-size:12.5px;cursor:pointer;user-select:none}
-.chk input{margin:0;accent-color:var(--jade)}
-.chk.on{border-color:var(--jade);background:#eaf7f2;color:var(--jade-d);font-weight:600}
-.amen-tools{display:flex;align-items:center;gap:9px;margin-bottom:9px;flex-wrap:wrap}
-.amen-tools input#e_amen_search{flex:1;min-width:150px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
-.amen-tools .chk{padding:5px 10px;font-size:12px}
+.chk{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:10px 12px;font-size:13px;cursor:pointer;user-select:none}
+.chk input{margin:0;accent-color:var(--blue);width:17px;height:17px}
+.chk.on{border-color:var(--blue);background:var(--blue-soft);color:var(--blue);font-weight:700}
+.amen-tools{display:flex;align-items:center;gap:8px;margin-bottom:9px;flex-wrap:wrap}
+.amen-tools input#e_amen_search{flex:1;min-width:140px;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:10px 12px}
 .amen-tools #e_amen_count{margin-left:auto}
-.amen-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:240px;overflow:auto;padding-right:4px}
-.amen-grid .chk{font-size:12px;padding:5px 9px}
+.amen-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:210px;overflow:auto;padding-right:4px}
+.amen-grid .chk{font-size:12px;padding:8px 9px}
 .amen-grid .chk.hide{display:none}
 .radio-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.mini{font-size:11px;color:var(--faint)}
-.btn{background:var(--jade);border:none;border-radius:9px;padding:9px 18px;color:#fff;font-weight:700}
-.btn:hover{background:var(--jade-d)}
-.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--mut)}
-.btn.ghost:hover{color:var(--jade-d);border-color:var(--jade)}
-.btn.danger{background:none;border:1px solid var(--line);color:var(--rose);margin-right:auto}
-.btn.danger:hover{background:#fdeceb;border-color:var(--rose)}
+.mini{font-size:11px;color:var(--grey-2)}
+.btn{background:var(--blue);border-radius:12px;padding:12px 18px;color:#fff;font-weight:800;font-size:13.5px}
+.btn.ghost{background:#fff;border:1px solid var(--line);color:var(--grey)}
+.btn.danger{background:none;border:1px solid var(--red-soft);color:var(--red);margin-right:auto}
 
-/* to-do */
-.todo-add{display:flex;gap:7px;flex-wrap:wrap}
-.todo-add #td_text{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
-.todo-add #td_date,.todo-add #td_time{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
-.todo-add #td_add{background:var(--jade);border:none;border-radius:9px;padding:0 16px;color:#fff;font-weight:700}
-.todo-list{display:flex;flex-direction:column;gap:6px;margin-top:4px}
-.todo-row{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel2)}
-.todo-row .tc{width:17px;height:17px;accent-color:var(--jade);flex:none}
-.todo-row .tt{flex:1;font-weight:600;cursor:pointer}
-.todo-row .tt:hover{color:var(--jade-d)}
-.todo-row .tbadge{font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap}
-.todo-row .tb,.todo-row .tbt{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 7px;font-size:12px}
-.todo-row .tbt{width:96px}
-.todo-row .tx{background:none;border:none;color:var(--faint);font-size:17px;line-height:1;padding:0 2px}
-.todo-row .tx:hover{color:var(--rose)}
-.todo-row.done{opacity:.6}
-.todo-row.done .tt{text-decoration:line-through;color:var(--mut);font-weight:500}
-.todo-row.overdue{border-color:#e7b4af;background:#fdf1f0}
-.todo-row.overdue .tbadge{color:var(--rose)}
-.rep-todo{border:1px solid #e3e8e5;border-radius:12px;padding:14px 18px;margin-bottom:22px;background:#f8fbf9}
-.rep-todo h2{margin:0 0 10px;font-size:16px;color:#0c7e5e}
-.rep-todo .rt{padding:4px 0;font-size:13.5px;border-bottom:1px solid #eef2f0}
-.rep-todo .rt:last-child{border-bottom:none}
-.rep-todo .rt span{color:#8a6d1e}
-.rep-todo .rt.done{color:#9aa8a3}.rep-todo .rt.done b{text-decoration:line-through;font-weight:500}
-.rep-todo .rt.overdue span{color:#c0392b}
+/* ---------- picker ---------- */
+.pick-list{display:flex;flex-direction:column;gap:8px}
+.pick{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:12px;
+  padding:13px 12px;cursor:pointer;background:#fff}
+.pick:active{border-color:var(--blue);background:var(--blue-soft)}
+.pick .pn{font-weight:700;flex:1}
+.pick .pm{font-size:11px;color:var(--grey-2)}
 
-/* picker */
-.pick-list{display:flex;flex-direction:column;gap:7px}
-.pick{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:9px 11px;cursor:pointer;background:var(--panel2)}
-.pick:hover{border-color:var(--jade);background:#eef8f4}
-.pick .pn{font-weight:600;flex:1}
-.pick .pm{font-size:11px;color:var(--faint)}
+.mobile-only{display:inline-grid}
+.desktop-only{display:none}
 
-/* ---------- Report ---------- */
-#report{position:fixed;inset:0;background:#fff;z-index:80;display:none;overflow:auto}
-#report.show{display:block}
-.rep-bar{position:sticky;top:0;display:flex;gap:10px;align-items:center;padding:12px 22px;
-  background:var(--jade-d);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:2}
-.rep-bar b{font-size:15px;flex:1}
-.rep-bar button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;
-  border-radius:8px;padding:7px 15px;font-weight:600}
-.rep-bar button:hover{background:rgba(255,255,255,.28)}
-.rep-body{max-width:900px;margin:0 auto;padding:30px 26px 80px}
-.rep-body h1{font-size:26px;margin:0 0 4px}
-.rep-body .rsub{color:#667;margin:0 0 24px;font-size:14px}
-.rep-day{border:1px solid #e3e8e5;border-radius:12px;margin-bottom:18px;overflow:hidden;page-break-inside:avoid}
-.rep-day-h{background:#f1f6f3;padding:12px 18px;border-bottom:1px solid #e3e8e5}
-.rep-day-h b{font-size:16px;color:#0c7e5e}
-.rep-day-h em{font-style:normal;font-weight:700;color:#1d2a26;margin-left:8px}
-.rep-day-h span{color:#667;margin-left:8px}
-.rep-day-b{padding:14px 18px}
-.rep-note{white-space:pre-wrap;color:#3c4a44;font-size:13px;line-height:1.6;background:#f7faf9;border:1px solid #e3e8e5;border-radius:8px;padding:8px 11px}
-.rep-block{margin-bottom:14px}
-.rep-block:last-child{margin-bottom:0}
-.rep-block .rblab{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a978f;margin-bottom:6px}
-.rep-el{border-left:3px solid #ccc;padding:2px 0 2px 12px;margin-bottom:10px}
-.rep-el .ren{font-weight:700;font-size:14px}
-.rep-el .redt{font-size:12.5px;color:#48544f;margin-top:3px;line-height:1.6}
-.rep-el .redt b{color:#2a332f}
-.rep-el.location{border-left-color:var(--c-location)}
-.rep-el.transport{border-left-color:var(--c-transport)}
-.rep-el.accommodation{border-left-color:var(--c-accommodation)}
-.rep-el.activities{border-left-color:var(--c-activities)}
-.rep-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
-.rep-tags span{font-size:11px;background:#eef4f1;border:1px solid #dbe6e1;border-radius:6px;padding:1px 8px;color:#3c4a44}
-.rep-empty{color:#9aa8a3;font-style:italic}
-@media print{
-  .rep-bar{display:none}
-  #report{position:static}
-  body{background:#fff}
-}
-@media (max-width:820px){
-  .wrap{grid-template-columns:1fr;height:auto}
-  .palette{height:auto;max-height:46vh;border-right:none;border-bottom:1px solid var(--line)}
-  .board{height:auto}
+/* ---------- wider screens: keep the phone layout, just breathe ---------- */
+@media (min-width:900px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+  .board{max-width:1500px;padding:18px}
+  .f2{grid-template-columns:1fr 1fr}
+  .f3{grid-template-columns:1fr 1fr 1fr}
+  .amen-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+  .ovl{align-items:flex-start;padding:34px 16px}
+  .modal{border-radius:20px;max-height:86vh}
+  .desktop-only{display:inline-grid}
 }
 </style>
 </head>
 <body>
 
 <header>
-  <button class="hbtn mobile-only" id="btnPalette" title="Item library" style="place-items:center">☰</button>
-  <div class="logo">VN</div>
-  <div class="brand"><b id="brandTitle">Vietnam 2026</b><small>Itinerary Builder</small></div>
-  <div class="hspace"></div>
-  <span class="saveflag" id="saveflag">Autosaved · 17:20</span>
-  <button class="hbtn" id="btnSync" title="Sync">☁<span class="lbl"> Sync</span></button>
-  <a class="hbtn" id="btnApp" href="../" title="Open the trip app">📱<span class="lbl"> App</span></a>
-  <button class="hbtn" id="btnSetup">⚙<span class="lbl"> Trip Setup</span></button>
-  <button class="hbtn" id="btnTodo">✓<span class="lbl"> To-Do</span></button>
-  <button class="hbtn" id="btnReport">📄<span class="lbl"> Export Report</span></button>
-  <button class="hbtn desktop-only" id="btnSaveCopy" title="Download a one-off backup file. Your work is already saved automatically — this is just a spare copy.">⬇<span class="lbl"> Backup</span></button>
+  <button class="hbtn" id="btnPalette" title="Item library">&#9776;</button>
+  <div class="brand"><small>Edit the plan</small><b id="brandTitle">Vietnam 2026</b></div>
+  <span class="saveflag" id="saveflag">Saved</span>
+  <button class="hbtn" id="btnSync" title="Sync">&#9729;</button>
+  <button class="hbtn" id="btnSetup" title="Trip setup">&#9881;</button>
+  <a class="hbtn primary" id="btnApp" href="../" title="Back to the trip app">Done</a>
 </header>
 
 <div class="palbackdrop" id="palBackdrop"></div>
@@ -323,7 +230,7 @@ header{display:flex;align-items:center;gap:16px;padding:11px 20px;
   <!-- LIBRARY -->
   <aside class="palette" id="palette">
     <div class="pal-tabs" id="palTabs"></div>
-    <div class="pal-sub" id="palSub">9 items · drag onto a day, or use “+ Add”</div>
+    <div class="pal-sub" id="palSub">9 items · tap + Add on a day</div>
     <div class="pal-add">
       <input id="newItemName" placeholder="New item name…" autocomplete="off">
       <button id="btnAddItem">Add</button>
@@ -350,17 +257,6 @@ header{display:flex;align-items:center;gap:16px;padding:11px 20px;
 <div class="ovl" id="ovlEdit"><div class="modal wide" id="editModal"></div></div>
 <div class="ovl" id="ovlPick"><div class="modal" id="pickModal"></div></div>
 <div class="ovl" id="ovlSetup"><div class="modal" id="setupModal"></div></div>
-<div class="ovl" id="ovlTodo"><div class="modal" id="todoModal"></div></div>
-
-<!-- Report -->
-<div id="report">
-  <div class="rep-bar">
-    <b>Itinerary Report</b>
-    <button onclick="window.print()">🖨 Print / Save PDF</button>
-    <button onclick="closeReport()">✕ Close</button>
-  </div>
-  <div class="rep-body" id="repBody"></div>
-</div>
 
 <!-- Persisted state lives here, inside the HTML itself -->
 <script id="trip-data" type="application/json">{"meta":{"title":"Vietnam 2026","startDate":"2026-08-20","numDays":16},"items":{"location":[{"id":"imrj68w2f20p9","cat":"location","name":"Da Nang"},{"id":"imrj6a2cf14v7","cat":"location","name":"Hoi An"},{"id":"imrj6ajy017kf","cat":"location","name":"Hue"},{"id":"imrj6bdg41bwv","cat":"location","name":"Hanoi"}],"transport":[{"id":"imrj75s6lo19","cat":"transport","name":"Airport Shuttle - Sofiana","tcat":"Organised","cost":"0","duration":"","pickup":"Da Nang Airport","dropoff":"Sofiana","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0i6qaj41","cat":"transport","name":"Grab App","tcat":"Taxi","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0ivhz1ook","cat":"transport","name":"Heritage Train - Danang","tcat":"Train","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0k2uh1sek","cat":"transport","name":"Sleeper Bus","tcat":"Bus","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0kcsn21a0","cat":"transport","name":"Hue to Hanoi Flight","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0v3t61thd","cat":"transport","name":"Flight into Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0vk122ps","cat":"transport","name":"Flight out of Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""}],"accommodation":[{"id":"imrj6cjrz1f1q","cat":"accommodation","name":"Sofiana My Khe Hotel & Spa","checkinDate":"2026-08-21","checkinTime":"14:00","checkoutDate":"2026-08-24","checkoutTime":"12:00","cost":"R3095","address":"54-56 Tran Bach Dang, Danang, Vietnam","url":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":"0"},"shuttle":{"status":"included","cost":"0"},"amenities":["Air conditioning","Terrace","Hairdryer","Electric kettle","Socket near the bed","Wake-Up Service"]},{"id":"imrj71yzn23vf","cat":"accommodation","name":"Nolia Hoi An","checkinDate":"2026-08-24","checkinTime":"14:00","checkoutDate":"2026-08-27","checkoutTime":"12:00","cost":"1917","address":"Cầu Hói Muống Street Số 01 - 02, 50000 Hoi An, Vietnam","url":"https://www.noliahoian.com/","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Free Bicycles Rental"],"cancelDate":"","cancelTime":""},{"id":"imrj76qq6124z","cat":"accommodation","name":"Gahi Homestay","checkinDate":"2026-08-27","checkinTime":"14:00","checkoutDate":"2026-08-30","checkoutTime":"12:00","cost":"R1644","address":"103 Dang Van Ngu, Hue, Vietnam","url":"","cancelDate":"","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":true,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Barbecue"]},{"id":"imrj771b220ym","cat":"accommodation","name":"Radison Red","checkinDate":"2026-09-03","checkinTime":"14:00","checkoutDate":"2026-09-04","checkoutTime":"18:00","cost":"0","address":"90 Vo Nguyen Gliap, Son Tra Ward, Da Nang, Vietnam","url":"https://www.radissonhotels.com/vi-vn/hotels/radisson-red-danang?msockid=2c25fde442166cf105c6ebfc43886d30","cancelDate":"","cancelTime":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]},{"id":"imrm0cw5dkoe","cat":"accommodation","name":"WeCozy","checkinDate":"2026-08-30","checkinTime":"15:00","checkoutDate":"2026-09-03","checkoutTime":"12:00","cost":"5359","address":"20 Tong Duy Tan, Hoan Kiem, Hanoi, Vietnam","url":"","cancelDate":"2026-08-24","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":false,"other":"Two Bedroom Apartment"},"breakfast":{"status":"","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]}],"activities":[{"id":"imrksfkmvjhd","cat":"activities","name":"My Sun Sanctuary Tour","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrksto2922bw","cat":"activities","name":"Memories Show","timeStart":"","timeEnd":"","location":"Hoi An","website":"https://www.getyourguide.com/hoi-an-l831/hoi-an-memories-show-hoi-an-impression-theme-park-qrticket-t481283/?ranking_uuid=e3163bfa-9558-4a58-a30e-d9b82484a45c&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"778","cancelDate":"","cancelTime":""},{"id":"imrkt45d21jju","cat":"activities","name":"City of Ghosts Cemetary","timeStart":"","timeEnd":"","location":"Hue","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm6ld9t18c7","cat":"activities","name":"Teh Dar: Unique Bamboo Circus","timeStart":"","timeEnd":"","location":"Hoi An Lune Center 1A Nguyen Phuc Chu, Minh An Ward, Hoi An, Quang Nam, Vietnam","website":"https://www.getyourguide.com/hoi-an-l831/teh-dar-vietnamese-tribal-culture-at-saigon-opera-house-t83301/?ranking_uuid=d0b089c1-8f05-422f-bb27-9a198db2d23e&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"908","cancelDate":"","cancelTime":""},{"id":"imrm7bk3nrgb","cat":"activities","name":"Hue Imperial Ancient City Walking Tour","timeStart":"","timeEnd":"","location":"FH9H+3XJ Phu Xuan, Hue, Vietnam","website":"https://www.getyourguide.com/hue-vietnam-l833/hue-imperial-ancient-city-walking-tour-t848289/?ranking_uuid=ebcd110b-f6b4-47ed-a0d5-6e71f4301999&q=Hue%2C+Vietnam&date_from=2026-08-27&date_to=2026-08-30&adults=2","cost":"366","cancelDate":"","cancelTime":""},{"id":"imrm7rgm82513","cat":"activities","name":"Hue Tombs","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm7voc51uso","cat":"activities","name":"Water Puppet Show","timeStart":"","timeEnd":"","location":"31 Lo Su, Hoan Kiem, Hanoi","website":"https://www.getyourguide.com/hanoi-l205/hanoi-water-puppet-tickets-with-hotel-delivery-t62912/?ranking_uuid=aa6c3c27-9032-4efc-afce-2472bd035eca&q=Hanoi&date_from=2026-08-31&date_to=2026-09-03&adults=2","cost":"230","cancelDate":"","cancelTime":""},{"id":"imrm7wqip14tb","cat":"activities","name":"Spa Day","timeStart":"","timeEnd":"","location":"","website":"","cost":"2000","cancelDate":"","cancelTime":""},{"id":"imrm80a1t1w53","cat":"activities","name":"Old Quarter Street Food Tour","timeStart":"","timeEnd":"","location":"38 Bát Sứ street","website":"","cost":"734","cancelDate":"","cancelTime":""}]},"days":[{"name":"Travel Day","note":"","locStart":null,"locEnd":null,"transport":[],"accommodation":[],"activities":[]},{"name":"Landing Day","note":"","locStart":null,"locEnd":"imrj68w2f20p9","transport":["imrj75s6lo19","imrm0v3t61thd"],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Shopping Vibe","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Heritage at Danang","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":["imrksfkmvjhd"]},{"name":"Travel Day","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj6a2cf14v7","transport":["imrm0i6qaj41"],"accommodation":["imrj71yzn23vf"],"activities":[]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrksto2922bw"]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrm6ld9t18c7"]},{"name":"Travel Day","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6ajy017kf","transport":["imrm0i6qaj41","imrm0ivhz1ook"],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":["imrm7bk3nrgb","imrm7rgm82513"]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"Travel Day","note":"","locStart":"imrj6ajy017kf","locEnd":null,"transport":["imrm0kcsn21a0","imrm0k2uh1sek"],"accommodation":["imrj76qq6124z"],"activities":["imrkt45d21jju"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":[]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7voc51uso","imrm80a1t1w53"]},{"name":"Spa Day","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7wqip14tb"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj771b220ym"],"activities":[]},{"name":"","note":"","locStart":"imrj68w2f20p9","locEnd":null,"transport":["imrm0vk122ps"],"accommodation":[],"activities":[]}],"savedAt":1784128845078,"todos":[]}</script>
@@ -492,12 +388,12 @@ function renderLibrary(){
   const cat=activeCat, list=state.items[cat];
   document.getElementById("palSub").textContent =
     cat==="location" ? "Locations (start / end points — no details)" :
-    `${list.length} item${list.length!==1?"s":""} · drag onto a day, or use “+ Add”`;
+    `${list.length} item${list.length!==1?"s":""} · tap + Add on a day`;
   const el=document.getElementById("palList");
   if(!list.length){ el.innerHTML=`<div class="pal-empty">No ${CATS.find(c=>c.key===cat).label.toLowerCase()} yet.<br>Type a name above and click <b>Add</b> to create one.</div>`; return; }
   el.innerHTML = list.map(it=>{
     const s=summary(it);
-    return `<div class="item" data-cat="${it.cat}" draggable="true" data-id="${it.id}">
+    return `<div class="item" data-cat="${it.cat}" data-id="${it.id}">
       <div class="nm">${esc(it.name)}</div>
       ${s?`<div class="mt">${esc(s)}</div>`:""}
       <div class="row-btns">
@@ -508,7 +404,6 @@ function renderLibrary(){
   }).join("");
   el.querySelectorAll(".item").forEach(node=>{
     const id=node.dataset.id;
-    node.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain",id); e.dataTransfer.effectAllowed="copy"; });
     node.querySelector('[data-act="del"]').onclick=e=>{ e.stopPropagation(); delItem(id); };
     const editBtn=node.querySelector('[data-act="edit"]'); if(editBtn) editBtn.onclick=e=>{ e.stopPropagation(); openEditor(id); };
     const renBtn=node.querySelector('[data-act="rename"]'); if(renBtn) renBtn.onclick=e=>{ e.stopPropagation(); renameItem(id); };
@@ -628,23 +523,6 @@ function wireBoard(){
   board.querySelectorAll(".slot").forEach(slot=>{
     const empty=slot.querySelector(".empty");
     if(empty) empty.onclick=()=>openPicker(+slot.dataset.day,"location",slot.dataset.slot);
-    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("drop-ok");});
-    slot.addEventListener("dragleave",()=>slot.classList.remove("drop-ok"));
-    slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("drop-ok");
-      const id=e.dataTransfer.getData("text/plain"); if(itemCat(id)!=="location") return;
-      const day=+slot.dataset.day; state.days[day][slot.dataset.slot==="start"?"locStart":"locEnd"]=id; autosave(); renderBoard();
-    });
-  });
-  // zone drop
-  board.querySelectorAll(".zone").forEach(zone=>{
-    zone.addEventListener("dragover",e=>{e.preventDefault();zone.classList.add("drop-ok");});
-    zone.addEventListener("dragleave",()=>zone.classList.remove("drop-ok"));
-    zone.addEventListener("drop",e=>{e.preventDefault();zone.classList.remove("drop-ok");
-      const id=e.dataTransfer.getData("text/plain"); const zc=zone.dataset.zone;
-      if(itemCat(id)!==zc) return;
-      const day=+zone.dataset.day; if(!state.days[day][zc].includes(id)) state.days[day][zc].push(id);
-      autosave(); renderBoard();
-    });
   });
   // day name + notes (update state on input without re-render so focus is kept; persist on blur)
   board.querySelectorAll(".day-name").forEach(inp=>{
@@ -962,223 +840,17 @@ function openSetup(){
 
 /* ============================================================= TO-DO */
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function todoSorted(){
-  return state.todos.map((t,idx)=>({t,idx})).sort((a,b)=>{
-    if(!!a.t.done!==!!b.t.done) return a.t.done?1:-1;         // undone first
-    const da=a.t.before||"9999-12-31", db=b.t.before||"9999-12-31";
-    if(da!==db) return da<db?-1:1;                            // earliest deadline first
-    return a.idx-b.idx;
-  }).map(x=>x.t);
-}
-function openTodo(){ renderTodo(); showOvl("ovlTodo"); }
-function renderTodo(){
-  const m=document.getElementById("todoModal");
-  const today=todayStr();
-  const list=todoSorted();
-  const open=state.todos.filter(t=>!t.done).length, total=state.todos.length;
-  m.innerHTML=`
-    <div class="m-h"><b>To-Do — Complete Before</b>
-      <span class="mini" style="margin-left:8px">${open} open · ${total} total</span>
-      <button class="x" onclick="closeOvl('ovlTodo')">×</button></div>
-    <div class="m-b">
-      <div class="todo-add">
-        <input id="td_text" placeholder="What needs doing? (e.g. Book Ha Long cruise)" autocomplete="off">
-        <input id="td_date" type="date" title="Complete before (optional)">
-        <input id="td_time" type="time" title="Time (optional)">
-        <button id="td_add">Add</button>
-      </div>
-      <div class="mini">Add a “Complete before” date to make it a deadline, or leave it blank for a plain checklist item.</div>
-      <div class="todo-list">
-        ${list.length? list.map(t=>{
-          const overdue = t.before && !t.done && t.before < today;
-          return `<div class="todo-row ${t.done?"done":""} ${overdue?"overdue":""}" data-id="${t.id}">
-            <input type="checkbox" class="tc" ${t.done?"checked":""}>
-            <span class="tt" title="Click to edit">${esc(t.text)}</span>
-            <span class="tbadge">${t.before?`before ${esc(fmtDate(t.before,t.beforeTime))}${overdue?" ⚠":""}`:""}</span>
-            <input type="date" class="tb" value="${esc(t.before||"")}" title="Complete before">
-            <input type="time" class="tbt" value="${esc(t.beforeTime||"")}" title="Time">
-            <button class="tx" title="Delete">×</button>
-          </div>`;
-        }).join("") : `<div class="pal-empty">No to-dos yet — add one above.</div>`}
-      </div>
-    </div>
-    <div class="m-f"><button class="btn ghost" onclick="closeOvl('ovlTodo')">Close</button></div>`;
-  const add=()=>{
-    const text=m.querySelector("#td_text").value.trim(); if(!text) return;
-    state.todos.push({id:uid(), text, before:m.querySelector("#td_date").value, beforeTime:m.querySelector("#td_time").value, done:false});
-    autosave(); renderTodo(); m.querySelector("#td_text").focus();
-  };
-  m.querySelector("#td_add").onclick=add;
-  m.querySelector("#td_text").addEventListener("keydown",e=>{ if(e.key==="Enter") add(); });
-  m.querySelectorAll(".todo-row").forEach(row=>{
-    const t=state.todos.find(x=>x.id===row.dataset.id); if(!t) return;
-    row.querySelector(".tc").onchange=e=>{ t.done=e.target.checked; autosave(); renderTodo(); };
-    row.querySelector(".tt").onclick=()=>{ const v=prompt("Edit task:",t.text); if(v!=null){ t.text=v.trim()||t.text; autosave(); renderTodo(); } };
-    row.querySelector(".tb").onchange=e=>{ t.before=e.target.value; autosave(); renderTodo(); };
-    row.querySelector(".tbt").onchange=e=>{ t.beforeTime=e.target.value; autosave(); renderTodo(); };
-    row.querySelector(".tx").onclick=()=>{ state.todos=state.todos.filter(x=>x.id!==t.id); autosave(); renderTodo(); };
-  });
-}
 
 /* ============================================================= REPORT */
 function fmtDate(d,t){ if(!d && !t) return ""; return [d,t].filter(Boolean).join(" "); }
-function elDetails(it){
-  if(!it) return "";
-  const rows=[];
-  const push=(l,v)=>{ if(v!=null && String(v).trim()!=="") rows.push(`<b>${l}:</b> ${esc(v)}`); };
-  if(it.cat==="transport"){
-    push("Category",it.tcat); push("Duration",it.duration); push("Cost",it.cost);
-    push("Airline",it.airline); push("Bus / operator",it.busName); push("License plate",it.plate);
-    push("Pickup",it.pickup); push("Drop-off",it.dropoff);
-    push("Boarding time",it.boardingTime); push("Gate",it.gate); push("Seat(s)",it.seat); push("Airport lounge",it.lounge);
-    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
-    push("Notes",it.notes);
-  } else if(it.cat==="activities"){
-    const tm=[it.timeStart,it.timeEnd].filter(Boolean).join(" – ");
-    push("Time",tm); push("Location",it.location); push("Website",it.website); push("Costs",it.cost);
-    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
-  } else if(it.cat==="accommodation"){
-    push("Check-in",fmtDate(it.checkinDate,it.checkinTime));
-    push("Check-out",fmtDate(it.checkoutDate,it.checkoutTime));
-    push("Free cancellation until",fmtDate(it.cancelDate,it.cancelTime));
-    push("Costs",it.cost); push("Address",it.address); push("Website",it.url);
-    const beds=[]; const b=it.beds||{};
-    if(b.twin)beds.push("Twin Beds"); if(b.doubleShared)beds.push("Double Bed (Shared)");
-    if(b.doubleEach)beds.push("Double Bed (Each)"); if(b.other)beds.push(b.other);
-    push("Beds",beds.join(", "));
-    const bfLine=(o)=>{ if(!o) return ""; const p=[]; if(o.status)p.push(o.status.charAt(0).toUpperCase()+o.status.slice(1)); if(o.cost)p.push("Cost "+o.cost); return p.join(" · "); };
-    push("Breakfast",bfLine(it.breakfast)); push("Airport Shuttle",bfLine(it.shuttle));
-    let out=rows.map(r=>`<div>${r}</div>`).join("");
-    if(it.amenities&&it.amenities.length) out+=`<div class="rep-tags">${it.amenities.map(a=>`<span>${esc(a)}</span>`).join("")}</div>`;
-    return out;
-  }
-  return rows.map(r=>`<div>${r}</div>`).join("");
-}
-function repEl(id){
-  const it=getItem(id); if(!it) return "";
-  const dt=elDetails(it);
-  return `<div class="rep-el ${it.cat}"><div class="ren">${esc(it.name)}</div>${dt?`<div class="redt">${dt}</div>`:""}</div>`;
-}
-function repBlock(label,ids){
-  if(!ids.length) return `<div class="rep-block"><div class="rblab">${label}</div><div class="rep-empty">—</div></div>`;
-  return `<div class="rep-block"><div class="rblab">${label}</div>${ids.map(repEl).join("")}</div>`;
-}
-function buildReport(){
-  const body=document.getElementById("repBody");
-  const days=state.days.map((d,i)=>{
-    const loc=[]; if(d.locStart)loc.push(d.locStart); if(d.locEnd)loc.push(d.locEnd);
-    const locBlock = (d.locStart||d.locEnd)
-      ? `<div class="rep-block"><div class="rblab">Location</div>
-          ${d.locStart?`<div class="rep-el location"><div class="ren">Start · ${esc(getItem(d.locStart)?.name||"")}</div></div>`:""}
-          ${d.locEnd?`<div class="rep-el location"><div class="ren">End · ${esc(getItem(d.locEnd)?.name||"")}</div></div>`:""}
-         </div>`
-      : `<div class="rep-block"><div class="rblab">Location</div><div class="rep-empty">—</div></div>`;
-    const noteBlock = d.note && d.note.trim()
-      ? `<div class="rep-block"><div class="rblab">Notes</div><div class="rep-note">${esc(d.note)}</div></div>` : "";
-    return `<div class="rep-day">
-      <div class="rep-day-h"><b>Day ${i+1}</b>${d.name&&d.name.trim()?`<em>${esc(d.name)}</em>`:""}<span>${esc(dayDate(i))}</span></div>
-      <div class="rep-day-b">
-        ${locBlock}
-        ${repBlock("Transport",d.transport)}
-        ${repBlock("Accommodation",d.accommodation)}
-        ${repBlock("Activities",d.activities)}
-        ${noteBlock}
-      </div></div>`;
-  }).join("");
-  const today=todayStr();
-  const todoRep = state.todos.length ? `<div class="rep-todo"><h2>To-Do — Complete Before</h2>${
-    todoSorted().map(t=>{
-      const overdue=t.before && !t.done && t.before<today;
-      return `<div class="rt ${t.done?"done":""} ${overdue?"overdue":""}">${t.done?"☑":"☐"} <b>${esc(t.text)}</b>${t.before?` <span>— before ${esc(fmtDate(t.before,t.beforeTime))}${overdue?" (overdue)":""}</span>`:""}</div>`;
-    }).join("")
-  }</div>` : "";
-  body.innerHTML=`<h1>${esc(state.meta.title)}</h1>
-    <p class="rsub">${state.meta.startDate?"Starting "+dayDate(0)+" · ":""}${state.meta.numDays} days · generated ${new Date().toLocaleDateString()}</p>
-    ${todoRep}
-    ${days}`;
-  document.getElementById("report").classList.add("show");
-}
-function closeReport(){ document.getElementById("report").classList.remove("show"); }
 
 /* ============================================================= SAVE */
-function buildFileHtml(){
-  autosave();
-  // write current state into the embedded json script tag; escape any "<slash"
-  // sequence so a stray closing tag inside notes/amenities cannot break the tag
-  // (JSON.parse restores it on load)
-  document.getElementById("trip-data").textContent = JSON.stringify(state).replace(/<\//g,"<\\/");
-  // clear dynamic containers so the saved file is clean (re-rendered on load)
-  const board=document.getElementById("board"), lib=document.getElementById("palList"), tabs=document.getElementById("palTabs");
-  const bh=board.innerHTML, lh=lib.innerHTML, th=tabs.innerHTML;
-  board.innerHTML=""; lib.innerHTML=""; tabs.innerHTML="";
-  document.getElementById("editModal").innerHTML="";
-  document.getElementById("pickModal").innerHTML="";
-  document.getElementById("setupModal").innerHTML="";
-  document.getElementById("todoModal").innerHTML="";
-  document.getElementById("repBody").innerHTML="";
-  const html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
-  // restore live view
-  board.innerHTML=bh; lib.innerHTML=lh; tabs.innerHTML=th;
-  renderTabs(); renderLibrary(); renderBoard();
-  return html;
-}
-function saveCopy(){
-  const html=buildFileHtml();
-  const blob=new Blob([html],{type:"text/html"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download=(state.meta.title.replace(/[^\w]+/g,"_")||"Itinerary")+"_Builder.html";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  flag("Copy downloaded · "+timeStr());
-}
 
 /* ---- Save in place (File System Access API) ----
    First click: pick Vietnam_Itinerary_Builder.html once and allow editing.
    After that the button overwrites the same file silently — no more
    "(1) (2) (3)" copies in Downloads. The file handle is remembered in
    IndexedDB; if the browser forgets it, you simply pick the file again. */
-function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open("vn_builder_handle",1);
-  r.onupgradeneeded=()=>r.result.createObjectStore("kv");
-  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
-async function idbGet(k){ const db=await idbOpen(); return new Promise((res,rej)=>{
-  const t=db.transaction("kv","readonly").objectStore("kv").get(k);
-  t.onsuccess=()=>res(t.result); t.onerror=()=>rej(t.error); }); }
-async function idbSet(k,v){ const db=await idbOpen(); return new Promise((res,rej)=>{
-  const t=db.transaction("kv","readwrite"); t.objectStore("kv").put(v,k);
-  t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
-async function ensureHandle(){
-  let h=null;
-  try{ h=await idbGet("file"); }catch(e){}
-  if(h){
-    let p=await h.queryPermission({mode:"readwrite"});
-    if(p!=="granted") p=await h.requestPermission({mode:"readwrite"});
-    if(p!=="granted") h=null;
-  }
-  if(!h){
-    h=await window.showSaveFilePicker({
-      suggestedName:"Vietnam_Itinerary_Builder.html",
-      types:[{description:"HTML file",accept:{"text/html":[".html",".htm"]}}]
-    });
-    try{ await idbSet("file",h); }catch(e){}
-  }
-  return h;
-}
-async function saveInPlace(){
-  if(!window.showSaveFilePicker){ saveCopy(); return; }  // browser without the API
-  try{
-    const h=await ensureHandle();
-    const html=buildFileHtml();
-    const w=await h.createWritable();
-    await w.write(html);
-    await w.close();
-    flag("Saved · "+h.name+" · "+timeStr());
-  }catch(e){
-    if(e && e.name==="AbortError"){ flag("Save cancelled"); return; }
-    alert("Couldn't save in place ("+((e&&e.message)||e)+").\nDownloading a copy instead.");
-    saveCopy();
-  }
-}
 
 /* ============================================================= OVERLAY UTIL */
 function showOvl(id){ document.getElementById(id).classList.add("show"); }
@@ -1190,12 +862,11 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ document.querySel
 document.getElementById("btnAddItem").onclick=addItem;
 document.getElementById("newItemName").addEventListener("keydown",e=>{ if(e.key==="Enter") addItem(); });
 document.getElementById("btnSetup").onclick=openSetup;
-document.getElementById("btnTodo").onclick=openTodo;
-document.getElementById("btnReport").onclick=buildReport;
-/* btnSave (overwrite-the-file-on-disk) is gone: that was the standalone-file
-   workflow. Hosted, the plan autosaves and syncs — a "Save" button would imply
-   the work isn't already safe. saveInPlace/ensureHandle are left unused. */
-document.getElementById("btnSaveCopy").onclick=saveCopy;
+/* No Save button by design: the plan autosaves and syncs, so a Save button
+   would imply the work isn't already safe. Removed with it: save-to-disk and
+   report export (both the standalone-file workflow), plan-level to-dos (they
+   now live per-person in the app), and drag-and-drop (never fires on touch —
+   openPicker is the tap path). */
 
 /* ---------- sync button ---------- */
 (function(){
