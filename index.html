@@ -2361,7 +2361,15 @@ renderAcct({status:"connecting",user:null});   /* until/unless sync reports in *
 /* the sync layer calls into these after sign-in / on remote changes */
 window.VNApp={setScope,loadPersonal,render,store,
   reloadPlan(){D=loadPlan();render();},
-  get personal(){return{todos:TODOS,bingo:BINGO,journal:store.get("journal","")}}};
+  /* What the sync layer PUSHES. It must list every key sync.js pulls, or that
+     key syncs one way and silently does nothing — an undefined field is just
+     skipped on the way back in, so it fails quietly rather than loudly.
+     Deliberately absent: todo_tab/bingo_tab (which tab you last had open is
+     this device's business, not your tablet's), idseq (a counter can't survive
+     last-write-wins — it would hand two devices the same id), and
+     checklist/checklist_merged (a one-off per-device migration flag). */
+  get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,fx:FX,
+    journal:store.get("journal","")}}};
 
 /* ============================================================ SERVICE WORKER (offline)
    An installed app has no address bar and no reload button, so it must offer

@@ -30,10 +30,15 @@ const firebaseConfig = {
 };
 
 const BUILDER_LS_KEY = "vietnam_itinerary_builder_v2";
-/* "finds" is metadata only — the photos are IndexedDB blobs and stay on the
-   phone that shot them. A find therefore syncs to your other device as a
-   priced, placed, colour-swatched row with no picture, by design. */
-const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds"];
+/* Keys pulled from this person's cloud doc. This list MUST match what
+   VNApp.personal pushes (index.html) — a key here that isn't pushed arrives
+   undefined and is skipped, so it looks synced and silently never is.
+   "finds" is metadata only: the photos are IndexedDB blobs and stay on the
+   phone that shot them, so a find reaches your other device as a priced,
+   placed, colour-swatched row with no picture, by design.
+   "fx" carries the rate you set by hand — only a deliberate tap on Update
+   changes it, so last-write-wins can't clobber a street rate behind your back. */
+const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds", "fx"];
 
 const listeners = new Set();
 /* `available` rides on the state itself. Readers must never have to reach back
@@ -144,6 +149,14 @@ emit();   /* tell the pages we exist, now that they've finished loading */
 
     /* hand the app this person's private namespace */
     window.VNApp?.setScope?.(user.uid);
+
+    /* Shout if the push and pull lists have drifted apart. This exact drift
+       shipped once — "finds" was pulled but never pushed, so it looked synced
+       and wasn't. A one-way key produces no error on its own: it just arrives
+       undefined forever. Cheap to check, invisible when correct. */
+    const pushed = Object.keys(window.VNApp?.personal || {});
+    const orphans = PERSONAL_KEYS.filter(k => !pushed.includes(k));
+    if (orphans.length) console.warn("[vnsync] pulled but never pushed — these will silently not sync:", orphans);
 
     const tripRef = fb.doc(db, "trips", TRIP_ID);
     const mineRef = fb.doc(db, "trips", TRIP_ID, "members", user.uid);
