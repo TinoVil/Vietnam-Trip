@@ -30,7 +30,10 @@ const firebaseConfig = {
 };
 
 const BUILDER_LS_KEY = "vietnam_itinerary_builder_v2";
-const PERSONAL_KEYS = ["todos", "bingo", "journal"];
+/* "finds" is metadata only — the photos are IndexedDB blobs and stay on the
+   phone that shot them. A find therefore syncs to your other device as a
+   priced, placed, colour-swatched row with no picture, by design. */
+const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds"];
 
 const listeners = new Set();
 /* `available` rides on the state itself. Readers must never have to reach back

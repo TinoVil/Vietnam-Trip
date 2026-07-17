@@ -1,6 +1,6 @@
 /* Vietnam 2026 · offline service worker */
 /* Bump CACHE on every deploy, otherwise installed phones keep serving the old copy. */
-const CACHE = "vn26-v12";
+const CACHE = "vn26-v13";
 const ASSETS = [
   "./",
   "./index.html",
@@ -24,6 +24,28 @@ const CDN_ASSETS = [
   `${SDK}/firebase-auth.js`,
   `${SDK}/firebase-firestore.js`
 ];
+
+/* Market Finds' category guesser (MobileNet, ~15MB of weights). Deliberately
+   NOT pre-cached at install: it's far too big to make everyone wait for, and
+   its weight URLs are minted at runtime and redirect, so there's no fixed list
+   to name. Instead the first classify pulls it over wifi and we keep it — every
+   launch after that guesses categories with no signal. Match on host, since
+   only the host is predictable. */
+const MODEL_HOSTS = [
+  "https://cdn.jsdelivr.net/",           /* tfjs + mobilenet bundles */
+  "https://tfhub.dev/",                  /* model manifest… */
+  "https://www.kaggle.com/",             /* …which now redirects here… */
+  "https://storage.googleapis.com/"      /* …and finally serves weights from here */
+];
+const isModelAsset = u => MODEL_HOSTS.some(h => u.startsWith(h));
+
+/* A redirected Response cannot be handed to cache.put — it throws. The model
+   manifest IS a redirect, so rebuild a clean response before storing it. */
+async function cacheable(r) {
+  if (!r.redirected) return r;
+  const body = await r.clone().blob();
+  return new Response(body, { status: r.status, statusText: r.statusText, headers: r.headers });
+}
 
 self.addEventListener("install", e => {
   e.waitUntil(
@@ -54,6 +76,25 @@ self.addEventListener("fetch", e => {
   if (url.origin !== location.origin) {
     if (CDN_ASSETS.some(u => e.request.url.startsWith(u))) {
       e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request)));
+      return;
+    }
+    /* Cache-first, then keep it: the model never changes under a pinned version,
+       and re-downloading 15MB on a Vietnamese sim is exactly what this avoids.
+       Every failure path here falls through to a plain fetch — a caching problem
+       must never be the reason a category can't be guessed. */
+    if (isModelAsset(e.request.url)) {
+      e.respondWith(
+        caches.match(e.request).then(hit => hit || fetch(e.request).then(async r => {
+          if (r && r.ok) {
+            try {
+              const copy = await cacheable(r.clone());
+              const c = await caches.open(CACHE);
+              await c.put(e.request, copy);
+            } catch (err) { /* over quota, or an opaque response — serve it anyway */ }
+          }
+          return r;
+        }))
+      );
     }
     return;
   }

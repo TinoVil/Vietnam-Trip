@@ -372,6 +372,98 @@ p{color:var(--body);font-size:13px}
   padding:9px 16px;border-radius:10px;flex:none}
 @keyframes upslide{from{transform:translateY(120%);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.updatebar{animation:none}}
+
+/* ---------------------------------------------------------- MARKET FINDS */
+/* Photo frames sit on the find's own detected colour, so a find whose photo
+   is on the other device still reads as "the green one" instead of a hole. */
+.ph-wrap{position:relative;display:block;overflow:hidden;background:var(--border-2)}
+.ph-wrap img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;
+  transition:opacity .25s ease}
+.ph-wrap.has-photo img{opacity:1}
+.f-capture{display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  padding:15px 16px;border-radius:var(--radius);background:var(--navy);color:#fff;
+  box-shadow:0 8px 22px rgba(36,52,71,.22)}
+.f-capture.slim{padding:12px 14px;margin-bottom:14px}
+.f-capture-ico{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;
+  background:rgba(255,255,255,.14);flex:none}
+.f-capture.slim .f-capture-ico{width:34px;height:34px;border-radius:10px}
+.f-capture-txt b{display:block;font-size:15px;font-weight:800}
+.f-capture-txt i{display:block;font-style:normal;font-size:11.5px;letter-spacing:.06em;
+  text-transform:uppercase;color:rgba(255,255,255,.7);margin-top:2px}
+.f-tray{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;
+  border:1px solid var(--border);border-radius:14px;padding:11px 12px;margin-bottom:8px}
+.f-tray-ico{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;
+  font-size:18px;flex:none}
+.f-tray-txt{flex:1;min-width:0}
+.f-tray-txt b{display:block;font-size:14px;color:var(--ink)}
+.f-tray-txt i{display:block;font-style:normal;font-size:12px;color:var(--grey);margin-top:1px}
+.f-tray-chev{color:var(--grey-2);flex:none;display:grid;place-items:center}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f-card{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  text-align:left;display:block}
+.f-card-ph{width:100%;aspect-ratio:1/1}
+.f-card-price{display:block;padding:8px 10px 0;font-size:14px;font-weight:800;color:var(--ink)}
+.f-card-sub{display:block;padding:1px 10px 10px;font-size:11.5px;color:var(--grey);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.f-hero-ph{width:100%;aspect-ratio:4/5;max-height:56vh;border-radius:var(--radius);
+  margin-bottom:14px;display:grid;place-items:center}
+.f-hero-ph .f-hero-none{font-size:12px;color:rgba(255,255,255,.9);text-align:center;padding:0 24px;
+  text-shadow:0 1px 6px rgba(0,0,0,.35)}
+.f-hero-ph.has-photo .f-hero-none{display:none}
+.f-hero-ph img{position:absolute;inset:0;height:100%}
+.f-price-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  margin-bottom:10px}
+.f-big{font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.f-badge{font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:999px;flex:none}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;
+  border:1px solid rgba(0,0,0,.12)}
+.f-del{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;
+  padding:13px;border-radius:14px;border:1px solid var(--border);background:#fff;
+  color:var(--red);font-weight:800;font-size:13px}
+.f-del.sure{background:var(--red);color:#fff;border-color:var(--red)}
+/* the shelf picker — used by both the sheet and the detail page */
+.f-cats{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.f-cat{display:flex;align-items:center;gap:7px;padding:10px 9px;border-radius:11px;
+  border:1px solid var(--border);background:#fff;font-size:12.5px;font-weight:600;
+  color:var(--body);text-align:left}
+.f-cat span{font-size:15px;line-height:1}
+.f-cat.on{border-color:var(--navy);background:var(--navy);color:#fff;font-weight:800}
+/* ---- capture sheet ---- */
+.fsheet{position:fixed;left:0;right:0;bottom:0;z-index:90;background:#fff;
+  border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom));
+  max-height:92vh;overflow-y:auto;transform:translateY(101%);transition:transform .26s ease;
+  box-shadow:0 -12px 40px rgba(16,26,39,.24)}
+.fsheet.open{transform:none}
+@media (prefers-reduced-motion:reduce){.fsheet{transition:none}}
+.sheet-grab{width:38px;height:4px;border-radius:2px;background:var(--border);margin:2px auto 12px}
+.sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.sheet-ph{width:60px;height:60px;border-radius:13px;flex:none;display:grid;place-items:center}
+.sheet-ph img{position:absolute;inset:0;height:100%}
+.ph-spin{font-size:16px;font-weight:800;color:rgba(255,255,255,.85)}
+.sheet-meta{flex:1;min-width:0}
+.sheet-title{font-size:15px;font-weight:800;color:var(--ink)}
+.sheet-sub{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+.sheet-sub .chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;
+  padding:3px 8px;border-radius:999px;background:var(--border-2);color:var(--grey-3)}
+.sheet-sub .chip.dim{opacity:.65}
+.sheet-x{width:32px;height:32px;border-radius:50%;background:var(--border-2);color:var(--grey);
+  font-size:19px;line-height:1;flex:none}
+.f-lab{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--grey-2);margin:14px 0 6px}
+.f-guess{background:var(--gold-soft);color:var(--gold-ink);padding:2px 6px;border-radius:5px;
+  letter-spacing:.04em;margin-left:4px}
+.f-money{display:flex;align-items:center;border:1px solid var(--border);border-radius:13px;
+  background:#fff;padding:0 13px}
+/* 16px floor on every input — anything smaller and Safari zooms the page on focus */
+.f-money input{flex:1;border:0;background:none;padding:13px 0;font-size:22px;font-weight:800;
+  color:var(--ink)}
+.f-cur{font-size:18px;font-weight:700;color:var(--grey-2)}
+.f-zar{min-height:16px;margin-top:5px}
+#f-stall{width:100%;border:1px solid var(--border);border-radius:13px;padding:13px;
+  font-size:16px;background:#fff;color:var(--ink)}
+.f-save{width:100%;margin-top:16px;padding:15px;border-radius:14px;background:var(--green);
+  color:#fff;font-weight:800;font-size:15px}
+.f-save:disabled{background:var(--border);color:var(--grey-2)}
 </style>
 </head>
 <body>
@@ -397,6 +489,14 @@ p{color:var(--body);font-size:13px}
 </aside>
 
 <main id="view" class="wrap"></main>
+
+<!-- Market Finds capture. One picker and one sheet for the whole app; "capture"
+     hands straight to the phone's camera, and falls back to the library on a
+     desktop. Lives outside #view so a re-render can't rip the sheet away
+     mid-typing. -->
+<input type="file" id="find-file" accept="image/*" capture="environment" hidden>
+<div class="scrim" id="find-scrim"></div>
+<div class="fsheet" id="find-sheet"></div>
 
 <!-- Trip data — same schema as the Itinerary Builder / Travel Book report -->
 <script id="trip-data" type="application/json">{"meta":{"title":"Vietnam 2026","startDate":"2026-08-20","numDays":16},"items":{"location":[{"id":"imrj68w2f20p9","cat":"location","name":"Da Nang"},{"id":"imrj6a2cf14v7","cat":"location","name":"Hoi An"},{"id":"imrj6ajy017kf","cat":"location","name":"Hue"},{"id":"imrj6bdg41bwv","cat":"location","name":"Hanoi"}],"transport":[{"id":"imrj75s6lo19","cat":"transport","name":"Airport Shuttle - Sofiana","tcat":"Organised","cost":"0","duration":"","pickup":"Da Nang Airport","dropoff":"Sofiana","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0i6qaj41","cat":"transport","name":"Grab App","tcat":"Taxi","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0ivhz1ook","cat":"transport","name":"Heritage Train - Danang","tcat":"Train","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0k2uh1sek","cat":"transport","name":"Sleeper Bus","tcat":"Bus","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0kcsn21a0","cat":"transport","name":"Hue to Hanoi Flight","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0v3t61thd","cat":"transport","name":"Flight into Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0vk122ps","cat":"transport","name":"Flight out of Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""}],"accommodation":[{"id":"imrj6cjrz1f1q","cat":"accommodation","name":"Sofiana My Khe Hotel & Spa","checkinDate":"2026-08-21","checkinTime":"14:00","checkoutDate":"2026-08-24","checkoutTime":"12:00","cost":"R3095","address":"54-56 Tran Bach Dang, Danang, Vietnam","url":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":"0"},"shuttle":{"status":"included","cost":"0"},"amenities":["Air conditioning","Terrace","Hairdryer","Electric kettle","Socket near the bed","Wake-Up Service"]},{"id":"imrj71yzn23vf","cat":"accommodation","name":"Nolia Hoi An","checkinDate":"2026-08-24","checkinTime":"14:00","checkoutDate":"2026-08-27","checkoutTime":"12:00","cost":"1917","address":"Cầu Hói Muống Street Số 01 - 02, 50000 Hoi An, Vietnam","url":"https://www.noliahoian.com/","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Free Bicycles Rental"],"cancelDate":"","cancelTime":""},{"id":"imrj76qq6124z","cat":"accommodation","name":"Gahi Homestay","checkinDate":"2026-08-27","checkinTime":"14:00","checkoutDate":"2026-08-30","checkoutTime":"12:00","cost":"R1644","address":"103 Dang Van Ngu, Hue, Vietnam","url":"","cancelDate":"","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":true,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Barbecue"]},{"id":"imrj771b220ym","cat":"accommodation","name":"Radison Red","checkinDate":"2026-09-03","checkinTime":"14:00","checkoutDate":"2026-09-04","checkoutTime":"18:00","cost":"0","address":"90 Vo Nguyen Gliap, Son Tra Ward, Da Nang, Vietnam","url":"https://www.radissonhotels.com/vi-vn/hotels/radisson-red-danang?msockid=2c25fde442166cf105c6ebfc43886d30","cancelDate":"","cancelTime":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]},{"id":"imrm0cw5dkoe","cat":"accommodation","name":"WeCozy","checkinDate":"2026-08-30","checkinTime":"15:00","checkoutDate":"2026-09-03","checkoutTime":"12:00","cost":"5359","address":"20 Tong Duy Tan, Hoan Kiem, Hanoi, Vietnam","url":"","cancelDate":"2026-08-24","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":false,"other":"Two Bedroom Apartment"},"breakfast":{"status":"","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]}],"activities":[{"id":"imrksfkmvjhd","cat":"activities","name":"My Sun Sanctuary Tour","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrksto2922bw","cat":"activities","name":"Memories Show","timeStart":"","timeEnd":"","location":"Hoi An","website":"https://www.getyourguide.com/hoi-an-l831/hoi-an-memories-show-hoi-an-impression-theme-park-qrticket-t481283/?ranking_uuid=e3163bfa-9558-4a58-a30e-d9b82484a45c&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"778","cancelDate":"","cancelTime":""},{"id":"imrkt45d21jju","cat":"activities","name":"City of Ghosts Cemetary","timeStart":"","timeEnd":"","location":"Hue","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm6ld9t18c7","cat":"activities","name":"Teh Dar: Unique Bamboo Circus","timeStart":"","timeEnd":"","location":"Hoi An Lune Center 1A Nguyen Phuc Chu, Minh An Ward, Hoi An, Quang Nam, Vietnam","website":"https://www.getyourguide.com/hoi-an-l831/teh-dar-vietnamese-tribal-culture-at-saigon-opera-house-t83301/?ranking_uuid=d0b089c1-8f05-422f-bb27-9a198db2d23e&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"908","cancelDate":"","cancelTime":""},{"id":"imrm7bk3nrgb","cat":"activities","name":"Hue Imperial Ancient City Walking Tour","timeStart":"","timeEnd":"","location":"FH9H+3XJ Phu Xuan, Hue, Vietnam","website":"https://www.getyourguide.com/hue-vietnam-l833/hue-imperial-ancient-city-walking-tour-t848289/?ranking_uuid=ebcd110b-f6b4-47ed-a0d5-6e71f4301999&q=Hue%2C+Vietnam&date_from=2026-08-27&date_to=2026-08-30&adults=2","cost":"366","cancelDate":"","cancelTime":""},{"id":"imrm7rgm82513","cat":"activities","name":"Hue Tombs","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm7voc51uso","cat":"activities","name":"Water Puppet Show","timeStart":"","timeEnd":"","location":"31 Lo Su, Hoan Kiem, Hanoi","website":"https://www.getyourguide.com/hanoi-l205/hanoi-water-puppet-tickets-with-hotel-delivery-t62912/?ranking_uuid=aa6c3c27-9032-4efc-afce-2472bd035eca&q=Hanoi&date_from=2026-08-31&date_to=2026-09-03&adults=2","cost":"230","cancelDate":"","cancelTime":""},{"id":"imrm7wqip14tb","cat":"activities","name":"Spa Day","timeStart":"","timeEnd":"","location":"","website":"","cost":"2000","cancelDate":"","cancelTime":""},{"id":"imrm80a1t1w53","cat":"activities","name":"Old Quarter Street Food Tour","timeStart":"","timeEnd":"","location":"38 Bát Sứ street","website":"","cost":"734","cancelDate":"","cancelTime":""}]},"days":[{"name":"Travel Day","note":"","locStart":null,"locEnd":null,"transport":[],"accommodation":[],"activities":[]},{"name":"Landing Day","note":"","locStart":null,"locEnd":"imrj68w2f20p9","transport":["imrj75s6lo19","imrm0v3t61thd"],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Shopping Vibe","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Heritage at Danang","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":["imrksfkmvjhd"]},{"name":"Travel Day","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj6a2cf14v7","transport":["imrm0i6qaj41"],"accommodation":["imrj71yzn23vf"],"activities":[]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrksto2922bw"]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrm6ld9t18c7"]},{"name":"Travel Day","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6ajy017kf","transport":["imrm0i6qaj41","imrm0ivhz1ook"],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":["imrm7bk3nrgb","imrm7rgm82513"]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"Travel Day","note":"","locStart":"imrj6ajy017kf","locEnd":null,"transport":["imrm0kcsn21a0","imrm0k2uh1sek"],"accommodation":["imrj76qq6124z"],"activities":["imrkt45d21jju"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":[]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7voc51uso","imrm80a1t1w53"]},{"name":"Spa Day","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7wqip14tb"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj771b220ym"],"activities":[]},{"name":"","note":"","locStart":"imrj68w2f20p9","locEnd":null,"transport":["imrm0vk122ps"],"accommodation":[],"activities":[]}],"savedAt":1784128845078,"todos":[]}</script>
@@ -464,7 +564,10 @@ const PATHS={
   grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   trash:'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
-  chev:'<path d="m9 6 6 6-6 6"/>'
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  cam:'<path d="M3 8a2 2 0 0 1 2-2h2.5l1.2-2h6.6l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/>',
+  tag:'<path d="M3 3h7.6l10 10a1.5 1.5 0 0 1 0 2.1l-5.5 5.5a1.5 1.5 0 0 1-2.1 0L3 10.6Z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+  pin:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>'
 };
 function ico(name,size,extra){
   return `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -712,7 +815,13 @@ function emptyState(a,b){
    once Firebase auth lands. Keeping the namespace here means the sync layer
    just maps scope -> a per-member document. */
 /* the checklist is no longer its own thing — it's the "pre" to-dos */
-const PERSONAL_KEYS=["todos","bingo","journal","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
+/* "finds" carries only what you typed and what was measured — price, stall,
+   coords, colour, category. The PHOTO never rides along: it's a blob in
+   IndexedDB, because a trip's worth of JPEGs fits in neither localStorage's
+   ~5MB nor a 1MB Firestore document. A find seen on another device therefore
+   shows its colour swatch instead of its photo, which is a real trade and the
+   reason the swatch hex is stored rather than derived on the fly. */
+const PERSONAL_KEYS=["todos","bingo","journal","finds","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
 /* Fallback rate, used until a live one is fetched (checked live 2026-07-16).
    It WILL drift — the point is that the converter still works in a market with
    no signal; tap Update, or set it by hand once you've changed money. */
@@ -742,7 +851,7 @@ const store={
     this.scope=prev;
   }
 };
-let TODOS,BINGO,idSeq,todoTab,bingoTab;
+let TODOS,BINGO,FINDS,idSeq,todoTab,bingoTab;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -750,6 +859,7 @@ function loadPersonal(){
   todoTab=store.get("todo_tab","pre");
   bingoTab=store.get("bingo_tab","food");
   FX=store.get("fx",{vndPerZar:DEFAULT_VND_PER_ZAR,updated:0,manual:false});
+  FINDS=store.get("finds",[]);        /* nothing to seed — it starts empty by design */
   TODOS=store.get("todos",null);
   if(!TODOS){
     let n=0;TODOS=[];
@@ -815,6 +925,7 @@ const SECTIONS=[
   {route:"bookings", name:"Bookings & Deadlines",icon:"alert",color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"todos",    name:"To-Do's",       icon:"check",  color:"var(--green)", soft:"var(--green-soft)", group:"On the trip"},
   {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
+  {route:"finds",    name:"Market Finds",  icon:"cam",    color:"var(--coral)", soft:"#FCEFE4"},
   {route:"fx",       name:"Currency",      icon:"wallet", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
   {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
@@ -858,7 +969,16 @@ function buildDrawer(active){
    would just walk your visit history, which is the thing being replaced. */
 function parentOf(route){
   if(!route||route==="summary")return null;          /* root — leave the app */
-  if(route.split("/")[0]==="day")return "itinerary"; /* a day lives under the itinerary */
+  const p=route.split("/");
+  if(p[0]==="day")return "itinerary";                /* a day lives under the itinerary */
+  /* Finds nest two deep: an item belongs to its category, a category to the
+     ledger. Climb via the item's OWN category, not the one you browsed in —
+     re-tagging a shirt as Homeware should send Back to Homeware. */
+  if(p[0]==="finds"&&p[1]==="item"){
+    const it=FINDS.find(f=>f.id===p[2]);
+    return it?"finds/"+it.cat:"finds";
+  }
+  if(p[0]==="finds"&&p[1])return "finds";
   return "summary";
 }
 function currentRoute(){
@@ -1643,8 +1763,505 @@ function wireInstallTip(el){
 }
 
 /* ============================================================ RENDER */
+/* ============================================================ MARKET FINDS
+
+   Snap a thing on a stall, type what they're asking, and it files itself.
+
+   Three deliberate calls:
+     · Photos live in IndexedDB, keyed by find id, and never sync (a trip of
+       JPEGs fits in neither localStorage nor a Firestore doc). Metadata does
+       sync, so your tablet lists a find your phone photographed — with the
+       colour swatch standing in for the picture.
+     · Ids are minted from the clock, NOT newId(). Both your devices share one
+       account and idSeq isn't synced, so the shared counter would hand two
+       phones the same id — and ids key the photos.
+     · Colour is measured on-device and always works. The category guess needs
+       the model and is only ever a pre-selection; it can never block a save. */
+
+const CATEGORIES=[
+  {id:"clothing",   label:"Clothing",          icon:"👕", color:"var(--blue)",    soft:"var(--blue-soft)"},
+  {id:"footwear",   label:"Footwear",          icon:"👟", color:"var(--teal)",    soft:"var(--teal-soft)"},
+  {id:"bags",       label:"Bags & Accessories",icon:"👜", color:"var(--purple)",  soft:"var(--purple-soft)"},
+  {id:"food",       label:"Food & Produce",    icon:"🍜", color:"var(--green)",   soft:"var(--green-soft)"},
+  {id:"homeware",   label:"Homeware",          icon:"🏺", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
+  {id:"souvenirs",  label:"Art & Souvenirs",   icon:"🏮", color:"var(--red)",     soft:"var(--red-soft)"},
+  {id:"electronics",label:"Electronics",       icon:"🔌", color:"var(--grey)",    soft:"#EEF1F5"},
+  {id:"other",      label:"Other",             icon:"✨", color:"var(--coral)",   soft:"#FCEFE4"}
+];
+const CAT_BY_ID=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+/* ImageNet class names → the eight shelves above. Checked in priority order so
+   "leather shoe shop" lands in Footwear, not Bags. */
+const CATEGORY_PRIORITY=["food","footwear","clothing","bags","electronics","homeware","souvenirs"];
+const CATEGORY_KEYWORDS={
+  food:["banana","orange","lemon","lime","pineapple","fig","apple","strawberry","pomegranate","fruit","corn","cucumber","mushroom","cabbage","broccoli","artichoke","pepper","spice","bread","pretzel","bagel","ice cream","ice lolly","meat","seafood","fish","rice","plate","hotpot","soup","coffee","espresso","tea","wine","beer","egg","custard","dough","pizza","burrito","cheese","honeycomb","guacamole","mashed"],
+  footwear:["shoe","sandal","clog","boot","loafer","sneaker","running shoe","cowboy boot","moccasin"],
+  clothing:["shirt","jersey","tee","sweatshirt","cardigan","coat","gown","dress","kimono","jean","trouser","skirt","suit","poncho","sarong","robe","sweater","pajama","brassiere","trunks","bikini","abaya","cloak","vestment","fur coat","lab coat","overskirt"],
+  bags:["bag","backpack","purse","wallet","handbag","pouch","hat","sombrero","bonnet","sunglass","sunglasses","necklace","bracelet","ring","umbrella","mitten","glove","scarf","tie","belt","crate","shopping"],
+  electronics:["phone","cellphone","laptop","computer","mouse","keyboard","headphone","earphone","speaker","camera","charger","cable","remote","tablet","monitor","radio","ipod","hard disc","modem","printer","microphone","digital watch"],
+  homeware:["bowl","cup","mug","plate","pot","vase","teapot","pitcher","tray","basket","kettle","frying pan","wok","spatula","ladle","quilt","pillow","blanket","mat","lamp","candle","chopstick","spoon","tablecloth","napkin","tub","bucket","saltshaker","measuring cup","mixing bowl","washbasin"],
+  souvenirs:["painting","sculpture","mask","figurine","statue","carving","lantern","lampshade","magnet","postcard","book","comic","toy","teddy","doll","jigsaw","kite","fan","pinwheel","maraca","ocarina","vestment"]
+};
+
+/* ---------- photo store (IndexedDB — device-local, never synced) ---------- */
+const PHOTO_DB="vn26-photos",PHOTO_STORE="ph";
+let _pdb=null;
+function photoDB(){
+  if(_pdb)return _pdb;
+  _pdb=new Promise((res,rej)=>{
+    const r=indexedDB.open(PHOTO_DB,1);
+    r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(PHOTO_STORE))r.result.createObjectStore(PHOTO_STORE);};
+    r.onsuccess=()=>res(r.result);
+    r.onerror=()=>rej(r.error);
+  }).catch(e=>{_pdb=null;throw e;});
+  return _pdb;
+}
+async function photoPut(id,rec){
+  const db=await photoDB();
+  return new Promise((res,rej)=>{
+    const tx=db.transaction(PHOTO_STORE,"readwrite");
+    tx.objectStore(PHOTO_STORE).put(rec,id);
+    tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+  });
+}
+async function photoGet(id){
+  try{
+    const db=await photoDB();
+    return await new Promise((res,rej)=>{
+      const tx=db.transaction(PHOTO_STORE,"readonly");
+      const q=tx.objectStore(PHOTO_STORE).get(id);
+      q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error);
+    });
+  }catch(e){return null;}      /* no photo on this device — the swatch stands in */
+}
+async function photoDel(id){
+  try{
+    const db=await photoDB();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction(PHOTO_STORE,"readwrite");
+      tx.objectStore(PHOTO_STORE).delete(id);
+      tx.oncomplete=res;tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){}
+}
+/* Object URLs leak until revoked, and this page never reloads between views.
+   Two buckets, deliberately: the sheet outlives any number of re-renders (a
+   remote sync calls render() — see sync.js — and that must not blank the photo
+   you're standing at a stall looking at), so its URLs are freed on close, not
+   on navigation. */
+let _urls=[],_sheetUrls=[];
+function findUrl(blob){const u=URL.createObjectURL(blob);_urls.push(u);return u;}
+function revokeUrls(){_urls.forEach(u=>URL.revokeObjectURL(u));_urls=[];}
+function sheetUrl(blob){const u=URL.createObjectURL(blob);_sheetUrls.push(u);return u;}
+function revokeSheetUrls(){_sheetUrls.forEach(u=>URL.revokeObjectURL(u));_sheetUrls=[];}
+/* Fill in <img data-ph="id"> once the blobs are out of IndexedDB. */
+function hydratePhotos(el,which){
+  el.querySelectorAll("[data-ph]").forEach(async img=>{
+    const rec=await photoGet(img.dataset.ph);
+    const blob=rec&&(which==="full"?rec.full||rec.thumb:rec.thumb||rec.full);
+    if(!blob||!img.isConnected)return;
+    img.src=findUrl(blob);
+    img.closest(".ph-wrap")?.classList.add("has-photo");
+  });
+}
+
+/* ---------- image → canvas ---------- */
+async function fileToBitmap(file){
+  /* imageOrientation honours the EXIF rotation phones bake in; without it every
+     portrait shot files itself sideways. The <img> path is the Safari fallback. */
+  try{return await createImageBitmap(file,{imageOrientation:"from-image"});}
+  catch(e){
+    return await new Promise((res,rej)=>{
+      const img=new Image();
+      img.onload=()=>res(img);img.onerror=rej;
+      img.src=URL.createObjectURL(file);
+    });
+  }
+}
+function drawScaled(src,maxDim){
+  const scale=Math.min(1,maxDim/Math.max(src.width,src.height));
+  const cv=document.createElement("canvas");
+  cv.width=Math.round(src.width*scale);cv.height=Math.round(src.height*scale);
+  cv.getContext("2d").drawImage(src,0,0,cv.width,cv.height);
+  return cv;
+}
+function canvasToBlob(cv,q){return new Promise(res=>cv.toBlob(b=>res(b),"image/jpeg",q));}
+async function processImage(file){
+  const bmp=await fileToBitmap(file);
+  const fullCv=drawScaled(bmp,1200),thumbCv=drawScaled(bmp,400);
+  const [full,thumb]=await Promise.all([canvasToBlob(fullCv,.72),canvasToBlob(thumbCv,.7)]);
+  return {full,thumb,canvas:thumbCv};
+}
+
+/* ---------- colour (measured here, always works, no signal needed) ---------- */
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b),l=(max+min)/2,d=max-min;
+  let h=0,s=0;
+  if(d!==0){
+    s=l>.5?d/(2-max-min):d/(max+min);
+    if(max===r)h=(g-b)/d+(g<b?6:0);else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;
+    h*=60;
+  }
+  return {h,s,l};
+}
+function colourName(r,g,b){
+  const {h,s,l}=rgbToHsl(r,g,b);
+  if(l<.11)return "Black";
+  if(l>.90&&s<.16)return "White";
+  if(s<.13)return l<.42?"Charcoal":(l<.72?"Grey":"Off-white");
+  if(h>=15&&h<45&&l<.38)return "Brown";
+  if(h>=15&&h<48&&s<.55&&l<.6)return "Tan";
+  if(h<15||h>=345)return "Red";
+  if(h<40)return "Orange";
+  if(h<66)return "Yellow";
+  if(h<90)return "Lime";
+  if(h<162)return "Green";
+  if(h<200)return "Teal";
+  if(h<250)return "Blue";
+  if(h<315)return "Purple";
+  return "Pink";
+}
+function detectColour(canvas){
+  const ctx=canvas.getContext("2d"),W=canvas.width,H=canvas.height;
+  /* sample the middle 64% — the edges are usually the stall, not the thing */
+  let data;
+  try{data=ctx.getImageData(Math.floor(W*.18),Math.floor(H*.18),Math.floor(W*.64),Math.floor(H*.64)).data;}
+  catch(e){return {name:null,hex:"#8A8778"};}
+  const groups={};
+  for(let i=0;i<data.length;i+=16){
+    if(data[i+3]<200)continue;
+    const n=colourName(data[i],data[i+1],data[i+2]);
+    const g=groups[n]||(groups[n]={n:0,r:0,g:0,b:0});
+    g.n++;g.r+=data[i];g.g+=data[i+1];g.b+=data[i+2];
+  }
+  let best=null,bestN=-1;
+  for(const n in groups){
+    /* discount neutrals so a coloured item beats a grey tarp behind it */
+    const dull=["White","Off-white","Grey","Charcoal","Black"].includes(n);
+    const score=groups[n].n*(dull?.55:1);
+    if(score>bestN){bestN=score;best=n;}
+  }
+  if(!best)return {name:null,hex:"#8A8778"};
+  const g=groups[best];
+  const hex="#"+[g.r,g.g,g.b].map(v=>Math.round(v/g.n).toString(16).padStart(2,"0")).join("");
+  return {name:best,hex};
+}
+
+/* Match keywords on WORD boundaries, never as substrings. ImageNet class names
+   are full of traps: plain .includes() files a teapot under Food (it contains
+   "tea") and a figurine under Food too ("fig"), because Food is checked first.
+   \b also spares the multi-word keys — "t-shirt" still matches "shirt", since
+   the hyphen is a boundary. */
+const CAT_RE=Object.fromEntries(Object.entries(CATEGORY_KEYWORDS).map(([cat,kws])=>
+  [cat,kws.map(k=>new RegExp("\\b"+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b"))]));
+
+/* ---------- category (MobileNet — a nicety, never a blocker) ---------- */
+const TF_CDN="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js";
+const MN_CDN="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js";
+let _model=null,_modelState="idle";      /* idle | loading | ready | failed */
+function loadScript(src){
+  return new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);
+  });
+}
+async function ensureModel(){
+  if(_modelState==="ready")return _model;
+  if(_modelState==="loading")return null;   /* don't queue behind a 15MB download */
+  if(_modelState==="failed")return null;
+  _modelState="loading";
+  try{
+    if(!window.tf)await loadScript(TF_CDN);
+    if(!window.mobilenet)await loadScript(MN_CDN);
+    _model=await window.mobilenet.load({version:2,alpha:1.0});
+    _modelState="ready";return _model;
+  }catch(e){_modelState="failed";return null;}
+}
+function mapToCategory(preds){
+  if(!preds||!preds.length)return null;
+  const scored={};
+  preds.forEach((p,idx)=>{
+    const name=(p.className||"").toLowerCase();
+    for(const cat of CATEGORY_PRIORITY){
+      if(CAT_RE[cat].some(re=>re.test(name))){
+        scored[cat]=(scored[cat]||0)+(p.probability||0)*(3-idx);
+        break;
+      }
+    }
+  });
+  let best=null,bestScore=0;
+  for(const c in scored)if(scored[c]>bestScore){bestScore=scored[c];best=c;}
+  return best;
+}
+async function detectCategory(canvas){
+  const model=await ensureModel();
+  if(!model)return null;
+  try{return mapToCategory(await model.classify(canvas,3));}catch(e){return null;}
+}
+
+/* ---------- where you were standing ---------- */
+function getLoc(){
+  return new Promise(res=>{
+    if(!navigator.geolocation)return res(null);
+    navigator.geolocation.getCurrentPosition(
+      p=>res({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6)}),
+      ()=>res(null),                              /* denied or timed out — save anyway */
+      {enableHighAccuracy:true,timeout:8000,maximumAge:60000}
+    );
+  });
+}
+
+/* ---------- money ---------- */
+function findPrice(vnd){
+  const rate=FX.vndPerZar||DEFAULT_VND_PER_ZAR;
+  return {vnd:fxFmtVnd(vnd)+" ₫",zar:"R "+fxFmtZar(vnd/rate)};
+}
+function findsTotal(list){return list.reduce((n,f)=>n+(f.price||0),0);}
+function findDate(ts){
+  const d=new Date(ts);
+  return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" · "+
+    d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+}
+function newFindId(){
+  /* clock + noise, because both my devices share one account and one idSeq */
+  return "fd"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+}
+
+/* ---------- the capture sheet ---------- */
+let _draft=null;    /* {id, blobs, colour, cat, loc, price, stall} while the sheet is open */
+function openCapture(file,presetCat){
+  _draft={id:newFindId(),blobs:null,colour:null,cat:presetCat||null,loc:null,busy:true};
+  showSheet();
+  /* location and picture race each other — neither waits for the other */
+  getLoc().then(l=>{if(_draft){_draft.loc=l;paintSheet();}});
+  processImage(file).then(async img=>{
+    if(!_draft)return;                       /* cancelled while it was decoding */
+    _draft.blobs={full:img.full,thumb:img.thumb};
+    _draft.colour=detectColour(img.canvas);
+    _draft.busy=false;
+    paintSheet();
+    if(!_draft.cat){
+      const cat=await detectCategory(img.canvas);
+      /* don't yank the picker out from under a thumb that's already tapped */
+      if(_draft&&!_draft.cat&&cat){_draft.cat=cat;_draft.guessed=true;paintSheet();}
+    }
+  }).catch(()=>{if(_draft){_draft.busy=false;_draft.err=true;paintSheet();}});
+}
+function showSheet(){
+  document.getElementById("find-scrim").classList.add("open");
+  document.getElementById("find-sheet").classList.add("open");
+  paintSheet();
+}
+function closeSheet(){
+  _draft=null;
+  revokeSheetUrls();
+  document.getElementById("find-scrim").classList.remove("open");
+  document.getElementById("find-sheet").classList.remove("open");
+}
+function paintSheet(){
+  const el=document.getElementById("find-sheet");
+  if(!_draft||!el.classList.contains("open"))return;
+  const d=_draft;
+  /* keep what's already typed — this repaints while photo/GPS/model land */
+  const price=el.querySelector("#f-price")?.value ?? "";
+  const stall=el.querySelector("#f-stall")?.value ?? "";
+  /* the <img> below is about to be thrown away by innerHTML, so its url is dead
+     weight — free it here or every repaint leaks one */
+  revokeSheetUrls();
+  const swatch=d.colour?.hex||"#E3E7EC";
+  el.innerHTML=`
+    <div class="sheet-grab"></div>
+    <div class="sheet-head">
+      <div class="ph-wrap sheet-ph" style="background:${swatch}">
+        ${d.blobs?`<img id="f-prev" alt="">`:`<span class="ph-spin">${d.err?"!":""}</span>`}
+      </div>
+      <div class="sheet-meta">
+        <div class="sheet-title">${d.err?"Photo didn't read":(d.busy?"Reading the photo…":"New find")}</div>
+        <div class="sheet-sub">
+          ${d.colour?.name?`<span class="chip"><i class="dot" style="background:${swatch}"></i>${esc(d.colour.name)}</span>`:""}
+          ${d.loc?`<span class="chip">${ico("pin",11)} located</span>`:`<span class="chip dim">no location</span>`}
+        </div>
+      </div>
+      <button class="sheet-x" id="f-cancel" aria-label="Cancel">×</button>
+    </div>
+    <label class="f-lab">What are they asking?</label>
+    <div class="f-money">
+      <input id="f-price" type="text" inputmode="numeric" placeholder="0" value="${esc(price)}" autocomplete="off">
+      <span class="f-cur">₫</span>
+    </div>
+    <div class="f-zar caption" id="f-zar"></div>
+    <label class="f-lab">Stall or shop</label>
+    <input id="f-stall" type="text" placeholder="e.g. Hàng Gai silk stall" maxlength="60" value="${esc(stall)}" autocomplete="off">
+    <label class="f-lab">Shelf it under${d.guessed?` <span class="f-guess">guessed</span>`:""}</label>
+    <div class="f-cats">
+      ${CATEGORIES.map(c=>`<button class="f-cat ${d.cat===c.id?"on":""}" data-fc="${c.id}">
+        <span>${c.icon}</span>${esc(c.label)}</button>`).join("")}
+    </div>
+    <button class="f-save" id="f-save" ${d.blobs?"":"disabled"}>${d.blobs?"Save this find":"Waiting for the photo…"}</button>`;
+  if(d.blobs)el.querySelector("#f-prev").src=sheetUrl(d.blobs.thumb);
+  const priceIn=el.querySelector("#f-price"),zarOut=el.querySelector("#f-zar");
+  const clean=s=>parseInt(String(s).replace(/[^\d]/g,""),10)||0;
+  const paintZar=()=>{
+    const v=clean(priceIn.value);
+    zarOut.textContent=v?"≈ "+findPrice(v).zar:"";
+  };
+  priceIn.addEventListener("input",paintZar);
+  priceIn.addEventListener("blur",()=>{const v=clean(priceIn.value);priceIn.value=v?fxFmtVnd(v):"";paintZar();});
+  paintZar();
+  el.querySelector("#f-cancel").onclick=closeSheet;
+  el.querySelectorAll("[data-fc]").forEach(b=>b.onclick=()=>{
+    _draft.cat=b.dataset.fc;_draft.guessed=false;paintSheet();
+  });
+  el.querySelector("#f-save").onclick=async()=>{
+    if(!_draft?.blobs)return;
+    const btn=el.querySelector("#f-save");btn.disabled=true;btn.textContent="Saving…";
+    const d2=_draft;
+    const find={
+      id:d2.id,ts:Date.now(),
+      price:clean(el.querySelector("#f-price").value),
+      stall:el.querySelector("#f-stall").value.trim(),
+      cat:d2.cat||"other",
+      colour:d2.colour?.name||null,hex:d2.colour?.hex||"#8A8778",
+      loc:d2.loc||null
+    };
+    /* photo first: a find with no photo is recoverable, a photo with no find is litter */
+    await photoPut(find.id,{full:d2.blobs.full,thumb:d2.blobs.thumb});
+    FINDS.push(find);store.set("finds",FINDS);
+    closeSheet();
+    go("finds/"+find.cat);
+  };
+}
+/* One file input for the whole app — the sheet is what varies, not the picker. */
+function wireCapture(el,presetCat){
+  const inp=document.getElementById("find-file");
+  el.querySelectorAll("[data-capture]").forEach(b=>b.onclick=()=>{
+    inp.value="";                                  /* same file twice must still fire */
+    inp.dataset.preset=presetCat||"";
+    inp.click();
+  });
+}
+
+/* ---------- views ---------- */
+function viewFinds(){
+  revokeUrls();
+  const total=findsTotal(FINDS);
+  const money=findPrice(total);
+  const byCat=CATEGORIES.map(c=>({c,list:FINDS.filter(f=>f.cat===c.id)})).filter(g=>g.list.length);
+  const tray=byCat.map(({c,list})=>`
+    <button class="f-tray" data-route="finds/${c.id}">
+      <span class="f-tray-ico" style="background:${c.soft}">${c.icon}</span>
+      <span class="f-tray-txt">
+        <b>${esc(c.label)}</b>
+        <i>${list.length} ${list.length===1?"find":"finds"} · ${findPrice(findsTotal(list)).vnd}</i>
+      </span>
+      <span class="f-tray-chev">${ico("chev",16)}</span>
+    </button>`).join("");
+  return {title:"Market Finds",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--coral),#E8A06A)">
+      <div class="hb-kicker">Seen at the stalls</div>
+      <div class="hb-title">Market Finds</div>
+      <div class="hb-sub">${FINDS.length} ${FINDS.length===1?"find":"finds"} logged${FINDS.length?" · "+money.vnd+" · "+money.zar:""}</div>
+    </div>
+    <button class="f-capture" data-capture>
+      <span class="f-capture-ico">${ico("cam",22)}</span>
+      <span class="f-capture-txt"><b>Log a find</b><i>photo · price · place</i></span>
+    </button>
+    ${FINDS.length?`<div class="card-title" style="margin:18px 4px 8px">${ico("tag",14)} Your shelves</div>${tray}`
+      :`<section class="card"><div class="card-title">${ico("cam",14)} Nothing logged yet</div>
+        <p class="caption">Tap <b>Log a find</b> at the next stall — snap the thing, punch in what
+        they're asking, and it files itself by colour and kind. Prices show in dong and rand using
+        your saved rate, and it all works with no signal.</p></section>`}`,
+  wire(el){
+    wireCapture(el);
+    el.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>go(b.dataset.route));
+  }};
+}
+function viewFindsCat(catId){
+  revokeUrls();
+  const c=CAT_BY_ID[catId];
+  if(!c)return viewFinds();
+  const list=FINDS.filter(f=>f.cat===catId).sort((a,b)=>b.ts-a.ts);
+  const grid=list.map(f=>`
+    <button class="f-card" data-find="${f.id}">
+      <span class="ph-wrap f-card-ph" style="background:${esc(f.hex||"#E3E7EC")}">
+        <img data-ph="${f.id}" alt="">
+      </span>
+      <span class="f-card-price">${findPrice(f.price||0).vnd}</span>
+      <span class="f-card-sub">${esc(f.stall||f.colour||"—")}</span>
+    </button>`).join("");
+  return {title:c.label,html:`
+    <div class="hero" style="background:linear-gradient(120deg,${c.color},${c.color})">
+      <div class="hb-kicker">${c.icon} Shelf</div>
+      <div class="hb-title">${esc(c.label)}</div>
+      <div class="hb-sub">${list.length} ${list.length===1?"find":"finds"} · ${findPrice(findsTotal(list)).vnd}</div>
+    </div>
+    <button class="f-capture slim" data-capture>
+      <span class="f-capture-ico">${ico("cam",18)}</span>
+      <span class="f-capture-txt"><b>Add to ${esc(c.label)}</b></span>
+    </button>
+    ${list.length?`<div class="f-grid">${grid}</div>`
+      :`<section class="card"><p class="caption">No ${esc(c.label.toLowerCase())} logged yet.</p></section>`}`,
+  wire(el){
+    wireCapture(el,catId);
+    hydratePhotos(el,"thumb");
+    el.querySelectorAll("[data-find]").forEach(b=>b.onclick=()=>go("finds/item/"+b.dataset.find));
+  }};
+}
+function viewFind(f){
+  revokeUrls();
+  const c=CAT_BY_ID[f.cat]||CAT_BY_ID.other;
+  const money=findPrice(f.price||0);
+  const maps=f.loc?`https://maps.apple.com/?q=${f.loc.lat},${f.loc.lng}`:null;
+  return {title:c.label,html:`
+    <div class="ph-wrap f-hero-ph" style="background:${esc(f.hex||"#E3E7EC")}">
+      <img data-ph="${f.id}" alt="">
+      <span class="f-hero-none">Photo lives on the phone that took it</span>
+    </div>
+    <section class="card">
+      <div class="f-price-row">
+        <div><div class="f-big">${money.vnd}</div><div class="caption">${money.zar} at your saved rate</div></div>
+        <span class="f-badge" style="background:${c.soft};color:${c.color}">${c.icon} ${esc(c.label)}</span>
+      </div>
+      <div class="info-row"><span class="label">Stall</span><span class="value">${esc(f.stall||"—")}</span></div>
+      <div class="info-row"><span class="label">Colour</span>
+        <span class="value"><i class="dot" style="background:${esc(f.hex)}"></i> ${esc(f.colour||"—")}</span></div>
+      <div class="info-row"><span class="label">Seen</span><span class="value">${esc(findDate(f.ts))}</span></div>
+      <div class="info-row"><span class="label">Where</span>
+        <span class="value">${maps?`<a href="${maps}" target="_blank" rel="noopener">Open in Maps ↗</a>`:"Not recorded"}</span></div>
+    </section>
+    <section class="card">
+      <div class="card-title">${ico("tag",14)} Move to another shelf</div>
+      <div class="f-cats">
+        ${CATEGORIES.map(x=>`<button class="f-cat ${x.id===f.cat?"on":""}" data-mv="${x.id}">
+          <span>${x.icon}</span>${esc(x.label)}</button>`).join("")}
+      </div>
+    </section>
+    <button class="f-del" id="f-del">${ico("trash",15)} Delete this find</button>`,
+  wire(el){
+    hydratePhotos(el,"full");
+    el.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{
+      f.cat=b.dataset.mv;store.set("finds",FINDS);render();
+    });
+    el.querySelector("#f-del").onclick=async e=>{
+      const btn=e.currentTarget;
+      if(btn.dataset.sure!=="1"){
+        btn.dataset.sure="1";btn.classList.add("sure");
+        btn.innerHTML=ico("trash",15)+" Tap again to delete";
+        setTimeout(()=>{if(btn.isConnected){btn.dataset.sure="";btn.classList.remove("sure");
+          btn.innerHTML=ico("trash",15)+" Delete this find";}},4000);
+        return;
+      }
+      const cat=f.cat;
+      FINDS=FINDS.filter(x=>x.id!==f.id);store.set("finds",FINDS);
+      await photoDel(f.id);
+      go("finds/"+cat);
+    };
+  }};
+}
+
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
-  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,fx:viewFx,journal:viewJournal};
+  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,finds:viewFinds,fx:viewFx,
+  journal:viewJournal};
 let lastRoute=null;
 function render(){
   const r=currentRoute();
@@ -1653,6 +2270,12 @@ function render(){
   if(parts[0]==="day"){
     const i=Math.max(0,Math.min(D.days.length-1,(parseInt(parts[1],10)||1)-1));
     v=viewDay(i);active="itinerary";
+  }else if(parts[0]==="finds"&&parts[1]==="item"){
+    const it=FINDS.find(f=>f.id===parts[2]);
+    /* deleted on another device, or a stale link — fall back rather than blank */
+    v=it?viewFind(it):viewFinds();active="finds";
+  }else if(parts[0]==="finds"&&parts[1]){
+    v=viewFindsCat(parts[1]);active="finds";
   }else{
     const fn=VIEWS[parts[0]]||viewSummary;
     v=fn();active=VIEWS[parts[0]]?parts[0]:"summary";
@@ -1720,6 +2343,14 @@ window.addEventListener("hashchange",()=>{
   if(currentRoute()!==lastRoute)render();
 });
 window.addEventListener("popstate",onPop);
+/* Market Finds: one picker, wired once. The sheet owns the rest of the flow. */
+document.getElementById("find-file").addEventListener("change",e=>{
+  const f=e.target.files&&e.target.files[0];
+  if(f)openCapture(f,e.target.dataset.preset||null);
+});
+document.getElementById("find-scrim").addEventListener("click",()=>{
+  if(_draft)closeSheet();
+});
 loadPersonal();
 history.replaceState({vn:"page"},"",location.hash||"#/summary");
 armBack();
