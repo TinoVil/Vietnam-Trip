@@ -483,6 +483,9 @@ p{color:var(--body);font-size:13px}
 .daylog-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   width:80px;height:80px;border-radius:11px;border:1.5px dashed var(--border);background:#fff;
   color:var(--purple);font-size:10.5px;font-weight:700}
+.daylog-share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:12px;
+  padding:13px;border-radius:13px;background:#1EA85C;color:#fff;font-weight:800;font-size:14px}
+.daylog-share:active{background:#178d4d}
 /* ---- lightbox ---- */
 .lightbox{position:fixed;inset:0;z-index:100;background:rgba(16,26,39,.92);display:none;
   align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
@@ -601,7 +604,8 @@ const PATHS={
   chev:'<path d="m9 6 6 6-6 6"/>',
   cam:'<path d="M3 8a2 2 0 0 1 2-2h2.5l1.2-2h6.6l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/>',
   tag:'<path d="M3 3h7.6l10 10a1.5 1.5 0 0 1 0 2.1l-5.5 5.5a1.5 1.5 0 0 1-2.1 0L3 10.6Z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
-  pin:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>'
+  pin:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>',
+  send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>'
 };
 function ico(name,size,extra){
   return `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1281,7 +1285,8 @@ function viewDay(i){
           </span>`).join("")}
         <button class="daylog-add" id="daylog-add">${ico("cam",18)}<span>Add photo</span></button>
       </div>
-      <div class="caption" style="margin-top:8px">Photos stay on this phone — the words sync, the pictures don't.</div>
+      <button class="daylog-share" id="daylog-share">${ico("send",16)} Share today's update</button>
+      <div class="caption" style="margin-top:8px">Photos stay on this phone — the words sync, the pictures don't. Sharing sends them straight from here to WhatsApp.</div>
     </section>
     <a class="editday" href="./builder/#day-${i+1}">${ico("grid",14)} Edit Day ${i+1}</a>
     <div class="daynav-spacer"></div>
@@ -1297,6 +1302,7 @@ function viewDay(i){
     el.querySelector("#all-days").onclick=()=>go("itinerary");
     /* ---- per-day journal ---- */
     hydratePhotos(el,"thumb");
+    prepareDayShare(i);   /* warm the photo files so a Share tap can stay in-gesture */
     const ta=el.querySelector("#daylog"),sn=el.querySelector("#daylog-save");
     ta.addEventListener("input",()=>{
       clearTimeout(saveTimer);
@@ -1320,6 +1326,8 @@ function viewDay(i){
       if(e.target.closest("[data-rm]"))return;
       openLightbox(s.dataset.open);
     });
+    const sh=el.querySelector("#daylog-share");
+    if(sh)sh.onclick=()=>shareDay(i);
   }};
 }
 
@@ -2143,6 +2151,64 @@ async function removeDayPhoto(i,id){
   store.set("daylog",DAYLOG);
   await photoDel(id);
   render();
+}
+/* ---- share a day as a WhatsApp-ready update ----
+   navigator.share opens the OS share sheet; the person picks WhatsApp and the
+   group/contact/Status and taps send themselves — the app never sends anything.
+   iOS trap: share-with-files must fire inside the tap, and awaiting IndexedDB
+   first voids the gesture. So the day's photos are pre-loaded into memory on
+   render (prepareDayShare) and the tap consumes them synchronously. */
+let _shareFiles=[],_shareForDay=-1;
+async function prepareDayShare(i){
+  _shareForDay=-1;_shareFiles=[];
+  const e=dayLogGet(i);
+  const acc=[];
+  for(const id of e.photos){
+    const rec=await photoGet(id);
+    const blob=rec&&(rec.full||rec.thumb);
+    if(blob)acc.push(new File([blob],`vietnam-day${i+1}-${acc.length+1}.jpg`,{type:"image/jpeg"}));
+  }
+  _shareFiles=acc;_shareForDay=i;          /* set day LAST, so a half-loaded set never looks ready */
+}
+function dayShareText(i){
+  const d=D.days[i],e=dayLogGet(i);
+  const loc=getItem(d.locEnd)?.name||getItem(d.locStart)?.name||"";
+  const date=dayDateStr(i,{weekday:"short",day:"numeric",month:"short"})||"";
+  const sub=[date,loc].filter(Boolean).join(" · ");
+  const body=(e.text||"").trim()||"📸 Photos from today";
+  return `🇻🇳 ${D.meta.title} — Day ${i+1}\n${sub}\n\n${body}`;
+}
+async function shareDay(i){
+  /* commit any un-saved keystrokes first, so the share matches what's on screen */
+  const ta=document.getElementById("daylog");
+  if(ta){clearTimeout(saveTimer);dayLogSetText(i,ta.value.trim());}
+  const e=dayLogGet(i);
+  if(!e.text&&!e.photos.length){
+    const sn=document.getElementById("daylog-save");
+    if(sn){sn.style.color="var(--grey-2)";sn.textContent="Write something or add a photo to share.";
+      setTimeout(()=>{if(sn.isConnected){sn.textContent="";sn.style.color="";}},2200);}
+    return;
+  }
+  const text=dayShareText(i);
+  const data={title:`${D.meta.title} — Day ${i+1}`,text};
+  /* only attach if THIS day's photos finished pre-loading and the browser
+     will actually take files (Android Chrome/iOS Safari yes; desktop often no) */
+  const files=_shareForDay===i?_shareFiles.slice():[];
+  if(files.length&&navigator.canShare&&navigator.canShare({files}))data.files=files;
+  if(navigator.share){
+    try{await navigator.share(data);}
+    catch(err){
+      if(err&&err.name==="AbortError")return;   /* they backed out of the sheet */
+      /* a real failure (e.g. files rejected mid-share) — retry text-only, then wa.me */
+      try{await navigator.share({title:data.title,text});return;}catch(e2){}
+      shareViaWa(text);
+    }
+    return;
+  }
+  shareViaWa(text);                              /* no Web Share (desktop) — WhatsApp link, text only */
+}
+function shareViaWa(text){
+  window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank","noopener");
 }
 
 /* ---------- the capture sheet ---------- */
