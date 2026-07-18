@@ -53,6 +53,8 @@ a{color:var(--blue)}
   padding-top:env(safe-area-inset-top);height:calc(56px + env(safe-area-inset-top));
   display:flex;align-items:center;gap:10px;box-shadow:0 2px 14px rgba(16,26,39,.25)}
 .appbar .burger{width:48px;height:56px;display:grid;place-items:center;color:#fff}
+.appbar .bar-back{width:44px;height:56px;display:grid;place-items:center;color:#fff;margin-left:-6px}
+.appbar .bar-back[hidden]{display:none}
 .appbar .ttl{font-weight:800;font-size:17px;letter-spacing:-.2px;flex:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .appbar .ttl small{display:block;font-weight:600;font-size:10.5px;letter-spacing:2px;
@@ -464,6 +466,28 @@ p{color:var(--body);font-size:13px}
 .f-save{width:100%;margin-top:16px;padding:15px;border-radius:14px;background:var(--green);
   color:#fff;font-weight:800;font-size:15px}
 .f-save:disabled{background:var(--border);color:var(--grey-2)}
+
+/* ---------------------------------------------------------- PER-DAY JOURNAL */
+/* 16px floor or Safari zooms the page when the textarea takes focus. */
+.daylog-ta{width:100%;min-height:96px;border:1px solid var(--border);border-radius:12px;
+  padding:12px;font-size:16px;line-height:1.5;background:#fff;color:var(--ink);resize:vertical;
+  font-family:inherit}
+.daylog-ta:focus{outline:2px solid var(--purple);outline-offset:-1px}
+.daylog-save{min-height:15px;color:var(--green);margin-top:5px}
+.daylog-photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.daylog-ph{position:relative;width:80px;height:80px;border-radius:11px;flex:none;
+  background:var(--border-2);cursor:zoom-in}
+.daylog-del{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;
+  background:var(--navy);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.daylog-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  width:80px;height:80px;border-radius:11px;border:1.5px dashed var(--border);background:#fff;
+  color:var(--purple);font-size:10.5px;font-weight:700}
+/* ---- lightbox ---- */
+.lightbox{position:fixed;inset:0;z-index:100;background:rgba(16,26,39,.92);display:none;
+  align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
+.lightbox.open{display:flex}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
 </style>
 </head>
 <body>
@@ -471,6 +495,11 @@ p{color:var(--body);font-size:13px}
 <header class="appbar">
   <button class="burger" id="burger" aria-label="Menu">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <!-- Shown on any page that has a parent (see render()); wired to history.back()
+       so it goes UP a level exactly like the OS back gesture, sentinel and all. -->
+  <button class="bar-back" id="bar-back" aria-label="Back" hidden>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
   </button>
   <div class="ttl"><small>Travel Book</small><span id="bar-title">Vietnam 2026</span></div>
   <div class="pill" id="bar-pill"></div>
@@ -497,6 +526,11 @@ p{color:var(--body);font-size:13px}
 <input type="file" id="find-file" accept="image/*" capture="environment" hidden>
 <div class="scrim" id="find-scrim"></div>
 <div class="fsheet" id="find-sheet"></div>
+
+<!-- Day-journal photo picker + a tap-to-enlarge lightbox. The picker allows
+     multiple, since you photograph a day in bursts, not one at a time. -->
+<input type="file" id="day-file" accept="image/*" capture="environment" multiple hidden>
+<div class="lightbox" id="lightbox"><img id="lightbox-img" alt=""></div>
 
 <!-- Trip data — same schema as the Itinerary Builder / Travel Book report -->
 <script id="trip-data" type="application/json">{"meta":{"title":"Vietnam 2026","startDate":"2026-08-20","numDays":16},"items":{"location":[{"id":"imrj68w2f20p9","cat":"location","name":"Da Nang"},{"id":"imrj6a2cf14v7","cat":"location","name":"Hoi An"},{"id":"imrj6ajy017kf","cat":"location","name":"Hue"},{"id":"imrj6bdg41bwv","cat":"location","name":"Hanoi"}],"transport":[{"id":"imrj75s6lo19","cat":"transport","name":"Airport Shuttle - Sofiana","tcat":"Organised","cost":"0","duration":"","pickup":"Da Nang Airport","dropoff":"Sofiana","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0i6qaj41","cat":"transport","name":"Grab App","tcat":"Taxi","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0ivhz1ook","cat":"transport","name":"Heritage Train - Danang","tcat":"Train","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0k2uh1sek","cat":"transport","name":"Sleeper Bus","tcat":"Bus","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0kcsn21a0","cat":"transport","name":"Hue to Hanoi Flight","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0v3t61thd","cat":"transport","name":"Flight into Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""},{"id":"imrm0vk122ps","cat":"transport","name":"Flight out of Danang","tcat":"Flight","cost":"","duration":"","pickup":"","dropoff":"","cancelDate":"","cancelTime":"","notes":""}],"accommodation":[{"id":"imrj6cjrz1f1q","cat":"accommodation","name":"Sofiana My Khe Hotel & Spa","checkinDate":"2026-08-21","checkinTime":"14:00","checkoutDate":"2026-08-24","checkoutTime":"12:00","cost":"R3095","address":"54-56 Tran Bach Dang, Danang, Vietnam","url":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":"0"},"shuttle":{"status":"included","cost":"0"},"amenities":["Air conditioning","Terrace","Hairdryer","Electric kettle","Socket near the bed","Wake-Up Service"]},{"id":"imrj71yzn23vf","cat":"accommodation","name":"Nolia Hoi An","checkinDate":"2026-08-24","checkinTime":"14:00","checkoutDate":"2026-08-27","checkoutTime":"12:00","cost":"1917","address":"Cầu Hói Muống Street Số 01 - 02, 50000 Hoi An, Vietnam","url":"https://www.noliahoian.com/","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Free Bicycles Rental"],"cancelDate":"","cancelTime":""},{"id":"imrj76qq6124z","cat":"accommodation","name":"Gahi Homestay","checkinDate":"2026-08-27","checkinTime":"14:00","checkoutDate":"2026-08-30","checkoutTime":"12:00","cost":"R1644","address":"103 Dang Van Ngu, Hue, Vietnam","url":"","cancelDate":"","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":true,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"excluded","cost":""},"amenities":["Barbecue"]},{"id":"imrj771b220ym","cat":"accommodation","name":"Radison Red","checkinDate":"2026-09-03","checkinTime":"14:00","checkoutDate":"2026-09-04","checkoutTime":"18:00","cost":"0","address":"90 Vo Nguyen Gliap, Son Tra Ward, Da Nang, Vietnam","url":"https://www.radissonhotels.com/vi-vn/hotels/radisson-red-danang?msockid=2c25fde442166cf105c6ebfc43886d30","cancelDate":"","cancelTime":"","beds":{"twin":true,"doubleShared":false,"doubleEach":false,"other":""},"breakfast":{"status":"included","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]},{"id":"imrm0cw5dkoe","cat":"accommodation","name":"WeCozy","checkinDate":"2026-08-30","checkinTime":"15:00","checkoutDate":"2026-09-03","checkoutTime":"12:00","cost":"5359","address":"20 Tong Duy Tan, Hoan Kiem, Hanoi, Vietnam","url":"","cancelDate":"2026-08-24","cancelTime":"","beds":{"twin":false,"doubleShared":false,"doubleEach":false,"other":"Two Bedroom Apartment"},"breakfast":{"status":"","cost":""},"shuttle":{"status":"","cost":""},"amenities":[]}],"activities":[{"id":"imrksfkmvjhd","cat":"activities","name":"My Sun Sanctuary Tour","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrksto2922bw","cat":"activities","name":"Memories Show","timeStart":"","timeEnd":"","location":"Hoi An","website":"https://www.getyourguide.com/hoi-an-l831/hoi-an-memories-show-hoi-an-impression-theme-park-qrticket-t481283/?ranking_uuid=e3163bfa-9558-4a58-a30e-d9b82484a45c&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"778","cancelDate":"","cancelTime":""},{"id":"imrkt45d21jju","cat":"activities","name":"City of Ghosts Cemetary","timeStart":"","timeEnd":"","location":"Hue","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm6ld9t18c7","cat":"activities","name":"Teh Dar: Unique Bamboo Circus","timeStart":"","timeEnd":"","location":"Hoi An Lune Center 1A Nguyen Phuc Chu, Minh An Ward, Hoi An, Quang Nam, Vietnam","website":"https://www.getyourguide.com/hoi-an-l831/teh-dar-vietnamese-tribal-culture-at-saigon-opera-house-t83301/?ranking_uuid=d0b089c1-8f05-422f-bb27-9a198db2d23e&q=Hoi+An&date_from=2026-08-24&date_to=2026-08-26&adults=2","cost":"908","cancelDate":"","cancelTime":""},{"id":"imrm7bk3nrgb","cat":"activities","name":"Hue Imperial Ancient City Walking Tour","timeStart":"","timeEnd":"","location":"FH9H+3XJ Phu Xuan, Hue, Vietnam","website":"https://www.getyourguide.com/hue-vietnam-l833/hue-imperial-ancient-city-walking-tour-t848289/?ranking_uuid=ebcd110b-f6b4-47ed-a0d5-6e71f4301999&q=Hue%2C+Vietnam&date_from=2026-08-27&date_to=2026-08-30&adults=2","cost":"366","cancelDate":"","cancelTime":""},{"id":"imrm7rgm82513","cat":"activities","name":"Hue Tombs","timeStart":"","timeEnd":"","location":"","website":"","cost":"","cancelDate":"","cancelTime":""},{"id":"imrm7voc51uso","cat":"activities","name":"Water Puppet Show","timeStart":"","timeEnd":"","location":"31 Lo Su, Hoan Kiem, Hanoi","website":"https://www.getyourguide.com/hanoi-l205/hanoi-water-puppet-tickets-with-hotel-delivery-t62912/?ranking_uuid=aa6c3c27-9032-4efc-afce-2472bd035eca&q=Hanoi&date_from=2026-08-31&date_to=2026-09-03&adults=2","cost":"230","cancelDate":"","cancelTime":""},{"id":"imrm7wqip14tb","cat":"activities","name":"Spa Day","timeStart":"","timeEnd":"","location":"","website":"","cost":"2000","cancelDate":"","cancelTime":""},{"id":"imrm80a1t1w53","cat":"activities","name":"Old Quarter Street Food Tour","timeStart":"","timeEnd":"","location":"38 Bát Sứ street","website":"","cost":"734","cancelDate":"","cancelTime":""}]},"days":[{"name":"Travel Day","note":"","locStart":null,"locEnd":null,"transport":[],"accommodation":[],"activities":[]},{"name":"Landing Day","note":"","locStart":null,"locEnd":"imrj68w2f20p9","transport":["imrj75s6lo19","imrm0v3t61thd"],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Shopping Vibe","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":[]},{"name":"Heritage at Danang","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj6cjrz1f1q"],"activities":["imrksfkmvjhd"]},{"name":"Travel Day","note":"","locStart":"imrj68w2f20p9","locEnd":"imrj6a2cf14v7","transport":["imrm0i6qaj41"],"accommodation":["imrj71yzn23vf"],"activities":[]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrksto2922bw"]},{"name":"","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6a2cf14v7","transport":[],"accommodation":["imrj71yzn23vf"],"activities":["imrm6ld9t18c7"]},{"name":"Travel Day","note":"","locStart":"imrj6a2cf14v7","locEnd":"imrj6ajy017kf","transport":["imrm0i6qaj41","imrm0ivhz1ook"],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":["imrm7bk3nrgb","imrm7rgm82513"]},{"name":"","note":"","locStart":"imrj6ajy017kf","locEnd":"imrj6ajy017kf","transport":[],"accommodation":["imrj76qq6124z"],"activities":[]},{"name":"Travel Day","note":"","locStart":"imrj6ajy017kf","locEnd":null,"transport":["imrm0kcsn21a0","imrm0k2uh1sek"],"accommodation":["imrj76qq6124z"],"activities":["imrkt45d21jju"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":[]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7voc51uso","imrm80a1t1w53"]},{"name":"Spa Day","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj6bdg41bwv","transport":[],"accommodation":["imrm0cw5dkoe"],"activities":["imrm7wqip14tb"]},{"name":"","note":"","locStart":"imrj6bdg41bwv","locEnd":"imrj68w2f20p9","transport":[],"accommodation":["imrj771b220ym"],"activities":[]},{"name":"","note":"","locStart":"imrj68w2f20p9","locEnd":null,"transport":["imrm0vk122ps"],"accommodation":[],"activities":[]}],"savedAt":1784128845078,"todos":[]}</script>
@@ -767,6 +801,14 @@ function costCell(r){
   if(r.status==="excluded")return `<span style="color:var(--grey-2);font-weight:600">Pay direct</span>`;
   return `<span style="color:var(--grey-2)">—</span>`;
 }
+/* Per-person cell. A captured cost is a shared total (same assumption the
+   summary's grand÷party split already makes), so pp = the amount / party.
+   Free/Included/Pay direct/— split to themselves, so mirror the total cell. */
+function ppCell(r,n){
+  const c=r.c;
+  if(c&&c.n>0)return esc(fmtMoney(c.n/n,c.cur));
+  return costCell(r);
+}
 function cancelEntries(){
   const u=usageMap(),out=[];
   ["transport","accommodation","activities"].forEach(cat=>{
@@ -821,7 +863,10 @@ function emptyState(a,b){
    ~5MB nor a 1MB Firestore document. A find seen on another device therefore
    shows its colour swatch instead of its photo, which is a real trade and the
    reason the swatch hex is stored rather than derived on the fly. */
-const PERSONAL_KEYS=["todos","bingo","journal","finds","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
+/* "daylog" is a per-day diary: {text, photos:[id]} keyed by day index. Same
+   photo deal as finds — the text syncs, the pictures are IndexedDB blobs that
+   stay on the phone that took them. */
+const PERSONAL_KEYS=["todos","bingo","journal","finds","daylog","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
 /* Fallback rate, used until a live one is fetched (checked live 2026-07-16).
    It WILL drift — the point is that the converter still works in a market with
    no signal; tap Update, or set it by hand once you've changed money. */
@@ -851,7 +896,7 @@ const store={
     this.scope=prev;
   }
 };
-let TODOS,BINGO,FINDS,idSeq,todoTab,bingoTab;
+let TODOS,BINGO,FINDS,DAYLOG,idSeq,todoTab,bingoTab;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -860,6 +905,7 @@ function loadPersonal(){
   bingoTab=store.get("bingo_tab","food");
   FX=store.get("fx",{vndPerZar:DEFAULT_VND_PER_ZAR,updated:0,manual:false});
   FINDS=store.get("finds",[]);        /* nothing to seed — it starts empty by design */
+  DAYLOG=store.get("daylog",{});      /* per-day diary, keyed by day index */
   TODOS=store.get("todos",null);
   if(!TODOS){
     let n=0;TODOS=[];
@@ -935,6 +981,10 @@ const drawer=document.getElementById("drawer"),scrim=document.getElementById("sc
 function openDrawer(){drawer.classList.add("open");scrim.classList.add("open");}
 function closeDrawer(){drawer.classList.remove("open");scrim.classList.remove("open");}
 document.getElementById("burger").onclick=openDrawer;
+/* Back button = the OS back gesture: history.back() consumes the sentinel and
+   onPop climbs one level via parentOf(lastRoute). Don't reimplement "up" here —
+   that logic already lives in one place and this must not drift from it. */
+document.getElementById("bar-back").onclick=()=>history.back();
 scrim.onclick=closeDrawer;
 function buildDrawer(active){
   const nav=document.getElementById("drawer-nav");
@@ -1172,6 +1222,7 @@ function dayTimeline(d){
 function viewDay(i){
   const d=D.days[i];
   if(!d)return viewItinerary();
+  revokeUrls();   /* this view hydrates journal photos — free the last view's urls */
   const s=getItem(d.locStart),e=getItem(d.locEnd);
   const stay=(d.accommodation||[]).map(id=>getItem(id)).filter(Boolean);
   const stayNow=stay.length?stay:D.items.accommodation.filter(a=>{
@@ -1218,6 +1269,20 @@ function viewDay(i){
     ${d.note&&d.note.trim()?`<section>
       <div class="card-title" style="color:var(--gold-ink)">${ico("note",13)} Notes</div>
       <div class="day-note">${esc(d.note)}</div></section>`:""}
+    <section class="card">
+      <div class="card-title" style="color:var(--purple)">${ico("note",13)} Journal — what we did & saw</div>
+      <textarea class="daylog-ta" id="daylog" placeholder="How did the day go? What did you eat, see, buy, laugh about…">${esc(dayLogGet(i).text)}</textarea>
+      <div class="daylog-save caption" id="daylog-save"></div>
+      <div class="daylog-photos">
+        ${dayLogGet(i).photos.map(pid=>`
+          <span class="daylog-ph ph-wrap" data-open="${pid}">
+            <img data-ph="${pid}" alt="">
+            <button class="daylog-del" data-rm="${pid}" aria-label="Remove photo">×</button>
+          </span>`).join("")}
+        <button class="daylog-add" id="daylog-add">${ico("cam",18)}<span>Add photo</span></button>
+      </div>
+      <div class="caption" style="margin-top:8px">Photos stay on this phone — the words sync, the pictures don't.</div>
+    </section>
     <a class="editday" href="./builder/#day-${i+1}">${ico("grid",14)} Edit Day ${i+1}</a>
     <div class="daynav-spacer"></div>
     <div class="daynav">
@@ -1230,6 +1295,31 @@ function viewDay(i){
     if(p&&!p.disabled)p.onclick=()=>go("day/"+i);
     if(n&&!n.disabled)n.onclick=()=>go("day/"+(i+2));
     el.querySelector("#all-days").onclick=()=>go("itinerary");
+    /* ---- per-day journal ---- */
+    hydratePhotos(el,"thumb");
+    const ta=el.querySelector("#daylog"),sn=el.querySelector("#daylog-save");
+    ta.addEventListener("input",()=>{
+      clearTimeout(saveTimer);
+      saveTimer=setTimeout(()=>{
+        dayLogSetText(i,ta.value.trim());
+        sn.textContent="Saved ✓";
+        setTimeout(()=>{if(sn.isConnected)sn.textContent="";},1600);
+      },400);
+    });
+    const inp=document.getElementById("day-file");
+    el.querySelector("#daylog-add").onclick=()=>{
+      /* a debounced keystroke may still be pending — commit the text before the
+         camera steals focus, or a re-render on return would drop it */
+      clearTimeout(saveTimer);dayLogSetText(i,ta.value.trim());
+      inp.value="";inp.dataset.day=i;inp.click();
+    };
+    el.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{
+      e.stopPropagation();removeDayPhoto(i,b.dataset.rm);
+    });
+    el.querySelectorAll("[data-open]").forEach(s=>s.onclick=e=>{
+      if(e.target.closest("[data-rm]"))return;
+      openLightbox(s.dataset.open);
+    });
   }};
 }
 
@@ -1329,6 +1419,7 @@ function viewCosts(){
         <span class="bar-val">${totalsToStr(c.t)}</span></div>
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(4,Math.round(c.zar/maxZar*100))}%;background:${CAT_COLOR[c.cat]}"></div></div>
     </div>`).join("");
+  const n=CONFIG.party||1;
   const tables=catTotals.map(c=>{
     /* chronological: the trip reads in day order, so the costs should too.
        Sort is stable, so a hotel's extras stay under their parent. */
@@ -1336,13 +1427,12 @@ function viewCosts(){
     const label=CAT_LABEL[c.cat]==="Activity"?"Activities":CAT_LABEL[c.cat];
     if(!list.length)return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}${emptyState("Nothing captured yet")}</section>`;
     return `<section>${sectionTitle(label,CAT_COLOR[c.cat])}
-      <div class="tablewrap"><table class="table"><thead><tr><th>Item</th><th>Used</th><th style="text-align:right">Cost</th></tr></thead><tbody>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Item</th><th>Used</th><th style="text-align:right">Per person</th><th style="text-align:right">Total</th></tr></thead><tbody>
       ${list.map(r=>`<tr><td>${r.extra?'<span class="caption">↳</span> ':""}${esc(r.name)}</td>
-        <td class="dt">${daysLabel(r.days)}</td><td class="rt">${costCell(r)}</td></tr>`).join("")}
-      <tr class="total"><td colspan="2">Subtotal</td><td class="rt">${totalsToStr(c.t)}</td></tr>
+        <td class="dt">${daysLabel(r.days)}</td><td class="rt">${ppCell(r,n)}</td><td class="rt">${costCell(r)}</td></tr>`).join("")}
+      <tr class="total"><td colspan="2">Subtotal</td><td class="rt">${totalsToStr(splitTotals(c.t,n))}</td><td class="rt">${totalsToStr(c.t)}</td></tr>
       </tbody></table></div></section>`;
   }).join("");
-  const n=CONFIG.party||1;
   const per=splitTotals(grand,n);
   return {title:"Cost Summary",html:`
     <div class="hero"><div class="hb-kicker">The budget</div><div class="hb-title">Cost Summary</div>
@@ -2027,6 +2117,34 @@ function newFindId(){
   return "fd"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 }
 
+/* ---------- per-day journal (text syncs; photos are device-local blobs) ---------- */
+function dayLogGet(i){const e=DAYLOG[i];return{text:e?.text||"",photos:e?.photos||[]};}
+function dayLogSetText(i,text){
+  const e=dayLogGet(i);
+  /* don't persist an empty shell — keeps the synced object and the diary count honest */
+  if(!text&&!e.photos.length){delete DAYLOG[i];}
+  else DAYLOG[i]={text,photos:e.photos};
+  store.set("daylog",DAYLOG);
+}
+async function addDayPhoto(i,file){
+  const img=await processImage(file);
+  const id="dp"+i+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  await photoPut(id,{full:img.full,thumb:img.thumb});
+  const e=dayLogGet(i);
+  DAYLOG[i]={text:e.text,photos:[...e.photos,id]};
+  store.set("daylog",DAYLOG);
+  render();
+}
+async function removeDayPhoto(i,id){
+  const e=dayLogGet(i);
+  const photos=e.photos.filter(x=>x!==id);
+  if(!e.text&&!photos.length){delete DAYLOG[i];}
+  else DAYLOG[i]={text:e.text,photos};
+  store.set("daylog",DAYLOG);
+  await photoDel(id);
+  render();
+}
+
 /* ---------- the capture sheet ---------- */
 let _draft=null;    /* {id, blobs, colour, cat, loc, price, stall} while the sheet is open */
 function openCapture(file,presetCat){
@@ -2291,6 +2409,9 @@ function render(){
   if(v.wire)v.wire(el);
   wireInstallTip(el);
   document.getElementById("bar-title").textContent=v.title==="Trip Summary"?D.meta.title:v.title;
+  /* a header Back on any page that has a parent — one tap up instead of
+     opening the menu to find your way out of a sub-page */
+  document.getElementById("bar-back").hidden=parentOf(r)===null;
   const ph=tripPhase();
   document.getElementById("bar-pill").textContent=ph.pill;
   document.getElementById("drawer-sub").textContent=
@@ -2351,6 +2472,30 @@ document.getElementById("find-file").addEventListener("change",e=>{
 document.getElementById("find-scrim").addEventListener("click",()=>{
   if(_draft)closeSheet();
 });
+/* Day-journal photos: the picker takes several at once, added in order. */
+document.getElementById("day-file").addEventListener("change",async e=>{
+  const day=parseInt(e.target.dataset.day,10);
+  const files=[...(e.target.files||[])];
+  for(const f of files)await addDayPhoto(day,f);   /* sequential: keeps order, avoids an IDB write storm */
+});
+/* Tap-to-enlarge. Its own object-URL bucket so a re-render can't revoke the
+   open image out from under it. */
+let _lbUrl=null;
+async function openLightbox(id){
+  const rec=await photoGet(id);
+  const blob=rec&&(rec.full||rec.thumb);
+  if(!blob)return;                                 /* photo's on the other device */
+  if(_lbUrl)URL.revokeObjectURL(_lbUrl);
+  _lbUrl=URL.createObjectURL(blob);
+  document.getElementById("lightbox-img").src=_lbUrl;
+  document.getElementById("lightbox").classList.add("open");
+}
+function closeLightbox(){
+  document.getElementById("lightbox").classList.remove("open");
+  if(_lbUrl){URL.revokeObjectURL(_lbUrl);_lbUrl=null;}
+  document.getElementById("lightbox-img").removeAttribute("src");
+}
+document.getElementById("lightbox").addEventListener("click",closeLightbox);
 loadPersonal();
 history.replaceState({vn:"page"},"",location.hash||"#/summary");
 armBack();
@@ -2368,7 +2513,7 @@ window.VNApp={setScope,loadPersonal,render,store,
      this device's business, not your tablet's), idseq (a counter can't survive
      last-write-wins — it would hand two devices the same id), and
      checklist/checklist_merged (a one-off per-device migration flag). */
-  get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,fx:FX,
+  get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,daylog:DAYLOG,fx:FX,
     journal:store.get("journal","")}}};
 
 /* ============================================================ SERVICE WORKER (offline)

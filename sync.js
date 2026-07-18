@@ -38,7 +38,7 @@ const BUILDER_LS_KEY = "vietnam_itinerary_builder_v2";
    placed, colour-swatched row with no picture, by design.
    "fx" carries the rate you set by hand — only a deliberate tap on Update
    changes it, so last-write-wins can't clobber a street rate behind your back. */
-const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds", "fx"];
+const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds", "daylog", "fx"];
 
 const listeners = new Set();
 /* `available` rides on the state itself. Readers must never have to reach back
