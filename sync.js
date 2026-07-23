@@ -38,7 +38,7 @@ const BUILDER_LS_KEY = "vietnam_itinerary_builder_v2";
    placed, colour-swatched row with no picture, by design.
    "fx" carries the rate you set by hand — only a deliberate tap on Update
    changes it, so last-write-wins can't clobber a street rate behind your back. */
-const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds", "daylog", "fx"];
+const PERSONAL_KEYS = ["todos", "bingo", "journal", "finds", "daylog", "side", "fx"];
 
 const listeners = new Set();
 /* `available` rides on the state itself. Readers must never have to reach back
@@ -71,6 +71,13 @@ const api = {
   signOut: async () => {},
   pushPersonal() {},
   pushPlan() {},
+  /* Activity rankings live on the SHARED trip doc, one field per person
+     (ranksTino / ranksJani). Each device writes only ITS OWN side, so the two
+     never collide — no merge logic needed. The other side is read on demand
+     (fetchRanks), deliberately NOT via the live listener, to keep this feature
+     from touching the plan-sync path. Stubs until the SDK is up. */
+  pushMyRanks() {},
+  fetchRanks: async () => ({ tino: null, jani: null }),
   available: false
 };
 window.VNSync = api;
@@ -191,7 +198,7 @@ emit();   /* tell the pages we exist, now that they've finished loading */
     }, err => { state.status = "error"; state.error = err.code || "Sync failed"; emit(); });
 
     /* ---- writers ---- */
-    let tPersonal = null, tPlan = null;
+    let tPersonal = null, tPlan = null, tRanks = null;
     api.pushPersonal = () => {
       if (applyingRemote || !state.user) return;
       clearTimeout(tPersonal);
@@ -217,9 +224,36 @@ emit();   /* tell the pages we exist, now that they've finished loading */
         } catch (e) { state.status = "error"; state.error = e.code || "Plan save failed"; emit(); }
       }, 700);
     };
+    /* One field per side. merge:true means writing ranksTino leaves ranksJani
+       (and the whole plan) untouched — the two writers can never overwrite each
+       other. No applyingRemote guard needed: we don't live-listen to ranks, so
+       there's no echo to suppress. */
+    api.pushMyRanks = (side, sideData) => {
+      if (!state.user) return;
+      clearTimeout(tRanks);
+      tRanks = setTimeout(async () => {
+        try {
+          const field = side === "jani" ? "ranksJani" : "ranksTino";
+          await fb.setDoc(tripRef, { [field]: sideData, ranksUpdatedBy: state.user.email, updatedAt: Date.now() }, { merge: true });
+        } catch (e) { state.status = "error"; state.error = e.code || "Ranking save failed"; emit(); }
+      }, 700);
+    };
+    /* On-demand read of both sides — called when the app opens Their Top 5 or
+       the Scoreboard. Throws if offline/denied; the caller keeps its cache. */
+    api.fetchRanks = async () => {
+      const snap = await fb.getDoc(tripRef);
+      const d = snap.data() || {};
+      return { tino: d.ranksTino || null, jani: d.ranksJani || null };
+    };
 
     /* push whatever this device already has, then let listeners take over */
     api.pushPersonal();
+    /* seed this device's ranking side, so picks made while signed out reach the
+       shared doc (a fresh sign-in has nothing to lose to; merge keeps the rest) */
+    try {
+      const mine = window.VNApp?.myRanksExport;
+      if (mine && mine.data) api.pushMyRanks(mine.side, mine.data);
+    } catch (e) {}
     try {
       const local = JSON.parse(localStorage.getItem(BUILDER_LS_KEY) || "null");
       if (local?.days?.length) {

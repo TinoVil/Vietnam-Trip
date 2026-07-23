@@ -491,6 +491,43 @@ p{color:var(--body);font-size:13px}
   align-items:center;justify-content:center;padding:16px;cursor:zoom-out}
 .lightbox.open{display:flex}
 .lightbox img{max-width:100%;max-height:100%;border-radius:8px;object-fit:contain}
+
+/* ---------------------------------------------------------- ACTIVITIES / RANKING */
+.linkish{color:#fff;text-decoration:underline;font-weight:800;opacity:.95}
+.side-pick{display:flex;gap:10px}
+.side-pick button{flex:1;padding:14px;border-radius:13px;border:1px solid var(--border);
+  background:#fff;font-weight:800;font-size:15px;color:var(--gold-ink)}
+.rank-slots{display:flex;flex-direction:column;gap:8px}
+.rank-slot{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+  border-radius:13px;padding:10px 11px;min-height:48px}
+.rank-slot.empty{border-style:dashed;background:var(--sand)}
+.rank-slot.pickable{border-color:var(--gold-ink);background:var(--gold-soft);cursor:pointer}
+.rank-num{width:24px;height:24px;flex:none;border-radius:50%;background:var(--gold-soft);color:var(--gold-ink);
+  font-weight:800;font-size:12.5px;display:grid;place-items:center}
+.rank-slot.ro .rank-num{background:var(--border-2);color:var(--grey)}
+.rank-name{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-hint{flex:1;font-size:12.5px;color:var(--grey-2)}
+.rank-ctrls{display:flex;gap:4px;flex:none}
+.rank-ctrls button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:#fff;
+  color:var(--navy);font-size:14px;font-weight:800;display:grid;place-items:center}
+.rank-ctrls button:disabled{opacity:.3}
+.rank-ctrls button[data-del]{color:var(--red)}
+.pool{display:flex;flex-wrap:wrap;gap:8px}
+.pool-chip{padding:9px 13px;border-radius:999px;border:1px solid var(--border);background:#fff;
+  font-size:13px;font-weight:600;color:var(--body);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pool-chip.on{border-color:var(--gold-ink);background:var(--gold-ink);color:#fff;font-weight:800}
+.score-list{display:flex;flex-direction:column;gap:8px}
+.score-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
+  border-radius:13px;padding:11px}
+.score-rank{width:22px;flex:none;text-align:center;font-weight:800;color:var(--grey-2);font-size:13px}
+.score-name{flex:1;min-width:0;font-size:14px;font-weight:700;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-combined{flex:none;font-size:17px;font-weight:800;color:var(--gold-ink);min-width:34px;text-align:right}
+.score-split{flex:none;display:flex;gap:5px}
+.sc-chip{font-size:11px;font-weight:800;padding:3px 7px;border-radius:6px}
+.sc-chip.t{background:var(--blue-soft);color:var(--blue)}
+.sc-chip.j{background:var(--purple-soft);color:var(--purple)}
 </style>
 </head>
 <body>
@@ -605,7 +642,8 @@ const PATHS={
   cam:'<path d="M3 8a2 2 0 0 1 2-2h2.5l1.2-2h6.6l1.2 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/>',
   tag:'<path d="M3 3h7.6l10 10a1.5 1.5 0 0 1 0 2.1l-5.5 5.5a1.5 1.5 0 0 1-2.1 0L3 10.6Z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
   pin:'<path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>',
-  send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>'
+  send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
+  star:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.7 1-5.8L4.5 9.2l5.9-.9L12 3Z"/>'
 };
 function ico(name,size,extra){
   return `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -870,7 +908,7 @@ function emptyState(a,b){
 /* "daylog" is a per-day diary: {text, photos:[id]} keyed by day index. Same
    photo deal as finds — the text syncs, the pictures are IndexedDB blobs that
    stay on the phone that took them. */
-const PERSONAL_KEYS=["todos","bingo","journal","finds","daylog","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
+const PERSONAL_KEYS=["todos","bingo","journal","finds","daylog","side","todo_tab","bingo_tab","idseq","checklist","checklist_merged","fx"];
 /* Fallback rate, used until a live one is fetched (checked live 2026-07-16).
    It WILL drift — the point is that the converter still works in a market with
    no signal; tap Update, or set it by hand once you've changed money. */
@@ -901,6 +939,8 @@ const store={
   }
 };
 let TODOS,BINGO,FINDS,DAYLOG,idSeq,todoTab,bingoTab;
+/* Activity rankings (shared, per-side) + this device's editing identity + UI state */
+let RANKS,mySide=null,actSection="mine",actLoc="danang",pickedAct=null;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -910,6 +950,8 @@ function loadPersonal(){
   FX=store.get("fx",{vndPerZar:DEFAULT_VND_PER_ZAR,updated:0,manual:false});
   FINDS=store.get("finds",[]);        /* nothing to seed — it starts empty by design */
   DAYLOG=store.get("daylog",{});      /* per-day diary, keyed by day index */
+  mySide=store.get("side",null);      /* which ranking side this phone edits (personal, synced across my devices) */
+  loadRanks();                        /* shared rankings cache (not scoped — one copy for the trip) */
   TODOS=store.get("todos",null);
   if(!TODOS){
     let n=0;TODOS=[];
@@ -976,6 +1018,7 @@ const SECTIONS=[
   {route:"todos",    name:"To-Do's",       icon:"check",  color:"var(--green)", soft:"var(--green-soft)", group:"On the trip"},
   {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
   {route:"finds",    name:"Market Finds",  icon:"cam",    color:"var(--coral)", soft:"#FCEFE4"},
+  {route:"activities",name:"Activities",   icon:"star",   color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"fx",       name:"Currency",      icon:"wallet", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
   {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
@@ -2443,9 +2486,224 @@ function viewFind(f){
   }};
 }
 
+/* ============================================================ VIEW · ACTIVITIES
+
+   Rank your top 5 activities per city, two-sided (Tino & Jani), then see the
+   combined score. The two sides live in ONE shared doc but in SEPARATE fields
+   (ranksTino / ranksJani) — each phone writes only its own side, so they can
+   never overwrite each other. Your side is edited locally and pushed; the other
+   side is fetched on demand when you open Their Top 5 / the Scoreboard, so this
+   whole feature never touches the live plan-sync listener. */
+const RANK_LOCS=[{k:"danang",label:"Da Nang"},{k:"hoian",label:"Hoi An"},{k:"hue",label:"Hue"},{k:"hanoi",label:"Hanoi"}];
+const RANK_SIDE_LABEL={tino:"Tino",jani:"Jani"};
+const RANK_SLOTS=5;
+let _ranksFetching=false,_ranksFetchedAt=0;
+
+function emptySide(){const slots={};RANK_LOCS.forEach(l=>slots[l.k]=[]);return{slots,custom:[],savedAt:0};}
+function normalizeSide(r){
+  r=r||{};const slots={};
+  RANK_LOCS.forEach(l=>{const a=r.slots&&r.slots[l.k];slots[l.k]=Array.isArray(a)?a.slice(0,RANK_SLOTS):[];});
+  return{slots,custom:Array.isArray(r.custom)?r.custom:[],savedAt:r.savedAt||0};
+}
+function loadRanks(){
+  let raw=null;try{raw=JSON.parse(localStorage.getItem("vn26_ranks")||"null");}catch(e){}
+  RANKS={tino:normalizeSide(raw&&raw.tino),jani:normalizeSide(raw&&raw.jani)};
+}
+function saveRanksLocal(){try{localStorage.setItem("vn26_ranks",JSON.stringify(RANKS));}catch(e){}}
+function setMySide(s){mySide=s;store.set("side",s);render();}
+function otherSide(){return mySide==="tino"?"jani":"tino";}
+/* name of an activity id — from the shared plan, or either side's custom list */
+function rankActName(id){
+  const a=(D.items.activities||[]).find(x=>x.id===id);
+  if(a)return a.name;
+  for(const s of["tino","jani"]){const c=RANKS[s].custom.find(x=>x.id===id);if(c)return c.name;}
+  return "Activity";
+}
+/* activities available to place: plan + everyone's customs, minus what's already
+   in MY list for this city (can't rank the same thing twice) */
+function rankPool(loc){
+  const seen=new Set(),all=[];
+  const add=a=>{if(a&&a.id&&!seen.has(a.id)){seen.add(a.id);all.push({id:a.id,name:a.name});}};
+  (D.items.activities||[]).forEach(add);
+  RANKS.tino.custom.forEach(add);RANKS.jani.custom.forEach(add);
+  const mine=new Set(RANKS[mySide].slots[loc]||[]);
+  return all.filter(a=>!mine.has(a.id));
+}
+function commitMyRanks(){
+  RANKS[mySide].savedAt=Date.now();
+  saveRanksLocal();
+  if(window.VNSync&&window.VNSync.pushMyRanks)window.VNSync.pushMyRanks(mySide,RANKS[mySide]);
+  render();
+}
+function rankAdd(loc,id){
+  const arr=RANKS[mySide].slots[loc];
+  if(arr.includes(id)||arr.length>=RANK_SLOTS)return;
+  arr.push(id);pickedAct=null;commitMyRanks();
+}
+function rankRemove(loc,id){
+  RANKS[mySide].slots[loc]=RANKS[mySide].slots[loc].filter(x=>x!==id);commitMyRanks();
+}
+function rankMove(loc,id,dir){
+  const arr=RANKS[mySide].slots[loc],i=arr.indexOf(id),j=i+dir;
+  if(i<0||j<0||j>=arr.length)return;
+  [arr[i],arr[j]]=[arr[j],arr[i]];commitMyRanks();
+}
+function rankAddCustom(loc,name){
+  name=(name||"").trim();if(!name)return;
+  if(RANKS[mySide].slots[loc].length>=RANK_SLOTS)return;   /* full — nowhere to put it */
+  const id="rk"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  RANKS[mySide].custom.push({id,name});
+  RANKS[mySide].slots[loc].push(id);
+  commitMyRanks();
+}
+/* position → points: slot 1 (top) = 5, slot 5 = 1; absent = null */
+function rankScore(slots,id){const i=(slots||[]).indexOf(id);return i<0?null:RANK_SLOTS-i;}
+function scoreboard(loc){
+  const t=RANKS.tino.slots[loc]||[],j=RANKS.jani.slots[loc]||[];
+  const ids=[...new Set([...t,...j])];
+  const rows=ids.map(id=>{
+    const ts=rankScore(t,id),js=rankScore(j,id);
+    const got=[ts,js].filter(v=>v!=null);
+    const combined=got.length?got.reduce((a,b)=>a+b,0)/got.length:0;
+    return{id,name:rankActName(id),ts,js,combined};
+  });
+  rows.sort((a,b)=>b.combined-a.combined||a.name.localeCompare(b.name));
+  return rows;
+}
+/* one-shot read of the other side (and a newer copy of my own, from my other
+   device) — only when viewing Theirs/Scores, throttled, never on the hot path */
+function maybeFetchOther(){
+  if(_ranksFetching||Date.now()-_ranksFetchedAt<3000)return;
+  _ranksFetching=true;
+  refreshOtherSide().finally(()=>{_ranksFetchedAt=Date.now();_ranksFetching=false;});
+}
+async function refreshOtherSide(){
+  if(!window.VNSync||!window.VNSync.fetchRanks)return;
+  let remote;try{remote=await window.VNSync.fetchRanks();}catch(e){return;}   /* offline — keep cache */
+  let changed=false;
+  ["tino","jani"].forEach(s=>{
+    const r=remote&&remote[s];if(!r)return;
+    const rn=normalizeSide(r);
+    if(s===mySide){ if(rn.savedAt>RANKS[s].savedAt){RANKS[s]=rn;changed=true;} }   /* my other device, if newer */
+    else if(JSON.stringify(rn)!==JSON.stringify(RANKS[s])){RANKS[s]=rn;changed=true;} /* their side is authoritative */
+  });
+  if(changed){saveRanksLocal();if(currentRoute()==="activities")render();}
+}
+function fmtScore(n){return Number.isInteger(n)?String(n):n.toFixed(1);}
+
+function viewActivities(){
+  /* first run on a device: who's holding it? Nothing is editable until chosen,
+     so a phone can only ever write the right person's side. */
+  if(!mySide){
+    return{title:"Activities",html:`
+      <div class="hero" style="background:linear-gradient(120deg,var(--gold-ink),#D9A94A)">
+        <div class="hb-kicker">Top-5 rankings</div><div class="hb-title">Activities</div>
+        <div class="hb-sub">Rank your favourites, then see whose is whose</div></div>
+      <section class="card">
+        <div class="card-title">${ico("star",14)} Who's on this phone?</div>
+        <p class="caption" style="margin-bottom:12px">Pick once. This phone will only ever edit that person's rankings — the other side syncs in from theirs.</p>
+        <div class="side-pick">
+          <button data-side="tino">I'm Tino</button>
+          <button data-side="jani">I'm Jani</button>
+        </div>
+      </section>`,
+    wire(el){el.querySelectorAll("[data-side]").forEach(b=>b.onclick=()=>setMySide(b.dataset.side));}};
+  }
+  const loc=actLoc,locLabel=(RANK_LOCS.find(l=>l.k===loc)||RANK_LOCS[0]).label;
+  const me=mySide,them=otherSide();
+  const locSeg=`<div class="seg">${RANK_LOCS.map(l=>`<button data-loc="${l.k}" class="${loc===l.k?"on":""}">${esc(l.label)}</button>`).join("")}</div>`;
+  const secSeg=`<div class="seg">
+    <button data-sec="mine" class="${actSection==="mine"?"on":""}">My Top 5</button>
+    <button data-sec="theirs" class="${actSection==="theirs"?"on":""}">${esc(RANK_SIDE_LABEL[them])}'s</button>
+    <button data-sec="scores" class="${actSection==="scores"?"on":""}">Scoreboard</button></div>`;
+
+  let body="";
+  if(actSection==="mine"){
+    const arr=RANKS[me].slots[loc];
+    const slots=Array.from({length:RANK_SLOTS},(_,i)=>{
+      if(i<arr.length){
+        const id=arr[i];
+        return `<div class="rank-slot filled">
+          <span class="rank-num">${i+1}</span>
+          <span class="rank-name">${esc(rankActName(id))}</span>
+          <span class="rank-ctrls">
+            <button data-up="${id}" ${i===0?"disabled":""} aria-label="Up">↑</button>
+            <button data-down="${id}" ${i===arr.length-1?"disabled":""} aria-label="Down">↓</button>
+            <button data-del="${id}" aria-label="Remove">✕</button>
+          </span></div>`;
+      }
+      return `<div class="rank-slot empty ${pickedAct?"pickable":""}" data-slot="${loc}">
+        <span class="rank-num">${i+1}</span>
+        <span class="rank-hint">${pickedAct?"Tap to drop here":"Empty slot"}</span></div>`;
+    }).join("");
+    const pool=rankPool(loc);
+    const chips=pool.length?pool.map(a=>`<button class="pool-chip ${pickedAct===a.id?"on":""}" data-pick="${a.id}">${esc(a.name)}</button>`).join("")
+      :`<span class="caption">All activities are ranked. Add a new one below.</span>`;
+    body=`
+      <div class="rank-slots">${slots}</div>
+      <div class="card-title" style="margin:16px 4px 8px">${ico("tag",13)} ${pickedAct?"Tap a slot to place it":"Tap an activity, then a slot"}</div>
+      <div class="pool">${chips}</div>
+      <div class="addbar" style="margin-top:12px">
+        <input id="act-new" type="text" placeholder="New activity — e.g. Cooking class" maxlength="50">
+        <button class="go" id="act-add" aria-label="Add">${ico("plus",20)}</button>
+      </div>
+      <div class="caption" style="margin-top:8px">A new activity drops into your next open slot for ${esc(locLabel)}.</div>`;
+  }else if(actSection==="theirs"){
+    const arr=RANKS[them].slots[loc];
+    const slots=Array.from({length:RANK_SLOTS},(_,i)=>{
+      if(i<arr.length)return `<div class="rank-slot filled ro"><span class="rank-num">${i+1}</span>
+        <span class="rank-name">${esc(rankActName(arr[i]))}</span></div>`;
+      return `<div class="rank-slot empty ro"><span class="rank-num">${i+1}</span>
+        <span class="rank-hint">—</span></div>`;
+    }).join("");
+    const empty=arr.length===0;
+    body=`<div class="rank-slots">${slots}</div>
+      <div class="caption" style="margin-top:10px" id="act-synced">${empty?`Nothing from ${esc(RANK_SIDE_LABEL[them])} yet — this updates when they rank on their phone.`:`Read-only — this is ${esc(RANK_SIDE_LABEL[them])}'s ranking.`}</div>`;
+  }else{
+    const rows=scoreboard(loc);
+    body=rows.length?`<div class="score-list">${rows.map((r,idx)=>`
+      <div class="score-row">
+        <span class="score-rank">${idx+1}</span>
+        <span class="score-name">${esc(r.name)}</span>
+        <span class="score-combined">${fmtScore(r.combined)}</span>
+        <span class="score-split">
+          <span class="sc-chip t">T ${r.ts==null?"–":r.ts}</span>
+          <span class="sc-chip j">J ${r.js==null?"–":r.js}</span>
+        </span></div>`).join("")}</div>
+      <div class="caption" style="margin-top:10px">Combined = average of both scores. Slot 1 = 5 points, slot 5 = 1.</div>`
+      :`<section class="card"><p class="caption">No rankings for ${esc(locLabel)} yet. Add some under <b>My Top 5</b>.</p></section>`;
+  }
+
+  return{title:"Activities",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--gold-ink),#D9A94A)">
+      <div class="hb-kicker">Top-5 rankings</div><div class="hb-title">Activities</div>
+      <div class="hb-sub">You're editing as <b>${esc(RANK_SIDE_LABEL[me])}</b> · <button class="linkish" id="act-swap">switch</button></div></div>
+    ${secSeg}
+    ${locSeg}
+    ${body}`,
+  wire(el){
+    el.querySelectorAll("[data-sec]").forEach(b=>b.onclick=()=>{actSection=b.dataset.sec;pickedAct=null;render();});
+    el.querySelectorAll("[data-loc]").forEach(b=>b.onclick=()=>{actLoc=b.dataset.loc;pickedAct=null;render();});
+    const sw=el.querySelector("#act-swap");if(sw)sw.onclick=()=>setMySide(otherSide());
+    if(actSection==="mine"){
+      el.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{pickedAct=pickedAct===b.dataset.pick?null:b.dataset.pick;render();});
+      el.querySelectorAll("[data-slot]").forEach(s=>s.onclick=()=>{if(pickedAct)rankAdd(s.dataset.slot,pickedAct);});
+      el.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>rankMove(loc,b.dataset.up,-1));
+      el.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>rankMove(loc,b.dataset.down,1));
+      el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>rankRemove(loc,b.dataset.del));
+      const inp=el.querySelector("#act-new"),addBtn=el.querySelector("#act-add");
+      const addNew=()=>{rankAddCustom(loc,inp.value);};
+      if(addBtn)addBtn.onclick=addNew;
+      if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNew();});
+    }else{
+      maybeFetchOther();   /* pull the other side / freshest scores on open */
+    }
+  }};
+}
+
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
-  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,finds:viewFinds,fx:viewFx,
-  journal:viewJournal};
+  stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,finds:viewFinds,
+  activities:viewActivities,fx:viewFx,journal:viewJournal};
 let lastRoute=null;
 function render(){
   const r=currentRoute();
@@ -2579,8 +2837,10 @@ window.VNApp={setScope,loadPersonal,render,store,
      this device's business, not your tablet's), idseq (a counter can't survive
      last-write-wins — it would hand two devices the same id), and
      checklist/checklist_merged (a one-off per-device migration flag). */
-  get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,daylog:DAYLOG,fx:FX,
-    journal:store.get("journal","")}}};
+  get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,daylog:DAYLOG,side:mySide,fx:FX,
+    journal:store.get("journal","")}},
+  /* the sync layer seeds this device's ranking side on sign-in */
+  get myRanksExport(){return mySide?{side:mySide,data:RANKS[mySide]}:null;}};
 
 /* ============================================================ SERVICE WORKER (offline)
    An installed app has no address bar and no reload button, so it must offer
