@@ -73,11 +73,9 @@ const api = {
   pushPlan() {},
   /* Activity rankings live on the SHARED trip doc, one field per person
      (ranksTino / ranksJani). Each device writes only ITS OWN side, so the two
-     never collide — no merge logic needed. The other side is read on demand
-     (fetchRanks), deliberately NOT via the live listener, to keep this feature
-     from touching the plan-sync path. Stubs until the SDK is up. */
+     never collide — no merge logic needed. Reading is LIVE via the trip-doc
+     listener (VNApp.applyRanks), same as the plan. Stub until the SDK is up. */
   pushMyRanks() {},
-  fetchRanks: async () => ({ tino: null, jani: null }),
   available: false
 };
 window.VNSync = api;
@@ -168,9 +166,16 @@ emit();   /* tell the pages we exist, now that they've finished loading */
     const tripRef = fb.doc(db, "trips", TRIP_ID);
     const mineRef = fb.doc(db, "trips", TRIP_ID, "members", user.uid);
 
-    /* ---- shared plan ---- */
+    /* ---- shared plan + rankings ---- */
     unsubTrip = fb.onSnapshot(tripRef, snap => {
-      const remote = snap.data()?.plan;
+      const data = snap.data() || {};
+      /* Rankings are LIVE, same as the plan. Read both sides FIRST — they don't
+         depend on a plan existing, so they must run before the early-return
+         below. Each side is its own field; the app adopts by savedAt. */
+      if (data.ranksTino || data.ranksJani) {
+        window.VNApp?.applyRanks?.({ tino: data.ranksTino || null, jani: data.ranksJani || null });
+      }
+      const remote = data.plan;
       if (!remote || !remote.days?.length) return;
       let local = null;
       try { local = JSON.parse(localStorage.getItem(BUILDER_LS_KEY) || "null"); } catch (e) {}
@@ -238,21 +243,21 @@ emit();   /* tell the pages we exist, now that they've finished loading */
         } catch (e) { state.status = "error"; state.error = e.code || "Ranking save failed"; emit(); }
       }, 700);
     };
-    /* On-demand read of both sides — called when the app opens Their Top 5 or
-       the Scoreboard. Throws if offline/denied; the caller keeps its cache. */
-    api.fetchRanks = async () => {
-      const snap = await fb.getDoc(tripRef);
-      const d = snap.data() || {};
-      return { tino: d.ranksTino || null, jani: d.ranksJani || null };
-    };
 
     /* push whatever this device already has, then let listeners take over */
     api.pushPersonal();
-    /* seed this device's ranking side, so picks made while signed out reach the
-       shared doc (a fresh sign-in has nothing to lose to; merge keeps the rest) */
+    /* seed this device's ranking side ONLY if ours is newer than the server's.
+       Without this compare, opening the app on a second device pushes that
+       device's empty/older ranks and wipes the copy the first device wrote —
+       the exact data-loss bug this guards against. Mirrors the plan seed below. */
     try {
       const mine = window.VNApp?.myRanksExport;
-      if (mine && mine.data) api.pushMyRanks(mine.side, mine.data);
+      if (mine && mine.data) {
+        const snap = await fb.getDoc(tripRef);
+        const remote = snap.data()?.[mine.side === "jani" ? "ranksJani" : "ranksTino"];
+        if (!remote || (mine.data.savedAt || 0) > (remote.savedAt || 0)) api.pushMyRanks(mine.side, mine.data);
+        /* else the server is newer — the live listener already delivered it */
+      }
     } catch (e) {}
     try {
       const local = JSON.parse(localStorage.getItem(BUILDER_LS_KEY) || "null");

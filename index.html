@@ -2497,7 +2497,6 @@ function viewFind(f){
 const RANK_LOCS=[{k:"danang",label:"Da Nang"},{k:"hoian",label:"Hoi An"},{k:"hue",label:"Hue"},{k:"hanoi",label:"Hanoi"}];
 const RANK_SIDE_LABEL={tino:"Tino",jani:"Jani"};
 const RANK_SLOTS=5;
-let _ranksFetching=false,_ranksFetchedAt=0;
 
 function emptySide(){const slots={};RANK_LOCS.forEach(l=>slots[l.k]=[]);return{slots,custom:[],savedAt:0};}
 function normalizeSide(r){
@@ -2570,24 +2569,20 @@ function scoreboard(loc){
   rows.sort((a,b)=>b.combined-a.combined||a.name.localeCompare(b.name));
   return rows;
 }
-/* one-shot read of the other side (and a newer copy of my own, from my other
-   device) — only when viewing Theirs/Scores, throttled, never on the hot path */
-function maybeFetchOther(){
-  if(_ranksFetching||Date.now()-_ranksFetchedAt<3000)return;
-  _ranksFetching=true;
-  refreshOtherSide().finally(()=>{_ranksFetchedAt=Date.now();_ranksFetching=false;});
-}
-async function refreshOtherSide(){
-  if(!window.VNSync||!window.VNSync.fetchRanks)return;
-  let remote;try{remote=await window.VNSync.fetchRanks();}catch(e){return;}   /* offline — keep cache */
+/* Called by the sync layer on every change to the shared trip doc — rankings
+   are LIVE, exactly like to-dos and finds. My own side adopts a remote copy only
+   if it's newer (an edit from my other device, by savedAt); the other person's
+   side is always theirs to set. Never overwrites newer local data. */
+function applyRanks(remote){
+  if(!remote||!RANKS)return;
   let changed=false;
   ["tino","jani"].forEach(s=>{
-    const r=remote&&remote[s];if(!r)return;
+    const r=remote[s];if(!r)return;
     const rn=normalizeSide(r);
-    if(s===mySide){ if(rn.savedAt>RANKS[s].savedAt){RANKS[s]=rn;changed=true;} }   /* my other device, if newer */
-    else if(JSON.stringify(rn)!==JSON.stringify(RANKS[s])){RANKS[s]=rn;changed=true;} /* their side is authoritative */
+    if(s===mySide){ if(rn.savedAt>RANKS[s].savedAt){RANKS[s]=rn;changed=true;} }
+    else if(JSON.stringify(rn)!==JSON.stringify(RANKS[s])){RANKS[s]=rn;changed=true;}
   });
-  if(changed){saveRanksLocal();if(currentRoute()==="activities")render();}
+  if(changed){saveRanksLocal();if(currentRoute()==="activities"&&typeof render==="function")render();}
 }
 function fmtScore(n){return Number.isInteger(n)?String(n):n.toFixed(1);}
 
@@ -2695,9 +2690,9 @@ function viewActivities(){
       const addNew=()=>{rankAddCustom(loc,inp.value);};
       if(addBtn)addBtn.onclick=addNew;
       if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNew();});
-    }else{
-      maybeFetchOther();   /* pull the other side / freshest scores on open */
     }
+    /* Theirs/Scores need no fetch — the live trip-doc listener keeps RANKS
+       current, so both sides are already fresh by the time you open them. */
   }};
 }
 
@@ -2840,7 +2835,9 @@ window.VNApp={setScope,loadPersonal,render,store,
   get personal(){return{todos:TODOS,bingo:BINGO,finds:FINDS,daylog:DAYLOG,side:mySide,fx:FX,
     journal:store.get("journal","")}},
   /* the sync layer seeds this device's ranking side on sign-in */
-  get myRanksExport(){return mySide?{side:mySide,data:RANKS[mySide]}:null;}};
+  get myRanksExport(){return mySide?{side:mySide,data:RANKS[mySide]}:null;},
+  /* the trip-doc listener calls this on every remote ranking change */
+  applyRanks};
 
 /* ============================================================ SERVICE WORKER (offline)
    An installed app has no address bar and no reload button, so it must offer
