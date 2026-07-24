@@ -513,10 +513,17 @@ p{color:var(--body);font-size:13px}
   color:var(--navy);font-size:14px;font-weight:800;display:grid;place-items:center}
 .rank-ctrls button:disabled{opacity:.3}
 .rank-ctrls button[data-del]{color:var(--red)}
-.pool{display:flex;flex-wrap:wrap;gap:8px}
-.pool-chip{padding:9px 13px;border-radius:999px;border:1px solid var(--border);background:#fff;
-  font-size:13px;font-weight:600;color:var(--body);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pool-chip.on{border-color:var(--gold-ink);background:var(--gold-ink);color:#fff;font-weight:800}
+.pool{display:flex;flex-direction:column;gap:8px}
+.pool-row{display:flex;align-items:center;gap:8px}
+.pc-name{flex:1;min-width:0;text-align:left;padding:11px 13px;border-radius:11px;border:1px solid var(--border);
+  background:#fff;font-size:14px;font-weight:600;color:var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-name.on{border-color:var(--gold-ink);background:var(--gold-ink);color:#fff;font-weight:800}
+/* 16px floor so focusing the city picker doesn't zoom Safari */
+.pc-area,#act-new-area{flex:none;width:104px;font-size:16px;padding:10px 8px;border-radius:11px;
+  border:1px solid var(--border);background:#fff;color:var(--ink)}
+.act-create{display:flex;gap:8px;margin-top:12px}
+.act-create #act-new{flex:1;min-width:0;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff;font-size:16px}
+.act-create #act-new:focus{outline:2px solid var(--gold-ink);outline-offset:-1px}
 .score-list{display:flex;flex-direction:column;gap:8px}
 .score-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
   border-radius:13px;padding:11px}
@@ -2491,18 +2498,49 @@ function viewFind(f){
    Rank your top 5 activities per city, two-sided (Tino & Jani), then see the
    combined score. The two sides live in ONE shared doc but in SEPARATE fields
    (ranksTino / ranksJani) — each phone writes only its own side, so they can
-   never overwrite each other. Your side is edited locally and pushed; the other
-   side is fetched on demand when you open Their Top 5 / the Scoreboard, so this
-   whole feature never touches the live plan-sync listener. */
+   never overwrite each other. Your side is edited locally and pushed; both sides
+   sync LIVE via the shared trip-doc listener (applyRanks). Each activity carries
+   a city (custom = its own `area`, plan = mapped from its location, plus a
+   per-side override map) so the pool shows only the selected city's activities. */
 const RANK_LOCS=[{k:"danang",label:"Da Nang"},{k:"hoian",label:"Hoi An"},{k:"hue",label:"Hue"},{k:"hanoi",label:"Hanoi"}];
 const RANK_SIDE_LABEL={tino:"Tino",jani:"Jani"};
 const RANK_SLOTS=5;
 
-function emptySide(){const slots={};RANK_LOCS.forEach(l=>slots[l.k]=[]);return{slots,custom:[],savedAt:0};}
+function emptySide(){const slots={};RANK_LOCS.forEach(l=>slots[l.k]=[]);return{slots,custom:[],areas:{},savedAt:0};}
 function normalizeSide(r){
   r=r||{};const slots={};
   RANK_LOCS.forEach(l=>{const a=r.slots&&r.slots[l.k];slots[l.k]=Array.isArray(a)?a.slice(0,RANK_SLOTS):[];});
-  return{slots,custom:Array.isArray(r.custom)?r.custom:[],savedAt:r.savedAt||0};
+  /* areas = my per-side override of which city an activity belongs to (custom
+     activities also carry their own `area`; plan activities are auto-mapped) */
+  return{slots,custom:Array.isArray(r.custom)?r.custom:[],
+    areas:(r.areas&&typeof r.areas==="object")?r.areas:{},savedAt:r.savedAt||0};
+}
+const RANK_LOC_KEYS=RANK_LOCS.map(l=>l.k);
+/* best-effort city from a plan activity's free-text location field */
+function mapLocToArea(loc){
+  if(!loc)return null;const s=String(loc).toLowerCase();
+  if(s.includes("hoi an")||s.includes("hoian"))return "hoian";
+  if(s.includes("da nang")||s.includes("danang")||s.includes("đà nẵng"))return "danang";
+  if(s.includes("hue")||s.includes("huế"))return "hue";
+  if(s.includes("hanoi")||s.includes("ha noi")||s.includes("hà nội"))return "hanoi";
+  return null;
+}
+/* which city an activity belongs to: my override wins, then a custom's own tag,
+   then a plan activity's mapped location, else null (unfiled — shows everywhere
+   so it can be tagged) */
+function actArea(id){
+  const ov=RANKS[mySide].areas&&RANKS[mySide].areas[id];
+  if(ov&&RANK_LOC_KEYS.includes(ov))return ov;
+  for(const s of["tino","jani"]){const c=RANKS[s].custom.find(x=>x.id===id);if(c&&c.area)return c.area;}
+  const a=(D.items.activities||[]).find(x=>x.id===id);
+  if(a)return mapLocToArea(a.location);
+  return null;
+}
+function setActArea(id,loc){
+  if(!RANKS[mySide].areas)RANKS[mySide].areas={};
+  if(loc&&RANK_LOC_KEYS.includes(loc))RANKS[mySide].areas[id]=loc;
+  else delete RANKS[mySide].areas[id];
+  commitMyRanks();
 }
 function loadRanks(){
   let raw=null;try{raw=JSON.parse(localStorage.getItem("vn26_ranks")||"null");}catch(e){}
@@ -2518,15 +2556,16 @@ function rankActName(id){
   for(const s of["tino","jani"]){const c=RANKS[s].custom.find(x=>x.id===id);if(c)return c.name;}
   return "Activity";
 }
-/* activities available to place: plan + everyone's customs, minus what's already
-   in MY list for this city (can't rank the same thing twice) */
+/* activities available to place in THIS city: plan + everyone's customs, filtered
+   to this city (or unfiled, so they can be tagged), minus what's already in MY
+   list for this city */
 function rankPool(loc){
   const seen=new Set(),all=[];
   const add=a=>{if(a&&a.id&&!seen.has(a.id)){seen.add(a.id);all.push({id:a.id,name:a.name});}};
   (D.items.activities||[]).forEach(add);
   RANKS.tino.custom.forEach(add);RANKS.jani.custom.forEach(add);
   const mine=new Set(RANKS[mySide].slots[loc]||[]);
-  return all.filter(a=>!mine.has(a.id));
+  return all.filter(a=>!mine.has(a.id)).filter(a=>{const ar=actArea(a.id);return ar===loc||ar===null;});
 }
 function commitMyRanks(){
   RANKS[mySide].savedAt=Date.now();
@@ -2547,13 +2586,15 @@ function rankMove(loc,id,dir){
   if(i<0||j<0||j>=arr.length)return;
   [arr[i],arr[j]]=[arr[j],arr[i]];commitMyRanks();
 }
-function rankAddCustom(loc,name){
+function rankAddCustom(area,name){
   name=(name||"").trim();if(!name)return;
-  if(RANKS[mySide].slots[loc].length>=RANK_SLOTS)return;   /* full — nowhere to put it */
+  if(!RANK_LOC_KEYS.includes(area))area=actLoc;
   const id="rk"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  RANKS[mySide].custom.push({id,name});
-  RANKS[mySide].slots[loc].push(id);
-  commitMyRanks();
+  RANKS[mySide].custom.push({id,name,area});          /* tagged to its city */
+  const slots=RANKS[mySide].slots[area];
+  if(slots.length<RANK_SLOTS)slots.push(id);          /* rank it now if there's room */
+  actLoc=area;                                        /* follow it to its city so you see it */
+  pickedAct=null;commitMyRanks();
 }
 /* position → points: slot 1 (top) = 5, slot 5 = 1; absent = null */
 function rankScore(slots,id){const i=(slots||[]).indexOf(id);return i<0?null:RANK_SLOTS-i;}
@@ -2632,17 +2673,23 @@ function viewActivities(){
         <span class="rank-hint">${pickedAct?"Tap to drop here":"Empty slot"}</span></div>`;
     }).join("");
     const pool=rankPool(loc);
-    const chips=pool.length?pool.map(a=>`<button class="pool-chip ${pickedAct===a.id?"on":""}" data-pick="${a.id}">${esc(a.name)}</button>`).join("")
-      :`<span class="caption">All activities are ranked. Add a new one below.</span>`;
+    const areaOpts=(sel)=>`<option value="">City…</option>`+RANK_LOCS.map(l=>`<option value="${l.k}" ${sel===l.k?"selected":""}>${esc(l.label)}</option>`).join("");
+    const rows=pool.length?pool.map(a=>`
+      <div class="pool-row">
+        <button class="pc-name ${pickedAct===a.id?"on":""}" data-pick="${a.id}">${esc(a.name)}</button>
+        <select class="pc-area" data-area="${a.id}" aria-label="City for ${esc(a.name)}">${areaOpts(actArea(a.id))}</select>
+      </div>`).join("")
+      :`<span class="caption">Nothing left to add for ${esc(locLabel)}. Create one below, or set another activity's city to ${esc(locLabel)}.</span>`;
     body=`
       <div class="rank-slots">${slots}</div>
-      <div class="card-title" style="margin:16px 4px 8px">${ico("tag",13)} ${pickedAct?"Tap a slot to place it":"Tap an activity, then a slot"}</div>
-      <div class="pool">${chips}</div>
-      <div class="addbar" style="margin-top:12px">
-        <input id="act-new" type="text" placeholder="New activity — e.g. Cooking class" maxlength="50">
+      <div class="card-title" style="margin:16px 4px 8px">${ico("tag",13)} ${pickedAct?"Tap a slot to place it":`Activities in ${esc(locLabel)} — tap one, then a slot`}</div>
+      <div class="pool">${rows}</div>
+      <div class="act-create">
+        <input id="act-new" type="text" placeholder="New activity…" maxlength="50">
+        <select id="act-new-area" aria-label="City">${RANK_LOCS.map(l=>`<option value="${l.k}" ${l.k===loc?"selected":""}>${esc(l.label)}</option>`).join("")}</select>
         <button class="go" id="act-add" aria-label="Add">${ico("plus",20)}</button>
       </div>
-      <div class="caption" style="margin-top:8px">A new activity drops into your next open slot for ${esc(locLabel)}.</div>`;
+      <div class="caption" style="margin-top:8px">Each activity has a <b>city</b> — the list above shows only ${esc(locLabel)}'s. Unfiled ones show everywhere until you set a city.</div>`;
   }else if(actSection==="theirs"){
     const arr=RANKS[them].slots[loc];
     const slots=Array.from({length:RANK_SLOTS},(_,i)=>{
@@ -2686,8 +2733,9 @@ function viewActivities(){
       el.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>rankMove(loc,b.dataset.up,-1));
       el.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>rankMove(loc,b.dataset.down,1));
       el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>rankRemove(loc,b.dataset.del));
-      const inp=el.querySelector("#act-new"),addBtn=el.querySelector("#act-add");
-      const addNew=()=>{rankAddCustom(loc,inp.value);};
+      el.querySelectorAll("[data-area]").forEach(sel=>sel.onchange=()=>setActArea(sel.dataset.area,sel.value));
+      const inp=el.querySelector("#act-new"),addBtn=el.querySelector("#act-add"),areaSel=el.querySelector("#act-new-area");
+      const addNew=()=>{rankAddCustom(areaSel?areaSel.value:loc,inp.value);};
       if(addBtn)addBtn.onclick=addNew;
       if(inp)inp.addEventListener("keydown",e=>{if(e.key==="Enter")addNew();});
     }
