@@ -541,11 +541,45 @@ p{color:var(--body);font-size:13px}
 .fc-book.done{background:var(--green-soft);color:var(--green)}
 .fc-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:11.5px;color:var(--grey)}
 .fc-meta span{display:inline-flex;align-items:center;gap:4px}
+.fc-type{background:var(--teal-soft);color:var(--teal);font-weight:800;padding:2px 7px;border-radius:6px}
+/* ---- by-day allocation ---- */
+.fd-day{padding:12px}
+.fd-day-head{display:flex;align-items:center;gap:8px;padding-bottom:9px;margin-bottom:4px;
+  border-bottom:1px solid var(--border-2)}
+.fd-day-n{font-size:14px;font-weight:800;color:var(--ink)}
+.fd-day-date{font-size:11.5px;color:var(--grey-2)}
+.fd-day-city{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:11px;
+  font-weight:700;color:var(--teal);background:var(--teal-soft);padding:3px 8px;border-radius:999px}
+.fd-meal{padding:8px 0;border-bottom:1px dashed var(--border-2)}
+.fd-meal:last-child{border-bottom:0;padding-bottom:0}
+.fd-meal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:12px;font-weight:800;color:var(--grey-3)}
+.fd-add{font-size:11.5px;font-weight:800;color:var(--red);padding:4px 8px;border-radius:8px;
+  background:var(--red-soft)}
+.fd-slot{display:flex;align-items:center;gap:8px;margin-top:6px}
+.fd-slot-name{flex:1;min-width:0;text-align:left;font-size:13.5px;font-weight:600;color:var(--ink);
+  background:var(--sand);border-radius:9px;padding:9px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-slot-name i{font-style:normal;color:var(--grey-2);font-weight:500}
+.fd-slot-x{flex:none;width:28px;height:28px;border-radius:8px;color:var(--grey-2);font-size:13px}
+.fd-empty{font-size:12px;color:var(--grey-2);padding:4px 0 0}
+.fd-pool{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fd-pool-chip{font-size:12.5px;font-weight:600;padding:8px 11px;border-radius:999px;
+  border:1px solid var(--border);background:#fff;color:var(--body);max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-pool-chip i{font-style:normal;font-size:10.5px;color:var(--grey-2);margin-left:4px}
+/* ---- day chips in the detail editor ---- */
+.fi-days{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.fi-day{padding:8px 4px;border-radius:10px;border:1px solid var(--border);background:#fff;text-align:center}
+.fi-day b{display:block;font-size:12px;font-weight:800;color:var(--ink)}
+.fi-day i{display:block;font-style:normal;font-size:10px;color:var(--grey-2);margin-top:1px}
+.fi-day.far{opacity:.45}
+.fi-day.on{background:var(--green);border-color:var(--green)}
+.fi-day.on b,.fi-day.on i{color:#fff}
 .food-head{margin-bottom:14px}
 .food-title{width:100%;border:0;border-bottom:2px solid var(--border);background:none;
   font-size:20px;font-weight:800;color:var(--ink);padding:4px 0 8px}
 .food-title:focus{outline:none;border-bottom-color:var(--red)}
-.food-sub{display:flex;gap:8px;margin-top:10px}
+.food-sub{display:flex;gap:8px;margin-top:8px}
 .food-sub select{flex:1;font-size:16px;padding:10px;border-radius:11px;border:1px solid var(--border);
   background:#fff;color:var(--ink)}
 .fi-input{width:100%;border:1px solid var(--border);border-radius:11px;padding:11px 12px;
@@ -753,6 +787,17 @@ D=loadPlan();
 window.addEventListener("storage",e=>{
   if(e.key===BUILDER_LS_KEY){D=loadPlan();if(typeof render==="function")render();}
 });
+/* The app READ the plan for its whole life; slotting a meal into a day makes it
+   a writer too. Use exactly the builder's contract so neither side can tell who
+   wrote: stamp savedAt, save under the builder's key (that's what loadPlan and
+   the builder both read), and push to the shared doc. Anything that edits
+   D.items/D.days must end with this, or the change lives only in memory. */
+function savePlan(){
+  D.savedAt=Date.now();
+  PLAN_SOURCE="builder";
+  try{localStorage.setItem(BUILDER_LS_KEY,JSON.stringify(D));}catch(e){}
+  if(window.VNSync&&window.VNSync.pushPlan)window.VNSync.pushPlan(D);
+}
 function esc(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function getItem(id){for(const k in D.items){const f=D.items[k].find(x=>x.id===id);if(f)return f;}return null;}
 function dayDateObj(i){
@@ -997,7 +1042,7 @@ let TODOS,BINGO,FINDS,DAYLOG,idSeq,todoTab,bingoTab;
 /* Activity rankings (shared, per-side) + this device's editing identity + UI state */
 let RANKS,mySide=null,actSection="mine",actLoc="danang",pickedAct=null;
 /* Food: ONE shared list both of you edit (unlike rankings, which are per-side) */
-let FOOD,foodMeal="lunch",foodLoc="all";
+let FOOD,foodMeal="lunch",foodLoc="all",foodTab="places",foodPickFor=null,newCuisineFor=null;
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -1313,7 +1358,16 @@ function dayTimeline(d){
       if(it.location)det.push(esc(it.location));
       links=linkChips(it.location||it.name,it.website);
     }
-    const iconName=x.cat==="transport"?(TCAT_ICON[it.tcat]||"car"):"pin";
+    /* a meal slotted from Food carries more than the plan knows — surface the
+       booking and what we said to order, which is the point of having it here */
+    const fp=x.cat==="activities"?foodByPlanId(it.id):null;
+    if(fp){
+      if(fp.cuisine)badges.push(`<span class="badge" style="background:var(--teal-soft);color:var(--teal)">${esc(fp.cuisine)}</span>`);
+      if(fp.booking)badges.push(`<span class="badge ${fp.bookingNote?"green":"gold"}">${fp.bookingNote?"Booked":"Needs booking"}</span>`);
+      if(fp.bookingNote)det.push(`<b>Booking:</b> ${esc(fp.bookingNote)}`);
+      if(fp.order.length)det.push(`<b>Order:</b> ${orderSummary(fp)}`);
+    }
+    const iconName=x.cat==="transport"?(TCAT_ICON[it.tcat]||"car"):(fp?"list":"pin");
     return `<div class="timeline-item">
       <div class="timeline-time">${esc(x.time||"—")}</div>
       <div class="timeline-rail"><span class="timeline-dot" style="background:${CAT_COLOR[x.cat]}"></span></div>
@@ -2810,6 +2864,10 @@ function viewActivities(){
    case) each save lands within a second and the other phone re-renders. */
 const MEALS=[{k:"breakfast",label:"Breakfast",icon:"🥐"},{k:"lunch",label:"Lunch",icon:"🍜"},{k:"dinner",label:"Dinner",icon:"🍲"}];
 const MEAL_BY_K=Object.fromEntries(MEALS.map(m=>[m.k,m]));
+/* Type of food. The starter set; anything you invent is added to FOOD.cuisines
+   so it syncs and shows up in the picker on both phones. */
+const CUISINES=["Vietnamese","Seafood","Sushi","BBQ","Fine Dining","Cafe","Desserts","Street Food"];
+function allCuisines(){return [...new Set([...CUISINES,...(FOOD.cuisines||[])])];}
 
 function normalizeFood(f){
   f=f||{};
@@ -2817,13 +2875,14 @@ function normalizeFood(f){
     id:String(p.id||""),name:String(p.name||""),
     meal:MEAL_BY_K[p.meal]?p.meal:"lunch",
     area:RANK_LOC_KEYS.includes(p.area)?p.area:null,
-    url:String(p.url||""),
+    url:String(p.url||""),address:String(p.address||""),cuisine:String(p.cuisine||""),
     booking:!!p.booking,bookingNote:String(p.bookingNote||""),
     order:Array.isArray(p.order)?p.order.map(o=>({id:String(o.id||""),dish:String(o.dish||""),
       qty:String(o.qty||""),note:String(o.note||"")})).filter(o=>o.dish):[],
     fromId:p.fromId||null,ts:p.ts||0
   })).filter(p=>p.id&&p.name):[];
-  return{places,importedFrom:Array.isArray(f.importedFrom)?f.importedFrom.map(String):[],savedAt:f.savedAt||0};
+  return{places,importedFrom:Array.isArray(f.importedFrom)?f.importedFrom.map(String):[],
+    cuisines:Array.isArray(f.cuisines)?f.cuisines.map(String).filter(Boolean):[],savedAt:f.savedAt||0};
 }
 function loadFood(){
   let raw=null;try{raw=JSON.parse(localStorage.getItem("vn26_food")||"null");}catch(e){}
@@ -2850,15 +2909,92 @@ function foodGet(id){return FOOD.places.find(p=>p.id===id)||null;}
 function foodAdd(name,meal,area){
   name=(name||"").trim();if(!name)return null;
   const p={id:newFoodId("fp"),name,meal:MEAL_BY_K[meal]?meal:"lunch",
-    area:RANK_LOC_KEYS.includes(area)?area:null,url:"",booking:false,bookingNote:"",order:[],fromId:null,ts:Date.now()};
+    area:RANK_LOC_KEYS.includes(area)?area:null,url:"",address:"",cuisine:"",booking:false,bookingNote:"",order:[],fromId:null,ts:Date.now()};
   FOOD.places.push(p);commitFood();return p;
 }
 function foodSet(id,patch){
   const p=foodGet(id);if(!p)return;
-  Object.assign(p,patch);commitFood();
+  Object.assign(p,patch);
+  /* if it's slotted into days, the itinerary entry IS this place — keep the
+     plan's copy in step so the builder shows the same name/place/site */
+  if(p.fromId&&syncFoodToPlan(p))savePlan();
+  commitFood();
+}
+/* set the type, remembering anything new so it's in the picker next time */
+function foodSetCuisine(id,label){
+  label=(label||"").trim();
+  if(label&&!allCuisines().includes(label))FOOD.cuisines.push(label);
+  foodSet(id,{cuisine:label});
 }
 function foodDelete(id){
-  FOOD.places=FOOD.places.filter(p=>p.id!==id);commitFood();
+  const p=foodGet(id);
+  /* pull it out of the itinerary too — leaving an orphan meal on a day, with
+     nothing behind it, is worse than removing both */
+  if(p&&p.fromId){
+    D.days.forEach(d=>{d.activities=(d.activities||[]).filter(x=>x!==p.fromId);});
+    D.items.activities=(D.items.activities||[]).filter(a=>a.id!==p.fromId);
+    savePlan();
+  }
+  FOOD.places=FOOD.places.filter(x=>x.id!==id);commitFood();
+}
+
+/* ---- Food ⟷ itinerary. The day allocation is NOT stored in FOOD: it lives in
+   the plan (days[i].activities), the same array the builder writes. That's what
+   makes the two views one thing — allocate here or there, both show it. ---- */
+function cityLabel(k){const l=RANK_LOCS.find(x=>x.k===k);return l?l.label:"";}
+function foodPlanItem(p){return p&&p.fromId?(D.items.activities||[]).find(a=>a.id===p.fromId)||null:null;}
+function foodByPlanId(id){return ((FOOD&&FOOD.places)||[]).find(p=>p.fromId===id)||null;}
+/* what to order, as one line: "2× Bánh xèo (Large, no peanuts) · Chả giò" */
+function orderSummary(p){
+  return (p.order||[]).map(o=>`${o.qty?esc(o.qty)+"× ":""}${esc(o.dish)}${o.note?` <i>(${esc(o.note)})</i>`:""}`).join(" · ");
+}
+function foodPlanName(p){return MEAL_BY_K[p.meal].label+" - "+p.name;}
+/* copy the fields the itinerary shows; returns true if anything actually moved */
+function syncFoodToPlan(p){
+  const it=foodPlanItem(p);if(!it)return false;
+  const name=foodPlanName(p),loc=p.address||cityLabel(p.area)||"";
+  let ch=false;
+  if(it.name!==name){it.name=name;ch=true;}
+  if(loc&&it.location!==loc){it.location=loc;ch=true;}
+  if(p.url&&it.website!==p.url){it.website=p.url;ch=true;}
+  return ch;
+}
+/* a place only gets a plan entry once it's actually slotted somewhere */
+function ensureFoodPlanItem(p){
+  let it=foodPlanItem(p);
+  if(it){syncFoodToPlan(p);return it;}
+  it={id:newFoodId("fa"),cat:"activities",name:foodPlanName(p),
+    location:p.address||cityLabel(p.area)||"",website:p.url||"",cost:"",
+    timeStart:"",timeEnd:"",cancelDate:"",cancelTime:""};
+  D.items.activities.push(it);
+  p.fromId=it.id;
+  return it;
+}
+function foodDays(p){
+  if(!p||!p.fromId)return[];
+  const out=[];D.days.forEach((d,i)=>{if((d.activities||[]).includes(p.fromId))out.push(i);});
+  return out;
+}
+function foodSetDay(placeId,dayIdx,on){
+  const p=foodGet(placeId);if(!p||!D.days[dayIdx])return;
+  const it=ensureFoodPlanItem(p);
+  const arr=D.days[dayIdx].activities=D.days[dayIdx].activities||[];
+  const at=arr.indexOf(it.id);
+  if(on&&at<0)arr.push(it.id);
+  else if(!on&&at>=0)arr.splice(at,1);
+  savePlan();
+  commitFood();      /* persists fromId and re-renders */
+}
+/* places already slotted on this day, for a given meal */
+function foodOnDay(dayIdx,meal){
+  const ids=(D.days[dayIdx]&&D.days[dayIdx].activities)||[];
+  return FOOD.places.filter(p=>p.meal===meal&&p.fromId&&ids.includes(p.fromId));
+}
+/* which city a day is in — used to offer the right restaurants first */
+function dayArea(i){
+  const d=D.days[i];if(!d)return null;
+  const loc=getItem(d.locEnd)||getItem(d.locStart);
+  return loc?mapLocToArea(loc.name):null;
 }
 function orderAdd(id,dish,qty,note){
   dish=(dish||"").trim();if(!dish)return;
@@ -2904,21 +3040,66 @@ function foodList(meal,loc){
     .sort((a,b)=>a.name.localeCompare(b.name));
 }
 
+/* The by-day view: the same allocation the builder makes, in a meal-shaped form.
+   Assigning here writes days[i].activities — so it shows up in the itinerary,
+   the day pages and the builder, and anything allocated there shows up here. */
+function foodByDayBody(){
+  return D.days.map((d,i)=>{
+    const ar=dayArea(i),city=ar?cityLabel(ar):"";
+    const rows=MEALS.map(m=>{
+      const on=foodOnDay(i,m.k);
+      const picking=foodPickFor&&foodPickFor.day===i&&foodPickFor.meal===m.k;
+      /* offer this city's places first; unfiled ones stay visible so nothing hides */
+      const pool=FOOD.places.filter(p=>p.meal===m.k)
+        .filter(p=>!on.some(x=>x.id===p.id))
+        .sort((a,b)=>{
+          const ap=(a.area===ar?0:a.area?2:1),bp=(b.area===ar?0:b.area?2:1);
+          return ap-bp||a.name.localeCompare(b.name);
+        });
+      return `<div class="fd-meal">
+        <div class="fd-meal-head"><span>${m.icon} ${esc(m.label)}</span>
+          <button class="fd-add" data-pick-day="${i}" data-pick-meal="${m.k}">${picking?"Close":"+ Add"}</button></div>
+        ${on.length?on.map(p=>`<div class="fd-slot">
+            <button class="fd-slot-name" data-open="${p.id}">${esc(p.name)}${p.area&&p.area!==ar?` <i>· ${esc(cityLabel(p.area))}</i>`:""}</button>
+            <button class="fd-slot-x" data-unslot="${p.id}" data-day="${i}" aria-label="Remove">✕</button>
+          </div>`).join(""):(picking?"":`<div class="fd-empty">—</div>`)}
+        ${picking?`<div class="fd-pool">${pool.length?pool.map(p=>`
+            <button class="fd-pool-chip" data-slot="${p.id}" data-day="${i}">${esc(p.name)}${p.area?` <i>${esc(cityLabel(p.area))}</i>`:""}</button>`).join("")
+            :`<span class="caption">No ${esc(m.label.toLowerCase())} places yet — add one under Places.</span>`}</div>`:""}
+      </div>`;
+    }).join("");
+    return `<section class="card fd-day">
+      <div class="fd-day-head">
+        <span class="fd-day-n">Day ${i+1}</span>
+        <span class="fd-day-date">${esc(dayDateStr(i,{weekday:"short",day:"numeric",month:"short"}))}</span>
+        ${city?`<span class="fd-day-city">${ico("pin",11)} ${esc(city)}</span>`:""}
+      </div>
+      ${rows}
+    </section>`;
+  }).join("");
+}
+
 function viewFood(){
   const meal=foodMeal,loc=foodLoc;
+  const tabSeg=`<div class="seg">
+    <button data-ftab="places" class="${foodTab==="places"?"on":""}">Places</button>
+    <button data-ftab="days" class="${foodTab==="days"?"on":""}">By day</button></div>`;
   const mealSeg=`<div class="seg">${MEALS.map(m=>`<button data-meal="${m.k}" class="${meal===m.k?"on":""}">${m.icon} ${esc(m.label)}</button>`).join("")}</div>`;
   const locSeg=`<div class="seg seg-wrap"><button data-floc="all" class="${loc==="all"?"on":""}">All</button>${RANK_LOCS.map(l=>`<button data-floc="${l.k}" class="${loc===l.k?"on":""}">${esc(l.label)}</button>`).join("")}</div>`;
   const list=foodList(meal,loc);
   const pending=mealActivityMatches();
   const cards=list.map(p=>{
     const city=p.area?(RANK_LOCS.find(l=>l.k===p.area)||{}).label:"No city";
+    const days=foodDays(p);
     return `<button class="food-card" data-open="${p.id}">
       <span class="fc-top">
         <span class="fc-name">${esc(p.name)}</span>
         ${p.booking?`<span class="fc-book ${p.bookingNote?"done":""}">${p.bookingNote?"Booked":"Book"}</span>`:""}
       </span>
       <span class="fc-meta">
+        ${p.cuisine?`<span class="fc-type">${esc(p.cuisine)}</span>`:""}
         <span class="fc-city">${ico("pin",11)} ${esc(city)}</span>
+        ${days.length?`<span class="fc-day">${ico("cal",11)} ${days.map(d=>"Day "+(d+1)).join(", ")}</span>`:""}
         ${p.order.length?`<span class="fc-order">${ico("list",11)} ${p.order.length} to order</span>`:""}
         ${p.url?`<span class="fc-web">${ico("globe",11)} site</span>`:""}
       </span>
@@ -2932,32 +3113,47 @@ function viewFood(){
       <div><b>${pending.length} meal ${pending.length===1?"activity":"activities"} found</b>
       <span class="caption">${esc(pending.slice(0,3).map(p=>p.name).join(", "))}${pending.length>3?` +${pending.length-3} more`:""}</span></div>
       <button id="food-import-go">Import</button></div>`:""}
-    ${mealSeg}${locSeg}
-    <div class="act-create">
-      <input id="food-new" type="text" placeholder="Add a ${esc(MEAL_BY_K[meal].label.toLowerCase())} place…" maxlength="60">
-      <select id="food-new-area" aria-label="City">
-        <option value="">City…</option>
-        ${RANK_LOCS.map(l=>`<option value="${l.k}" ${l.k===loc?"selected":""}>${esc(l.label)}</option>`).join("")}
-      </select>
-      <button class="go" id="food-add" aria-label="Add">${ico("plus",20)}</button>
-    </div>
-    ${list.length?`<div class="food-list">${cards}</div>`
-      :`<section class="card"><p class="caption">No ${esc(MEAL_BY_K[meal].label.toLowerCase())} places${loc==="all"?"":" for "+esc((RANK_LOCS.find(l=>l.k===loc)||{}).label)} yet. Add one above — then tap it to set a website, booking and what to order.</p></section>`}`,
+    ${tabSeg}
+    ${foodTab==="days"?foodByDayBody():`
+      ${mealSeg}${locSeg}
+      <div class="act-create">
+        <input id="food-new" type="text" placeholder="Add a ${esc(MEAL_BY_K[meal].label.toLowerCase())} place…" maxlength="60">
+        <select id="food-new-area" aria-label="City">
+          <option value="">City…</option>
+          ${RANK_LOCS.map(l=>`<option value="${l.k}" ${l.k===loc?"selected":""}>${esc(l.label)}</option>`).join("")}
+        </select>
+        <button class="go" id="food-add" aria-label="Add">${ico("plus",20)}</button>
+      </div>
+      ${list.length?`<div class="food-list">${cards}</div>`
+        :`<section class="card"><p class="caption">No ${esc(MEAL_BY_K[meal].label.toLowerCase())} places${loc==="all"?"":" for "+esc((RANK_LOCS.find(l=>l.k===loc)||{}).label)} yet. Add one above — then tap it to set a place, website, booking and what to order.</p></section>`}`}`,
   wire(el){
+    el.querySelectorAll("[data-ftab]").forEach(b=>b.onclick=()=>{foodTab=b.dataset.ftab;foodPickFor=null;render();});
     el.querySelectorAll("[data-meal]").forEach(b=>b.onclick=()=>{foodMeal=b.dataset.meal;render();});
     el.querySelectorAll("[data-floc]").forEach(b=>b.onclick=()=>{foodLoc=b.dataset.floc;render();});
     el.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go("food/item/"+b.dataset.open));
     const imp=el.querySelector("#food-import-go");
     if(imp)imp.onclick=()=>{const n=importMealActivities();if(n)go("food");};
+    /* by-day allocation */
+    el.querySelectorAll("[data-pick-day]").forEach(b=>b.onclick=()=>{
+      const d=+b.dataset.pickDay,m=b.dataset.pickMeal;
+      foodPickFor=(foodPickFor&&foodPickFor.day===d&&foodPickFor.meal===m)?null:{day:d,meal:m};
+      render();
+    });
+    el.querySelectorAll("[data-slot]").forEach(b=>b.onclick=()=>{
+      foodPickFor=null;foodSetDay(b.dataset.slot,+b.dataset.day,true);
+    });
+    el.querySelectorAll("[data-unslot]").forEach(b=>b.onclick=()=>foodSetDay(b.dataset.unslot,+b.dataset.day,false));
     const inp=el.querySelector("#food-new"),sel=el.querySelector("#food-new-area");
-    const add=()=>{const p=foodAdd(inp.value,foodMeal,sel.value||null);if(p)go("food/item/"+p.id);};
-    el.querySelector("#food-add").onclick=add;
-    inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+    if(inp){
+      const add=()=>{const p=foodAdd(inp.value,foodMeal,sel.value||null);if(p)go("food/item/"+p.id);};
+      el.querySelector("#food-add").onclick=add;
+      inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+    }
   }};
 }
 
 function viewFoodItem(p){
-  const city=p.area||"";
+  const city=p.area||"",slotted=foodDays(p);
   const orders=p.order.map(o=>`
     <div class="ord-row">
       <span class="ord-qty">${esc(o.qty||"1")}</span>
@@ -2974,11 +3170,39 @@ function viewFoodItem(p){
           ${RANK_LOCS.map(l=>`<option value="${l.k}" ${city===l.k?"selected":""}>${esc(l.label)}</option>`).join("")}
         </select>
       </div>
+      <div class="food-sub">
+        <select id="fi-cuisine" aria-label="Type of food">
+          <option value="">Type of food…</option>
+          ${allCuisines().map(c=>`<option value="${esc(c)}" ${p.cuisine===c?"selected":""}>${esc(c)}</option>`).join("")}
+          <option value="__new">＋ New type…</option>
+        </select>
+      </div>
+      ${newCuisineFor===p.id?`<div class="act-create" style="margin-top:8px">
+        <input id="fi-cuisine-new" type="text" placeholder="New type — e.g. Hot Pot" maxlength="24">
+        <button class="go" id="fi-cuisine-save" aria-label="Save type">${ico("plus",20)}</button>
+      </div>`:""}
     </div>
+    <section class="card">
+      <div class="card-title" style="color:var(--teal)">${ico("pin",14)} Where it is</div>
+      <input class="fi-input" id="fi-address" type="text" placeholder="Address or area — e.g. 24 Lê Văn Hưu, Hanoi" value="${esc(p.address)}" maxlength="120">
+      ${linkChips(p.address||(p.name+" "+cityLabel(p.area)).trim(),"")}
+      <div class="caption" style="margin-top:6px">Maps searches the address if you've set one, otherwise the name and city.</div>
+    </section>
     <section class="card">
       <div class="card-title" style="color:var(--blue)">${ico("globe",14)} Website</div>
       <input class="fi-input" id="fi-url" type="url" inputmode="url" placeholder="https://…" value="${esc(p.url)}">
       ${p.url?`<a class="editlink blue" href="${esc(p.url)}" target="_blank" rel="noopener">Open site ↗</a>`:""}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--green)">${ico("cal",14)} On these days</div>
+      <div class="fi-days">${D.days.map((d,i)=>{
+        const on=slotted.includes(i),ar=dayArea(i);
+        return `<button class="fi-day ${on?"on":""} ${!on&&ar&&p.area&&ar!==p.area?"far":""}" data-day="${i}">
+          <b>Day ${i+1}</b><i>${esc(dayDateStr(i,{day:"numeric",month:"short"}))}</i></button>`;
+      }).join("")}</div>
+      <div class="caption" style="margin-top:8px">${slotted.length
+        ? `On the itinerary as <b>${esc(foodPlanName(p))}</b> — edit it here or in the planner, it's the same entry.`
+        : `Tap a day to put it on the itinerary. Days in another city are dimmed, not blocked.`}</div>
     </section>
     <section class="card">
       <div class="card-title" style="color:var(--gold-ink)">${ico("alert",14)} Booking</div>
@@ -3004,6 +3228,23 @@ function viewFoodItem(p){
     nm.addEventListener("change",()=>{const v=nm.value.trim();if(v)foodSet(p.id,{name:v});});
     el.querySelector("#fi-meal").onchange=e=>foodSet(p.id,{meal:e.target.value});
     el.querySelector("#fi-area").onchange=e=>foodSet(p.id,{area:e.target.value||null});
+    el.querySelector("#fi-cuisine").onchange=e=>{
+      if(e.target.value==="__new"){newCuisineFor=p.id;render();return;}
+      newCuisineFor=null;foodSetCuisine(p.id,e.target.value);
+    };
+    const cn=el.querySelector("#fi-cuisine-new");
+    if(cn){
+      cn.focus();
+      const saveCuisine=()=>{const v=cn.value.trim();newCuisineFor=null;
+        if(v)foodSetCuisine(p.id,v);else render();};
+      el.querySelector("#fi-cuisine-save").onclick=saveCuisine;
+      cn.addEventListener("keydown",e=>{if(e.key==="Enter")saveCuisine();});
+    }
+    const addr=el.querySelector("#fi-address");
+    addr.addEventListener("change",()=>foodSet(p.id,{address:addr.value.trim()}));
+    el.querySelectorAll(".fi-days [data-day]").forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.day;foodSetDay(p.id,i,!foodDays(p).includes(i));
+    });
     const url=el.querySelector("#fi-url");
     url.addEventListener("change",()=>foodSet(p.id,{url:url.value.trim()}));
     el.querySelector("#fi-book").onchange=e=>foodSet(p.id,{booking:e.target.checked});
