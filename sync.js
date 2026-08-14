@@ -76,6 +76,9 @@ const api = {
      never collide — no merge logic needed. Reading is LIVE via the trip-doc
      listener (VNApp.applyRanks), same as the plan. Stub until the SDK is up. */
   pushMyRanks() {},
+  /* The restaurant list is ONE shared list both people edit, so it uses the
+     plan's whole-object model (savedAt wins) rather than the per-side split. */
+  pushFood() {},
   available: false
 };
 window.VNSync = api;
@@ -175,6 +178,7 @@ emit();   /* tell the pages we exist, now that they've finished loading */
       if (data.ranksTino || data.ranksJani) {
         window.VNApp?.applyRanks?.({ tino: data.ranksTino || null, jani: data.ranksJani || null });
       }
+      if (data.food) window.VNApp?.applyFood?.(data.food);
       const remote = data.plan;
       if (!remote || !remote.days?.length) return;
       let local = null;
@@ -203,7 +207,7 @@ emit();   /* tell the pages we exist, now that they've finished loading */
     }, err => { state.status = "error"; state.error = err.code || "Sync failed"; emit(); });
 
     /* ---- writers ---- */
-    let tPersonal = null, tPlan = null, tRanks = null;
+    let tPersonal = null, tPlan = null, tRanks = null, tFood = null;
     api.pushPersonal = () => {
       if (applyingRemote || !state.user) return;
       clearTimeout(tPersonal);
@@ -233,6 +237,15 @@ emit();   /* tell the pages we exist, now that they've finished loading */
        (and the whole plan) untouched — the two writers can never overwrite each
        other. No applyingRemote guard needed: we don't live-listen to ranks, so
        there's no echo to suppress. */
+    api.pushFood = food => {
+      if (!state.user) return;
+      clearTimeout(tFood);
+      tFood = setTimeout(async () => {
+        try {
+          await fb.setDoc(tripRef, { food, foodUpdatedBy: state.user.email, updatedAt: Date.now() }, { merge: true });
+        } catch (e) { state.status = "error"; state.error = e.code || "Food save failed"; emit(); }
+      }, 700);
+    };
     api.pushMyRanks = (side, sideData) => {
       if (!state.user) return;
       clearTimeout(tRanks);
@@ -257,6 +270,15 @@ emit();   /* tell the pages we exist, now that they've finished loading */
         const remote = snap.data()?.[mine.side === "jani" ? "ranksJani" : "ranksTino"];
         if (!remote || (mine.data.savedAt || 0) > (remote.savedAt || 0)) api.pushMyRanks(mine.side, mine.data);
         /* else the server is newer — the live listener already delivered it */
+      }
+    } catch (e) {}
+    /* same no-clobber guard for the shared food list */
+    try {
+      const food = window.VNApp?.foodExport;
+      if (food && (food.places || []).length) {
+        const snap = await fb.getDoc(tripRef);
+        const remote = snap.data()?.food;
+        if (!remote || (food.savedAt || 0) > (remote.savedAt || 0)) api.pushFood(food);
       }
     } catch (e) {}
     try {

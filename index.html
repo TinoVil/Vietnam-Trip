@@ -521,9 +521,57 @@ p{color:var(--body);font-size:13px}
 /* 16px floor so focusing the city picker doesn't zoom Safari */
 .pc-area,#act-new-area{flex:none;width:104px;font-size:16px;padding:10px 8px;border-radius:11px;
   border:1px solid var(--border);background:#fff;color:var(--ink)}
+/* ---------------------------------------------------------- FOOD */
+.seg-wrap{flex-wrap:wrap}
+.seg-wrap button{flex:1 1 28%;min-width:0}
+.food-import{display:flex;align-items:center;gap:10px;background:var(--gold-soft);
+  border:1px solid var(--gold);border-radius:14px;padding:11px 12px;margin-bottom:12px}
+.food-import div{flex:1;min-width:0;font-size:13px;color:var(--ink)}
+.food-import .caption{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.food-import button{flex:none;padding:9px 15px;border-radius:10px;background:var(--gold-ink);color:#fff;
+  font-weight:800;font-size:12.5px}
+.food-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.food-card{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--border);
+  border-radius:14px;padding:12px}
+.fc-top{display:flex;align-items:center;gap:8px}
+.fc-name{flex:1;min-width:0;font-size:14.5px;font-weight:700;color:var(--ink);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fc-book{flex:none;font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:999px;
+  background:var(--gold-soft);color:var(--gold-ink)}
+.fc-book.done{background:var(--green-soft);color:var(--green)}
+.fc-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:11.5px;color:var(--grey)}
+.fc-meta span{display:inline-flex;align-items:center;gap:4px}
+.food-head{margin-bottom:14px}
+.food-title{width:100%;border:0;border-bottom:2px solid var(--border);background:none;
+  font-size:20px;font-weight:800;color:var(--ink);padding:4px 0 8px}
+.food-title:focus{outline:none;border-bottom-color:var(--red)}
+.food-sub{display:flex;gap:8px;margin-top:10px}
+.food-sub select{flex:1;font-size:16px;padding:10px;border-radius:11px;border:1px solid var(--border);
+  background:#fff;color:var(--ink)}
+.fi-input{width:100%;border:1px solid var(--border);border-radius:11px;padding:11px 12px;
+  font-size:16px;background:#fff;color:var(--ink)}
+.fi-check{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--ink)}
+.fi-check input{width:22px;height:22px;accent-color:var(--gold-ink);flex:none}
+.fi-area-in{width:100%;margin-top:10px;min-height:70px;border:1px solid var(--border);border-radius:11px;
+  padding:11px;font-size:16px;font-family:inherit;line-height:1.5;background:#fff;color:var(--ink);resize:vertical}
+.ord-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.ord-row{display:flex;align-items:center;gap:9px;background:var(--sand);border-radius:10px;padding:9px 10px}
+.ord-qty{flex:none;min-width:26px;height:26px;padding:0 6px;border-radius:7px;background:var(--green);color:#fff;
+  font-size:12px;font-weight:800;display:grid;place-items:center}
+.ord-body{flex:1;min-width:0;font-size:13.5px;color:var(--ink)}
+.ord-body i{display:block;font-style:normal;font-size:11.5px;color:var(--grey);margin-top:1px}
+.ord-del{flex:none;width:26px;height:26px;border-radius:7px;color:var(--grey-2);font-size:14px}
+.ord-add{display:flex;gap:8px;margin-bottom:8px}
+.ord-add #ord-qty{flex:none;width:64px;text-align:center}
+.ord-add input{border:1px solid var(--border);border-radius:11px;padding:11px 12px;font-size:16px;background:#fff;min-width:0}
+.ord-add #ord-dish{flex:1}
+.ord-add .go{width:46px;flex:none;border-radius:11px;background:var(--green);color:#fff;display:grid;place-items:center}
 .act-create{display:flex;gap:8px;margin-top:12px}
-.act-create #act-new{flex:1;min-width:0;border:1px solid var(--border);border-radius:14px;padding:12px 14px;background:#fff;font-size:16px}
-.act-create #act-new:focus{outline:2px solid var(--gold-ink);outline-offset:-1px}
+.act-create #act-new,.act-create #food-new{flex:1;min-width:0;border:1px solid var(--border);
+  border-radius:14px;padding:12px 14px;background:#fff;font-size:16px}
+.act-create #act-new:focus,.act-create #food-new:focus{outline:2px solid var(--gold-ink);outline-offset:-1px}
+#food-new-area{flex:none;width:104px;font-size:16px;padding:10px 8px;border-radius:11px;
+  border:1px solid var(--border);background:#fff;color:var(--ink)}
 .score-list{display:flex;flex-direction:column;gap:8px}
 .score-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);
   border-radius:13px;padding:11px}
@@ -948,6 +996,8 @@ const store={
 let TODOS,BINGO,FINDS,DAYLOG,idSeq,todoTab,bingoTab;
 /* Activity rankings (shared, per-side) + this device's editing identity + UI state */
 let RANKS,mySide=null,actSection="mine",actLoc="danang",pickedAct=null;
+/* Food: ONE shared list both of you edit (unlike rankings, which are per-side) */
+let FOOD,foodMeal="lunch",foodLoc="all";
 /* (Re)load this person's data for the current scope, seeding a fresh set if
    they have none. Called at boot and again whenever the account changes. */
 function loadPersonal(){
@@ -959,6 +1009,7 @@ function loadPersonal(){
   DAYLOG=store.get("daylog",{});      /* per-day diary, keyed by day index */
   mySide=store.get("side",null);      /* which ranking side this phone edits (personal, synced across my devices) */
   loadRanks();                        /* shared rankings cache (not scoped — one copy for the trip) */
+  loadFood();                         /* shared restaurant list (same: one copy for the trip) */
   TODOS=store.get("todos",null);
   if(!TODOS){
     let n=0;TODOS=[];
@@ -1026,6 +1077,7 @@ const SECTIONS=[
   {route:"bingo",    name:"Bingo",         icon:"grid",   color:"var(--purple)",soft:"var(--purple-soft)"},
   {route:"finds",    name:"Market Finds",  icon:"cam",    color:"var(--coral)", soft:"#FCEFE4"},
   {route:"activities",name:"Activities",   icon:"star",   color:"var(--gold-ink)",soft:"var(--gold-soft)"},
+  {route:"food",     name:"Food",          icon:"list",   color:"var(--red)",   soft:"var(--red-soft)"},
   {route:"fx",       name:"Currency",      icon:"wallet", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
   {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
@@ -1083,6 +1135,7 @@ function parentOf(route){
     return it?"finds/"+it.cat:"finds";
   }
   if(p[0]==="finds"&&p[1])return "finds";
+  if(p[0]==="food"&&p[1])return "food";     /* a restaurant belongs to the food list */
   return "summary";
 }
 function currentRoute(){
@@ -2744,9 +2797,241 @@ function viewActivities(){
   }};
 }
 
+/* ============================================================ VIEW · FOOD
+
+   Where we eat: a restaurant per meal per city, with a website, a
+   requires-booking flag (+ what we booked), and a recommended order.
+
+   Unlike the rankings, this is ONE list you BOTH edit — you're building it
+   together, and either of you must be able to fix or delete a row. So it uses
+   the same whole-object last-write-wins model as the shared plan: live via the
+   trip-doc listener, adopted by savedAt. The realistic cost is that two people
+   editing while BOTH offline can lose one set of edits; online (the normal
+   case) each save lands within a second and the other phone re-renders. */
+const MEALS=[{k:"breakfast",label:"Breakfast",icon:"🥐"},{k:"lunch",label:"Lunch",icon:"🍜"},{k:"dinner",label:"Dinner",icon:"🍲"}];
+const MEAL_BY_K=Object.fromEntries(MEALS.map(m=>[m.k,m]));
+
+function normalizeFood(f){
+  f=f||{};
+  const places=Array.isArray(f.places)?f.places.map(p=>({
+    id:String(p.id||""),name:String(p.name||""),
+    meal:MEAL_BY_K[p.meal]?p.meal:"lunch",
+    area:RANK_LOC_KEYS.includes(p.area)?p.area:null,
+    url:String(p.url||""),
+    booking:!!p.booking,bookingNote:String(p.bookingNote||""),
+    order:Array.isArray(p.order)?p.order.map(o=>({id:String(o.id||""),dish:String(o.dish||""),
+      qty:String(o.qty||""),note:String(o.note||"")})).filter(o=>o.dish):[],
+    fromId:p.fromId||null,ts:p.ts||0
+  })).filter(p=>p.id&&p.name):[];
+  return{places,importedFrom:Array.isArray(f.importedFrom)?f.importedFrom.map(String):[],savedAt:f.savedAt||0};
+}
+function loadFood(){
+  let raw=null;try{raw=JSON.parse(localStorage.getItem("vn26_food")||"null");}catch(e){}
+  FOOD=normalizeFood(raw);
+}
+function saveFoodLocal(){try{localStorage.setItem("vn26_food",JSON.stringify(FOOD));}catch(e){}}
+function commitFood(){
+  FOOD.savedAt=Date.now();
+  saveFoodLocal();
+  if(window.VNSync&&window.VNSync.pushFood)window.VNSync.pushFood(FOOD);
+  render();
+}
+/* live from the shared trip doc — adopt only a genuinely newer copy, so a
+   remote echo can never roll back what you just typed */
+function applyFood(remote){
+  if(!remote||!FOOD)return;
+  const rn=normalizeFood(remote);
+  if(rn.savedAt<=FOOD.savedAt)return;
+  FOOD=rn;saveFoodLocal();
+  if(currentRoute().split("/")[0]==="food"&&typeof render==="function")render();
+}
+function newFoodId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function foodGet(id){return FOOD.places.find(p=>p.id===id)||null;}
+function foodAdd(name,meal,area){
+  name=(name||"").trim();if(!name)return null;
+  const p={id:newFoodId("fp"),name,meal:MEAL_BY_K[meal]?meal:"lunch",
+    area:RANK_LOC_KEYS.includes(area)?area:null,url:"",booking:false,bookingNote:"",order:[],fromId:null,ts:Date.now()};
+  FOOD.places.push(p);commitFood();return p;
+}
+function foodSet(id,patch){
+  const p=foodGet(id);if(!p)return;
+  Object.assign(p,patch);commitFood();
+}
+function foodDelete(id){
+  FOOD.places=FOOD.places.filter(p=>p.id!==id);commitFood();
+}
+function orderAdd(id,dish,qty,note){
+  dish=(dish||"").trim();if(!dish)return;
+  const p=foodGet(id);if(!p)return;
+  p.order.push({id:newFoodId("od"),dish,qty:(qty||"").trim(),note:(note||"").trim()});commitFood();
+}
+function orderDelete(id,oid){
+  const p=foodGet(id);if(!p)return;
+  p.order=p.order.filter(o=>o.id!==oid);commitFood();
+}
+/* ---- migrate "Lunch - X" / "Dinner - X" activities from the plan ----
+   These were typed into the itinerary builder before Food existed. Detected at
+   runtime (the live plan comes from the builder, not the baseline in this file)
+   and imported on a tap, carrying city and website across. Imported plan ids are
+   remembered so nothing is offered — or added — twice. */
+const MEAL_PREFIX=/^\s*(breakfast|lunch|dinner|brunch|supper)\s*[-–—:]\s*(.+)$/i;
+function mealActivityMatches(){
+  const done=new Set(FOOD.importedFrom);
+  return (D.items.activities||[]).map(a=>{
+    if(done.has(a.id))return null;
+    const m=MEAL_PREFIX.exec(a.name||"");
+    if(!m)return null;
+    let meal=m[1].toLowerCase();
+    if(meal==="brunch")meal="breakfast";
+    if(meal==="supper")meal="dinner";
+    return{act:a,meal,name:m[2].trim()};
+  }).filter(Boolean);
+}
+function importMealActivities(){
+  const found=mealActivityMatches();
+  if(!found.length)return 0;
+  found.forEach(({act,meal,name})=>{
+    FOOD.places.push({id:newFoodId("fp"),name,meal,
+      area:mapLocToArea(act.location),url:act.website||"",
+      booking:false,bookingNote:"",order:[],fromId:act.id,ts:Date.now()});
+    FOOD.importedFrom.push(act.id);
+  });
+  commitFood();
+  return found.length;
+}
+function foodList(meal,loc){
+  return FOOD.places.filter(p=>p.meal===meal).filter(p=>loc==="all"||p.area===loc||p.area===null)
+    .sort((a,b)=>a.name.localeCompare(b.name));
+}
+
+function viewFood(){
+  const meal=foodMeal,loc=foodLoc;
+  const mealSeg=`<div class="seg">${MEALS.map(m=>`<button data-meal="${m.k}" class="${meal===m.k?"on":""}">${m.icon} ${esc(m.label)}</button>`).join("")}</div>`;
+  const locSeg=`<div class="seg seg-wrap"><button data-floc="all" class="${loc==="all"?"on":""}">All</button>${RANK_LOCS.map(l=>`<button data-floc="${l.k}" class="${loc===l.k?"on":""}">${esc(l.label)}</button>`).join("")}</div>`;
+  const list=foodList(meal,loc);
+  const pending=mealActivityMatches();
+  const cards=list.map(p=>{
+    const city=p.area?(RANK_LOCS.find(l=>l.k===p.area)||{}).label:"No city";
+    return `<button class="food-card" data-open="${p.id}">
+      <span class="fc-top">
+        <span class="fc-name">${esc(p.name)}</span>
+        ${p.booking?`<span class="fc-book ${p.bookingNote?"done":""}">${p.bookingNote?"Booked":"Book"}</span>`:""}
+      </span>
+      <span class="fc-meta">
+        <span class="fc-city">${ico("pin",11)} ${esc(city)}</span>
+        ${p.order.length?`<span class="fc-order">${ico("list",11)} ${p.order.length} to order</span>`:""}
+        ${p.url?`<span class="fc-web">${ico("globe",11)} site</span>`:""}
+      </span>
+    </button>`;
+  }).join("");
+  return{title:"Food",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--red),#E06A6A)">
+      <div class="hb-kicker">Where we eat</div><div class="hb-title">Food</div>
+      <div class="hb-sub">${FOOD.places.length} ${FOOD.places.length===1?"place":"places"} saved</div></div>
+    ${pending.length?`<div class="food-import" id="food-import">
+      <div><b>${pending.length} meal ${pending.length===1?"activity":"activities"} found</b>
+      <span class="caption">${esc(pending.slice(0,3).map(p=>p.name).join(", "))}${pending.length>3?` +${pending.length-3} more`:""}</span></div>
+      <button id="food-import-go">Import</button></div>`:""}
+    ${mealSeg}${locSeg}
+    <div class="act-create">
+      <input id="food-new" type="text" placeholder="Add a ${esc(MEAL_BY_K[meal].label.toLowerCase())} place…" maxlength="60">
+      <select id="food-new-area" aria-label="City">
+        <option value="">City…</option>
+        ${RANK_LOCS.map(l=>`<option value="${l.k}" ${l.k===loc?"selected":""}>${esc(l.label)}</option>`).join("")}
+      </select>
+      <button class="go" id="food-add" aria-label="Add">${ico("plus",20)}</button>
+    </div>
+    ${list.length?`<div class="food-list">${cards}</div>`
+      :`<section class="card"><p class="caption">No ${esc(MEAL_BY_K[meal].label.toLowerCase())} places${loc==="all"?"":" for "+esc((RANK_LOCS.find(l=>l.k===loc)||{}).label)} yet. Add one above — then tap it to set a website, booking and what to order.</p></section>`}`,
+  wire(el){
+    el.querySelectorAll("[data-meal]").forEach(b=>b.onclick=()=>{foodMeal=b.dataset.meal;render();});
+    el.querySelectorAll("[data-floc]").forEach(b=>b.onclick=()=>{foodLoc=b.dataset.floc;render();});
+    el.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>go("food/item/"+b.dataset.open));
+    const imp=el.querySelector("#food-import-go");
+    if(imp)imp.onclick=()=>{const n=importMealActivities();if(n)go("food");};
+    const inp=el.querySelector("#food-new"),sel=el.querySelector("#food-new-area");
+    const add=()=>{const p=foodAdd(inp.value,foodMeal,sel.value||null);if(p)go("food/item/"+p.id);};
+    el.querySelector("#food-add").onclick=add;
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter")add();});
+  }};
+}
+
+function viewFoodItem(p){
+  const city=p.area||"";
+  const orders=p.order.map(o=>`
+    <div class="ord-row">
+      <span class="ord-qty">${esc(o.qty||"1")}</span>
+      <span class="ord-body"><b>${esc(o.dish)}</b>${o.note?`<i>${esc(o.note)}</i>`:""}</span>
+      <button class="ord-del" data-orddel="${o.id}" aria-label="Remove">✕</button>
+    </div>`).join("");
+  return{title:p.name,html:`
+    <div class="food-head">
+      <input class="food-title" id="fi-name" value="${esc(p.name)}" maxlength="60" aria-label="Name">
+      <div class="food-sub">
+        <select id="fi-meal" aria-label="Meal">${MEALS.map(m=>`<option value="${m.k}" ${p.meal===m.k?"selected":""}>${m.icon} ${esc(m.label)}</option>`).join("")}</select>
+        <select id="fi-area" aria-label="City">
+          <option value="">City…</option>
+          ${RANK_LOCS.map(l=>`<option value="${l.k}" ${city===l.k?"selected":""}>${esc(l.label)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <section class="card">
+      <div class="card-title" style="color:var(--blue)">${ico("globe",14)} Website</div>
+      <input class="fi-input" id="fi-url" type="url" inputmode="url" placeholder="https://…" value="${esc(p.url)}">
+      ${p.url?`<a class="editlink blue" href="${esc(p.url)}" target="_blank" rel="noopener">Open site ↗</a>`:""}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--gold-ink)">${ico("alert",14)} Booking</div>
+      <label class="fi-check"><input type="checkbox" id="fi-book" ${p.booking?"checked":""}>
+        <span>Requires booking</span></label>
+      ${p.booking?`<textarea class="fi-area-in" id="fi-booknote" placeholder="What we booked — date, time, name, reference…">${esc(p.bookingNote)}</textarea>`:""}
+    </section>
+    <section class="card">
+      <div class="card-title" style="color:var(--green)">${ico("list",14)} Recommended order</div>
+      ${p.order.length?`<div class="ord-list">${orders}</div>`:`<p class="caption">Nothing yet — add what's worth ordering.</p>`}
+      <div class="ord-add">
+        <input id="ord-qty" type="text" inputmode="numeric" placeholder="Qty" maxlength="6" aria-label="Quantity">
+        <input id="ord-dish" type="text" placeholder="Dish" maxlength="50" aria-label="Dish">
+        <button class="go" id="ord-go" aria-label="Add dish">${ico("plus",20)}</button>
+      </div>
+      <input class="fi-input" id="ord-note" type="text" placeholder="Notes — large, no peanuts, extra spicy…" maxlength="60">
+    </section>
+    <button class="f-del" id="fi-del">${ico("trash",15)} Delete this place</button>`,
+  wire(el){
+    /* Text fields save on blur/change rather than every keystroke: this list is
+       shared, so a push per character would fight the other phone's edits. */
+    const nm=el.querySelector("#fi-name");
+    nm.addEventListener("change",()=>{const v=nm.value.trim();if(v)foodSet(p.id,{name:v});});
+    el.querySelector("#fi-meal").onchange=e=>foodSet(p.id,{meal:e.target.value});
+    el.querySelector("#fi-area").onchange=e=>foodSet(p.id,{area:e.target.value||null});
+    const url=el.querySelector("#fi-url");
+    url.addEventListener("change",()=>foodSet(p.id,{url:url.value.trim()}));
+    el.querySelector("#fi-book").onchange=e=>foodSet(p.id,{booking:e.target.checked});
+    const bn=el.querySelector("#fi-booknote");
+    if(bn)bn.addEventListener("change",()=>foodSet(p.id,{bookingNote:bn.value.trim()}));
+    const qty=el.querySelector("#ord-qty"),dish=el.querySelector("#ord-dish"),note=el.querySelector("#ord-note");
+    const addOrder=()=>{if(!dish.value.trim())return;orderAdd(p.id,dish.value,qty.value,note.value);};
+    el.querySelector("#ord-go").onclick=addOrder;
+    dish.addEventListener("keydown",e=>{if(e.key==="Enter")addOrder();});
+    note.addEventListener("keydown",e=>{if(e.key==="Enter")addOrder();});
+    el.querySelectorAll("[data-orddel]").forEach(b=>b.onclick=()=>orderDelete(p.id,b.dataset.orddel));
+    el.querySelector("#fi-del").onclick=e=>{
+      const btn=e.currentTarget;
+      if(btn.dataset.sure!=="1"){
+        btn.dataset.sure="1";btn.classList.add("sure");
+        btn.innerHTML=ico("trash",15)+" Tap again to delete";
+        setTimeout(()=>{if(btn.isConnected){btn.dataset.sure="";btn.classList.remove("sure");
+          btn.innerHTML=ico("trash",15)+" Delete this place";}},4000);
+        return;
+      }
+      foodDelete(p.id);go("food");
+    };
+  }};
+}
+
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
   stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,finds:viewFinds,
-  activities:viewActivities,fx:viewFx,journal:viewJournal};
+  activities:viewActivities,food:viewFood,fx:viewFx,journal:viewJournal};
 let lastRoute=null;
 function render(){
   const r=currentRoute();
@@ -2755,6 +3040,10 @@ function render(){
   if(parts[0]==="day"){
     const i=Math.max(0,Math.min(D.days.length-1,(parseInt(parts[1],10)||1)-1));
     v=viewDay(i);active="itinerary";
+  }else if(parts[0]==="food"&&parts[1]==="item"){
+    const p=foodGet(parts[2]);
+    /* deleted on the other phone, or a stale link — fall back rather than blank */
+    v=p?viewFoodItem(p):viewFood();active="food";
   }else if(parts[0]==="finds"&&parts[1]==="item"){
     const it=FINDS.find(f=>f.id===parts[2]);
     /* deleted on another device, or a stale link — fall back rather than blank */
@@ -2884,8 +3173,9 @@ window.VNApp={setScope,loadPersonal,render,store,
     journal:store.get("journal","")}},
   /* the sync layer seeds this device's ranking side on sign-in */
   get myRanksExport(){return mySide?{side:mySide,data:RANKS[mySide]}:null;},
-  /* the trip-doc listener calls this on every remote ranking change */
-  applyRanks};
+  /* the trip-doc listener calls these on every remote change */
+  applyRanks,applyFood,
+  get foodExport(){return FOOD;}};
 
 /* ============================================================ SERVICE WORKER (offline)
    An installed app has no address bar and no reload button, so it must offer
