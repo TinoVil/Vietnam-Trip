@@ -579,6 +579,14 @@ p{color:var(--body);font-size:13px}
 .fi-day.far{opacity:.5}
 .fi-day.on{background:var(--green);border-color:var(--green)}
 .fi-day.on b,.fi-day.on i,.fi-day.on em{color:#fff}
+/* ---------------------------------------------------------- EXPORT */
+.ex-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:9px;
+  padding:14px;border-radius:13px;border:1px solid var(--border);background:#fff;
+  font-weight:800;font-size:14px;color:var(--navy)}
+.ex-btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.ex-btn:first-of-type{margin-top:0}
+.ex-dump{width:100%;height:150px;margin-top:10px;font-size:16px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  border:1px solid var(--border);border-radius:11px;padding:10px;background:var(--sand);color:var(--ink)}
 .food-head{margin-bottom:14px}
 .food-title{width:100%;border:0;border-bottom:2px solid var(--border);background:none;
   font-size:20px;font-weight:800;color:var(--ink);padding:4px 0 8px}
@@ -1130,7 +1138,8 @@ const SECTIONS=[
   {route:"fx",       name:"Currency",      icon:"wallet", color:"var(--gold-ink)",soft:"var(--gold-soft)"},
   {route:"journal",  name:"Notes",         icon:"note",   color:"var(--grey)",  soft:"#EEF1F5"},
   {route:"builder",  name:"Edit the plan", icon:"grid",   color:"var(--green)", soft:"var(--green-soft)",
-   group:"Planning", href:"./builder/"}
+   group:"Planning", href:"./builder/"},
+  {route:"export",   name:"Export data",   icon:"send",   color:"var(--navy)",  soft:"#E8ECF2"}
 ];
 const drawer=document.getElementById("drawer"),scrim=document.getElementById("scrim");
 function openDrawer(){drawer.classList.add("open");scrim.classList.add("open");}
@@ -3284,9 +3293,146 @@ function viewFoodItem(p){
   }};
 }
 
+/* ============================================================ VIEW · EXPORT
+
+   One file with everything the app knows, so it can be handed to someone (or
+   another tool) without them guessing from screenshots. Two shapes in one file:
+   `days` is resolved and readable — every id already swapped for the real item,
+   dates spelled out, meals carrying their booking and order — and `plan` / the
+   rest are the raw records, so nothing is lost in the translation.
+
+   Photos are the one deliberate omission: they're IndexedDB blobs that would
+   balloon the file into megabytes of base64. Everything about them travels; the
+   pixels don't. */
+function buildExport(){
+  const item=id=>{const it=getItem(id);return it?JSON.parse(JSON.stringify(it)):null;};
+  const days=D.days.map((d,i)=>{
+    const acts=(d.activities||[]).map(id=>{
+      const it=item(id);if(!it)return null;
+      const fp=foodByPlanId(id);
+      if(fp)it.food={meal:fp.meal,mealLabel:MEAL_BY_K[fp.meal].label,cuisine:fp.cuisine||null,
+        city:fp.area?cityLabel(fp.area):null,address:fp.address||null,website:fp.url||null,
+        requiresBooking:!!fp.booking,bookingDetail:fp.bookingNote||null,
+        recommendedOrder:(fp.order||[]).map(o=>({qty:o.qty||null,dish:o.dish,notes:o.note||null}))};
+      return it;
+    }).filter(Boolean);
+    const log=DAYLOG[i]||{};
+    return{day:i+1,
+      date:dayDateStr(i,{weekday:"long",day:"numeric",month:"long",year:"numeric"})||null,
+      title:d.name||null,plannerNote:d.note||null,
+      startsIn:(item(d.locStart)||{}).name||null,endsIn:(item(d.locEnd)||{}).name||null,
+      transport:(d.transport||[]).map(item).filter(Boolean),
+      accommodation:(d.accommodation||[]).map(item).filter(Boolean),
+      activities:acts,
+      journal:log.text||null,journalPhotoCount:(log.photos||[]).length};
+  });
+  const foodOut=(FOOD.places||[]).map(p=>({...p,
+    mealLabel:MEAL_BY_K[p.meal].label,city:p.area?cityLabel(p.area):null,
+    onDays:foodDays(p).map(i=>i+1)}));
+  const ranksOut={};
+  ["tino","jani"].forEach(s=>{
+    ranksOut[s]={};
+    RANK_LOCS.forEach(l=>{
+      ranksOut[s][l.label]=(RANKS[s].slots[l.k]||[]).map((id,idx)=>({rank:idx+1,points:RANK_SLOTS-idx,name:rankActName(id)}));
+    });
+  });
+  const scores={};
+  RANK_LOCS.forEach(l=>{scores[l.label]=scoreboard(l.k).map(r=>({name:r.name,combined:r.combined,tino:r.ts,jani:r.js}));});
+  return{
+    exportedAt:new Date().toString(),
+    app:"Vietnam 2026 · Travel Book",
+    planSource:PLAN_SOURCE,          /* "builder" = the live edited plan, "embedded" = the shipped baseline */
+    trip:{...D.meta,days:D.days.length},
+    days,
+    food:{places:foodOut,customTypes:FOOD.cuisines||[]},
+    rankings:{editingAs:mySide,byPerson:ranksOut,scoreboard:scores},
+    personal:{
+      todos:TODOS,bingo:BINGO,notes:store.get("journal",""),
+      currency:FX,
+      marketFinds:(FINDS||[]).map(f=>({name:f.stall||null,price:f.price,currency:"VND",
+        colour:f.colour,category:(CAT_BY_ID[f.cat]||{}).label||f.cat,
+        location:f.loc||null,seen:new Date(f.ts).toString()}))
+    },
+    raw:{plan:D,food:FOOD,ranks:RANKS,daylog:DAYLOG},
+    omitted:"Photos (market finds and day-journal pictures) live on the device that took them and are not in this file."
+  };
+}
+function exportJSON(){return JSON.stringify(buildExport(),null,2);}
+function exportName(){
+  const d=new Date();
+  const p=n=>String(n).padStart(2,"0");
+  return `vietnam2026-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`;
+}
+function viewExport(){
+  const j=exportJSON();
+  const kb=Math.max(1,Math.round(j.length/1024));
+  const counts={
+    days:D.days.length,
+    activities:(D.items.activities||[]).length,
+    food:(FOOD.places||[]).length,
+    slotted:(FOOD.places||[]).filter(p=>foodDays(p).length).length,
+    journal:Object.values(DAYLOG).filter(e=>e&&(e.text||(e.photos||[]).length)).length,
+    finds:(FINDS||[]).length
+  };
+  return{title:"Export",html:`
+    <div class="hero" style="background:linear-gradient(120deg,var(--navy),#3B5A85)">
+      <div class="hb-kicker">Hand it over</div><div class="hb-title">Export</div>
+      <div class="hb-sub">Everything the app knows, in one file · about ${kb} KB</div></div>
+    <section class="card">
+      <div class="card-title">${ico("list",14)} What's in it</div>
+      <div class="info-row"><span class="label">Days, fully resolved</span><span class="value">${counts.days}</span></div>
+      <div class="info-row"><span class="label">Planned activities</span><span class="value">${counts.activities}</span></div>
+      <div class="info-row"><span class="label">Food places</span><span class="value">${counts.food}${counts.slotted?` · ${counts.slotted} on days`:""}</span></div>
+      <div class="info-row"><span class="label">Journal entries</span><span class="value">${counts.journal}</span></div>
+      <div class="info-row"><span class="label">Market finds</span><span class="value">${counts.finds}</span></div>
+      <div class="info-row"><span class="label">Plan in use</span><span class="value">${PLAN_SOURCE==="builder"?"Your edited plan":"Shipped baseline"}</span></div>
+      <p class="caption" style="margin-top:10px">Bookings, what to order, rankings and scores are all in there.
+        Photos aren't — they live on the phone that took them and would bloat the file.</p>
+    </section>
+    <section class="card">
+      <div class="card-title">${ico("send",14)} Take it with you</div>
+      <button class="ex-btn primary" id="ex-copy">${ico("list",15)} Copy to clipboard</button>
+      <button class="ex-btn" id="ex-share">${ico("send",15)} Share the file</button>
+      <button class="ex-btn" id="ex-save">${ico("plus",15)} Save to Files</button>
+      <div class="caption" id="ex-msg" style="margin-top:10px">Copy is usually quickest — paste it straight into a chat.</div>
+    </section>`,
+  wire(el){
+    const msg=el.querySelector("#ex-msg");
+    const say=(t,ok)=>{msg.textContent=t;msg.style.color=ok===false?"var(--red)":(ok?"var(--green)":"");};
+    el.querySelector("#ex-copy").onclick=async()=>{
+      const text=exportJSON();
+      try{
+        await navigator.clipboard.writeText(text);
+        say("Copied — paste it wherever you need it.",true);
+      }catch(e){
+        /* clipboard API needs a secure context and can still refuse — fall back
+           to a selectable box rather than leaving them with nothing */
+        const ta=document.createElement("textarea");
+        ta.className="ex-dump";ta.value=text;ta.readOnly=true;
+        msg.insertAdjacentElement("afterend",ta);ta.focus();ta.select();
+        say("Couldn't copy automatically — it's selected below, copy it by hand.",false);
+      }
+    };
+    el.querySelector("#ex-share").onclick=async()=>{
+      const file=new File([exportJSON()],exportName(),{type:"application/json"});
+      if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){
+        try{await navigator.share({files:[file],title:"Vietnam 2026 data"});say("Shared.",true);}
+        catch(e){if(e&&e.name!=="AbortError")say("Sharing didn't work here — try Copy or Save.",false);}
+      }else say("This phone won't share files — use Copy or Save to Files.",false);
+    };
+    el.querySelector("#ex-save").onclick=()=>{
+      const url=URL.createObjectURL(new Blob([exportJSON()],{type:"application/json"}));
+      const a=document.createElement("a");
+      a.href=url;a.download=exportName();document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      say("Saved as "+exportName()+" — check Downloads or Files.",true);
+    };
+  }};
+}
+
 const VIEWS={summary:viewSummary,itinerary:viewItinerary,movement:viewMovement,costs:viewCosts,
   stays:viewStays,bookings:viewBookings,todos:viewTodos,bingo:viewBingo,finds:viewFinds,
-  activities:viewActivities,food:viewFood,fx:viewFx,journal:viewJournal};
+  activities:viewActivities,food:viewFood,fx:viewFx,journal:viewJournal,export:viewExport};
 let lastRoute=null;
 function render(){
   const r=currentRoute();
